@@ -1,0 +1,73 @@
+{
+  "name": "client-manager",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron/main.js",
+  "homepage": "./",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.103.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^13.5.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4",
+    "yaml": "^2.8.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "electron": "electron .",
+    "electron:dev": "concurrently \"BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run build && electron-builder"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "build": {
+    "appId": "com.clientmanager.app",
+    "productName": "Client Manager",
+    "extends": null,
+    "extraMetadata": {
+      "main": "electron/main.js"
+    },
+    "files": [
+      "build/**/*",
+      "electron/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "electron": "^33.4.11",
+    "electron-builder": "^26.8.1",
+    "wait-on": "^9.0.10"
+  }
+}
