@@ -1,0 +1,250 @@
+/* ── Mobile-only styles — desktop (≥1024px) is untouched ── */
+
+/* ── Clients table: card layout on mobile ── */
+@media (max-width: 767px) {
+  /* Dissolve table structure into block stack */
+  .clients-table,
+  .clients-table tbody,
+  .clients-table tr,
+  .clients-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Remove outer table chrome — cards carry their own */
+  .clients-table {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  /* Hide header row */
+  .clients-table thead { display: none; }
+
+  /* Each row = card */
+  .clients-table-row {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    background: var(--color-surface);
+    padding: 12px 14px;
+    box-shadow: var(--shadow);
+  }
+
+  /* Reset cell padding/borders */
+  .clients-table td {
+    border-bottom: none;
+    padding: 3px 0;
+    font-size: 14px;
+    min-width: unset;
+  }
+
+  /* Name row: flex, wraps badge next to name */
+  .clients-table td.cell-name {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: unset;
+    font-size: 16px;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* Type tags: reset margin for RTL */
+  .clients-table .type-tag {
+    margin-left: 0;
+    margin-right: 4px;
+  }
+
+  /* Actions: always visible, thumb-friendly */
+  .row-actions {
+    opacity: 1;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 8px;
+  }
+
+  .row-actions .btn-ghost {
+    min-height: 40px;
+    min-width: 40px;
+    font-size: 16px;
+    padding: 6px 10px;
+  }
+}
+
+/* ── docs-table (StatusTable): card layout on mobile ── */
+@media (max-width: 767px) {
+  .docs-table,
+  .docs-table tbody,
+  .docs-table tr,
+  .docs-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .docs-table thead { display: none; }
+
+  .docs-table tr {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow);
+  }
+
+  .docs-table td {
+    border-bottom: none;
+    padding: 4px 0;
+  }
+
+  .docs-table td:first-child {
+    width: 100%;
+    font-size: 15px;
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .docs-table td:nth-child(2) { width: 100%; }
+
+  .docs-table .status-badge-wrap {
+    width: 100%;
+    display: flex;
+  }
+  .docs-table .status-badge-wrap select {
+    flex: 1;
+    width: 100%;
+  }
+
+  .docs-table input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .docs-table .reminder-select {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .reminder-badge { white-space: normal; }
+
+  .reminder-custom {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+/* Always hide these elements on desktop */
+.mobile-menu-btn    { display: none; }
+.mobile-nav-overlay { display: none; }
+
+@media (max-width: 1023px) {
+  /* ── Base ── */
+  body { overflow-x: hidden; }
+  img, video { max-width: 100%; height: auto; }
+
+  /* ── Sidebar: hidden slide-in drawer ── */
+  .sidebar {
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 200;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Dark overlay behind open sidebar */
+  .mobile-nav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 199;
+  }
+  .mobile-nav-overlay.mobile-open { display: block; }
+
+  /* ── Hamburger button ── */
+  .mobile-menu-btn {
+    display: flex;
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 201;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    min-height: 44px;
+    min-width: 44px;
+    font-size: 20px;
+    color: var(--color-text);
+  }
+
+  /* ── Main content: full width, room for hamburger ── */
+  .main-content {
+    margin-right: 0;
+    max-width: 100%;
+    width: 100%;
+    padding: 64px 16px 24px;
+  }
+
+  /* ── Grids → single column ── */
+  .detail-grid  { grid-template-columns: 1fr; }
+  .form-row     { grid-template-columns: 1fr; }
+  .form-row-3   { grid-template-columns: 1fr; }
+
+  /* ── Notification card: stack ── */
+  .notification-card    { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .notification-actions { flex-wrap: wrap; }
+
+  /* ── Info cards row: stack ── */
+  .info-cards-row { flex-direction: column; }
+
+  /* ── Phase stepper: wrap, hide connectors ── */
+  .phase-stepper { flex-wrap: wrap; gap: 8px; }
+  .phase-step:not(:last-child)::after { display: none; }
+  .phase-label { white-space: normal; font-size: 11px; }
+
+  /* ── Spacing reductions ── */
+  .empty-state  { padding: 40px 20px; }
+  .client-form  { padding: 18px 14px; }
+  .detail-section { padding: 14px 16px; }
+  .licensing-tab .detail-section { padding: 16px; }
+  .page-title   { font-size: 20px; }
+  .page-header  { flex-direction: column; gap: 12px; }
+
+  /* ── Touch targets ── */
+  .btn        { min-height: 44px; }
+  .nav-item   { min-height: 44px; }
+  .tab-button { min-height: 44px; padding: 10px 12px; }
+
+  /* ── Filter bar: stack ── */
+  .filter-bar        { flex-direction: column; align-items: stretch; }
+  .filter-bar select { width: 100%; }
+
+  /* ── Login ── */
+  .login-box { padding: 24px 20px; }
+
+  /* ── Clients stats row: wrap ── */
+  .clients-stats-row { flex-wrap: wrap; gap: 10px; }
+
+  /* ── Sub-tabs: wrap ── */
+  .sub-tabs { flex-wrap: wrap; }
+
+  /* ── Tabs: allow wrapping ── */
+  .tabs { flex-wrap: wrap; }
+
+  /* ── Flow row: stack on very small screens ── */
+  .flow-row { flex-wrap: wrap; gap: 8px; }
+}
