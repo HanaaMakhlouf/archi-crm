@@ -33,11 +33,15 @@ npm start       # dev server at http://localhost:3000
 npm run build   # production build
 ```
 
-Requires a `.env` file in project root:
+Create a `.env` file in the project root from `.env.example` and enter the project URL and public anon/publishable key from **Supabase → Project Settings → API**:
 ```
-REACT_APP_SUPABASE_URL=...
-REACT_APP_SUPABASE_ANON_KEY=...
+REACT_APP_SUPABASE_URL=https://your-project-id.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your-anon-or-publishable-key
 ```
+
+In PowerShell, start with `Copy-Item .env.example .env`. Restart `npm start` after editing `.env`. Never put a Supabase service-role key in this React app or commit `.env`.
+
+The app expects the Supabase tables `profiles`, `offices`, `clients`, and `row_reminders`, plus the `admin-users` Edge Function for staff management. Configure Auth, database tables, and row-level security policies in your Supabase project before signing in. The service-role key belongs only in the Edge Function's server-side secrets.
 
 ---
 
