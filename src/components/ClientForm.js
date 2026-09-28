@@ -49,11 +49,12 @@ export default function ClientForm({
   }, [formError]);
 
   // Returns true on success, false on validation/save error
-  const { officeId } = useAuth();
+  const { officeId, isViewer } = useAuth();
 
   const submit = async () => {
     const fail = (msg) => { setFormError(msg); return false; };
 
+    if (isViewer) return fail('אין הרשאת עריכה');
     if (!form.name.trim() || !form.phone.trim() || !form.city.trim() || !form.gush.trim()) {
       return fail('נא למלא את כל שדות החובה המסומנים ב-*');
     }

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { authMsg } from '../utils/authMessages';
+import { usernameToLoginEmail } from '../utils/username';
 import '../styles/Login.css';
 
 // Survives component remount (which happens when signOut clears the user)
 let pendingError = '';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [officeName, setOfficeName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,7 +30,9 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: usernameToLoginEmail(username), password,
+      });
       if (authError) { setError(authError.message); return; }
 
       const { data: existingProfile } = await supabase
@@ -84,13 +87,13 @@ export default function Login() {
           )}
 
           <div className="form-group">
-            <label htmlFor="email">דוא״ל</label>
+            <label htmlFor="username">שם משתמש</label>
             <input
-              id="email"
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="username"
+              type="text"
+              placeholder="שם משתמש"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               disabled={loading}
               required
             />
@@ -126,7 +129,7 @@ export default function Login() {
           <button
             type="submit"
             className="btn btn-primary btn-large"
-            disabled={loading || !email || !password || !officeName.trim()}
+            disabled={loading || !username || !password || !officeName.trim()}
           >
             {loading ? 'טוען...' : 'התחברות'}
           </button>

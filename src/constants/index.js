@@ -201,6 +201,7 @@ export const REMINDER_DAYS_PRESETS = [1, 3, 7]; // preset options for the תזכ
 export const ROLE_ADMIN = 'admin';
 export const ROLE_MANAGER = 'manager';
 export const ROLE_USER = 'user';
+export const ROLE_VIEWER = 'viewer'; // read-only: can view everything, cannot edit or add users
 
 // ── SHARED FIELD GROUPS ──
 // Land/property fields that live directly on the client row (single source of truth

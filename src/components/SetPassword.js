@@ -54,8 +54,8 @@ export default function SetPassword({ onDone }) {
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label>דוא״ל</label>
-            <input type="email" value={user?.email || ''} disabled />
+            <label>שם משתמש</label>
+            <input type="text" value={user?.user_metadata?.username || user?.email || ''} disabled />
           </div>
 
           <div className="form-group">

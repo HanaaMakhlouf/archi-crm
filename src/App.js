@@ -39,7 +39,7 @@ const EMPTY_FORM = {
 };
 
 export default function App() {
-  const { officeId } = useAuth();
+  const { officeId, isViewer } = useAuth();
 
   // ── DATA ──
   const [clients, setClients] = useState([]);
@@ -115,6 +115,7 @@ export default function App() {
   };
 
   const handleDelete = async (id) => {
+    if (isViewer) return;
     const client = clients.find(c => c.id === id);
     const name = client?.name || 'לקוח זה';
     if (!window.confirm(`למחוק את "${name}"? פעולה זו אינה הפיכה.`)) return;
@@ -128,6 +129,7 @@ export default function App() {
   };
 
   const handleUpdateClient = async (id, updates) => {
+    if (isViewer) return;
     const { error } = await supabase.from(TABLE_CLIENTS).update(updates).eq('id', id);
     if (error) {
       console.error('Update client error:', error.message);
@@ -140,6 +142,7 @@ export default function App() {
   // days === null → delete the reminder; days > 0 → upsert it.
   // Optimistic update first so Inbox reflects the change immediately.
   const handleReminderChange = useCallback(async (clientId, sectionKey, rowLabel, days) => {
+    if (isViewer) return;
     if (days === null) {
       // Remove optimistically — notification disappears from Inbox at once.
       setReminders(prev => prev.filter(r =>
@@ -167,11 +170,12 @@ export default function App() {
     }
     // Sync with real DB id (replaces optimistic placeholder).
     fetchReminders();
-  }, [fetchReminders, officeId]);
+  }, [fetchReminders, officeId, isViewer]);
 
   // Delete all reminders for a section (GrayOut reset).
   // sectionKey ending with '*' → prefix match (clears all sub-sections).
   const handleClearReminders = useCallback(async (clientId, sectionKey) => {
+    if (isViewer) return;
     // Optimistic: remove from state immediately so Inbox clears at once.
     if (sectionKey.endsWith('*')) {
       const prefix = sectionKey.slice(0, -1);
@@ -187,10 +191,11 @@ export default function App() {
     }
     await q;
     fetchReminders();
-  }, [fetchReminders]);
+  }, [fetchReminders, isViewer]);
 
   // Update an existing reminder by its DB id (used from InboxView delay/dismiss).
   const handleUpdateReminder = useCallback(async (reminderId, newDays) => {
+    if (isViewer) return;
     if (newDays === null) {
       // Optimistic: remove immediately so Inbox clears at once.
       setReminders(prev => prev.filter(r => r.id !== reminderId));
@@ -204,7 +209,7 @@ export default function App() {
         .eq('id', reminderId);
     }
     fetchReminders();
-  }, [fetchReminders]);
+  }, [fetchReminders, isViewer]);
 
   const toggleType = (type) => setForm(prev => {
     const newTypes = prev.client_type.includes(type)
@@ -275,7 +280,9 @@ export default function App() {
                 <h1 className="page-title">לקוחות</h1>
                 <p className="page-subtitle">{filtered.length} לקוחות נמצאו</p>
               </div>
-              <button className="btn btn-primary" onClick={() => openForm()}>+ הוסף לקוח</button>
+              {!isViewer && (
+                <button className="btn btn-primary" onClick={() => openForm()}>+ הוסף לקוח</button>
+              )}
             </div>
 
             <div className="search-bar">
@@ -326,7 +333,9 @@ export default function App() {
                 </svg>
                 <h3>אין לקוחות עדיין</h3>
                 <p>הוסף את הלקוח הראשון שלך כדי להתחיל</p>
-                <button className="btn btn-primary" onClick={() => openForm()}>הוסף לקוח</button>
+                {!isViewer && (
+                  <button className="btn btn-primary" onClick={() => openForm()}>הוסף לקוח</button>
+                )}
               </div>
 
               /* ── CLIENTS TABLE ── */
@@ -414,8 +423,12 @@ export default function App() {
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                             </button>
                           )}
-                          <button className="btn btn-ghost btn-sm" onClick={() => openForm(client)}>✏️</button>
-                          <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(client.id)}>🗑️</button>
+                          {!isViewer && (
+                            <>
+                              <button className="btn btn-ghost btn-sm" onClick={() => openForm(client)}>✏️</button>
+                              <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(client.id)}>🗑️</button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

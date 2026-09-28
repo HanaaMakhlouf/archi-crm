@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { ROLE_USER } from '../constants';
+import { ROLE_USER, ROLE_VIEWER } from '../constants';
 
 const AuthContext = createContext(null);
 
@@ -71,6 +71,7 @@ export function AuthProvider({ children }) {
       setOfficeId,
       userRole,
       isAdmin: userRole === 'admin',
+      isViewer: userRole === ROLE_VIEWER,
       loading,
       logout,
     }}>

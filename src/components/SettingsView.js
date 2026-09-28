@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
-import { ROLE_ADMIN, ROLE_MANAGER, ROLE_USER } from '../constants';
+import { ROLE_ADMIN, ROLE_MANAGER, ROLE_USER, ROLE_VIEWER } from '../constants';
 
 const ROLE_OPTIONS = [
-  { value: ROLE_USER,    label: 'משתמש' },
+  { value: ROLE_USER,    label: 'עובד' },
+  { value: ROLE_VIEWER,  label: 'צופה' },
   { value: ROLE_MANAGER, label: 'מנהל' },
   { value: ROLE_ADMIN,   label: 'אדמין' },
 ];
 
-const ROLE_LABELS = { [ROLE_USER]: 'משתמש', [ROLE_MANAGER]: 'מנהל', [ROLE_ADMIN]: 'אדמין' };
+const ROLE_LABELS = { [ROLE_USER]: 'עובד', [ROLE_VIEWER]: 'צופה', [ROLE_MANAGER]: 'מנהל', [ROLE_ADMIN]: 'אדמין' };
 
 function canAct(myRole, targetRole) {
   if (myRole === ROLE_ADMIN) return true;
@@ -51,7 +52,7 @@ export default function SettingsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newEmail, setNewEmail] = useState('');
+  const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState(ROLE_USER);
   const [adding, setAdding] = useState(false);
@@ -74,17 +75,17 @@ export default function SettingsView() {
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (!newEmail.trim() || !newPassword.trim()) return;
+    if (!newUsername.trim() || !newPassword.trim()) return;
     setAdding(true);
     setAddError(null);
     try {
       await callAdminUsers('create', {
-        email: newEmail.trim(),
+        username: newUsername.trim(),
         password: newPassword,
         role: newRole,
         officeId,
       });
-      setNewEmail('');
+      setNewUsername('');
       setNewPassword('');
       setNewRole(ROLE_USER);
       setShowAddForm(false);
@@ -133,12 +134,12 @@ export default function SettingsView() {
           <h3 className="detail-section-title">הוספת עובד חדש</h3>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div className="form-group" style={{ flex: 2, minWidth: 200 }}>
-              <label>אימייל</label>
+              <label>שם משתמש</label>
               <input
-                type="email"
-                value={newEmail}
-                onChange={e => setNewEmail(e.target.value)}
-                placeholder="worker@example.com"
+                type="text"
+                value={newUsername}
+                onChange={e => setNewUsername(e.target.value)}
+                placeholder="worker1"
                 required
               />
             </div>
@@ -167,7 +168,7 @@ export default function SettingsView() {
           </div>
           {addError && <p style={{ color: 'var(--color-error)', marginTop: 8, fontSize: 13 }}>{addError}</p>}
           <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-            העובד יוכל להתחבר מיד עם האימייל והסיסמה שהוגדרו כאן.
+            העובד יוכל להתחבר מיד עם שם המשתמש והסיסמה שהוגדרו כאן.
           </p>
         </form>
       )}
@@ -189,7 +190,7 @@ export default function SettingsView() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'right' }}>
-                  <th style={{ padding: '8px 12px', fontWeight: 600, fontSize: 13 }}>אימייל</th>
+                  <th style={{ padding: '8px 12px', fontWeight: 600, fontSize: 13 }}>שם משתמש</th>
                   <th style={{ padding: '8px 12px', fontWeight: 600, fontSize: 13 }}>תפקיד</th>
                   {isAdmin && <th style={{ padding: '8px 12px', fontWeight: 600, fontSize: 13 }}>משרד</th>}
                   <th style={{ padding: '8px 12px', fontWeight: 600, fontSize: 13 }}>תאריך הצטרפות</th>
@@ -201,7 +202,7 @@ export default function SettingsView() {
                   const editable = canAct(userRole, u.role);
                   return (
                     <tr key={u.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                      <td style={{ padding: '10px 12px', fontSize: 14 }}>{u.email}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 14 }}>{u.username}</td>
                       <td style={{ padding: '10px 12px' }}>
                         {editable ? (
                           <select

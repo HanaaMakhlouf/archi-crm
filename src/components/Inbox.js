@@ -1,5 +1,6 @@
 import { NOTIF_TYPE_ROW_REMINDER, ONE_DAY_MS, NOTIFICATION_DELAY_UNIT } from '../constants';
 import DatePickerButton from './DatePickerButton';
+import { useAuth } from '../contexts/AuthContext';
 
 const ONE_MINUTE_MS = 60 * 1000;
 const unitMs = NOTIFICATION_DELAY_UNIT === 'minutes' ? ONE_MINUTE_MS : ONE_DAY_MS;
@@ -11,6 +12,7 @@ const SNOOZE_PRESETS = [
 ];
 
 export default function Inbox({ notifications, snoozeNotification, onUpdateReminder, onGoToClient }) {
+  const { isViewer } = useAuth();
   const handleDateSnooze = async (notif, dateStr) => {
     const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / unitMs);
     if (days <= 0) return;
@@ -58,7 +60,7 @@ export default function Inbox({ notifications, snoozeNotification, onUpdateRemin
                 </div>
 
                 <div className="notification-actions">
-                  <div className="snooze-presets">
+                  <fieldset disabled={isViewer} className="snooze-presets" style={{ border: 0, margin: 0, padding: 0 }}>
                     <span className="snooze-label">דחה:</span>
                     {SNOOZE_PRESETS.map(({ label, days }) => (
                       <button
@@ -70,7 +72,7 @@ export default function Inbox({ notifications, snoozeNotification, onUpdateRemin
                       </button>
                     ))}
                     <DatePickerButton onSelect={(dateStr) => handleDateSnooze(notification, dateStr)} />
-                  </div>
+                  </fieldset>
 
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button

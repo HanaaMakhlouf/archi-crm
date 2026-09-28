@@ -22,7 +22,7 @@ export default function ClientDetail({
   initialTab,
 }) {
   const [activeTab, setActiveTab] = useState(initialTab || TAB_GENERAL);
-  const { userRole, isAdmin } = useAuth();
+  const { userRole, isAdmin, isViewer } = useAuth();
   const canSeeFiles = isAdmin || userRole === ROLE_MANAGER;
 
   return (
@@ -38,9 +38,11 @@ export default function ClientDetail({
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn btn-ghost" onClick={onEdit}>
-            ✏️ עריכה
-          </button>
+          {!isViewer && (
+            <button className="btn btn-ghost" onClick={onEdit}>
+              ✏️ עריכה
+            </button>
+          )}
           <button className="btn btn-ghost" onClick={onBack}>
             חזרה ←
           </button>
@@ -72,6 +74,10 @@ export default function ClientDetail({
       </div>
 
       {/* ── TAB CONTENT ── */}
+      {/* fieldset disabled: native way to block every input/select/button below for viewers,
+          without threading a readOnly prop through every tab/phase component.
+          display:contents keeps it out of the detail-grid layout. */}
+      <fieldset disabled={isViewer} style={{ display: 'contents', border: 0, margin: 0, padding: 0 }}>
       {activeTab === TAB_GENERAL && (
         <div className="detail-grid">
 
@@ -149,6 +155,7 @@ export default function ClientDetail({
           onClearReminders={(sk) => onClearReminders(client.id, sk)}
         />
       )}
+      </fieldset>
 
     </>
   );
