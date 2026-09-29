@@ -135,8 +135,9 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
     landDebounce.current = setTimeout(() => {
       const payload = { ...next };
       NUMERIC_LAND_FIELDS.forEach(k => {
-        payload[k] = payload[k] === '' ? (k === 'migrash' ? null : payload[k]) : Number(payload[k]);
+        payload[k] = payload[k] === '' ? payload[k] : Number(payload[k]);
       });
+      payload.migrash = String(payload.migrash ?? '').trim() || null;
       onUpdate(payload);
       setLandDraft(null);
     }, DEBOUNCE_DELAY_MS);

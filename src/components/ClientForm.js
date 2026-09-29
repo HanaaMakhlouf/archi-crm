@@ -63,20 +63,17 @@ export default function ClientForm({
     }
     const gushNum = Number(form.gush);
     const helkaNum = form.helka ? Number(form.helka) : null;
-    const migrashNum = form.migrash ? Number(form.migrash) : null;
+    const migrash = form.migrash.trim() || null; // free text — plots can be "6א" etc., not always a plain number
     if (!Number.isInteger(gushNum) || gushNum <= 0) return fail('גוש חייב להיות מספר שלם חיובי');
     if (helkaNum !== null && (!Number.isInteger(helkaNum) || helkaNum <= 0)) {
       return fail('חלקה חייבת להיות מספר שלם חיובי');
-    }
-    if (migrashNum !== null && (!Number.isFinite(migrashNum) || migrashNum <= 0)) {
-      return fail('מגרש חייב להיות מספר חיובי');
     }
 
     setSaving(true);
     const payload = {
       label: form.label, name: form.name.trim(), phone: form.phone.trim(), city: form.city.trim(), email: form.email.trim() || null,
       gush: gushNum, helka: helkaNum,
-      migrash: migrashNum,
+      migrash,
       notes: form.notes || null,
       client_type: form.client_type,
       type_attributes: form.type_attributes,
