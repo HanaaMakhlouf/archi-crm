@@ -68,8 +68,8 @@ export default function ClientForm({
     if (helkaNum !== null && (!Number.isInteger(helkaNum) || helkaNum <= 0)) {
       return fail('חלקה חייבת להיות מספר שלם חיובי');
     }
-    if (migrashNum !== null && (!Number.isInteger(migrashNum) || migrashNum <= 0)) {
-      return fail('מגרש חייב להיות מספר שלם חיובי');
+    if (migrashNum !== null && (!Number.isFinite(migrashNum) || migrashNum <= 0)) {
+      return fail('מגרש חייב להיות מספר חיובי');
     }
 
     setSaving(true);
