@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { makeEmptyPerson } from './PersonForm';
 import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
+import HelkaList from '../HelkaList';
 import {
   LICENSING_DOCUMENTS,
   DOC_STATUS_MISSING, DOC_STATUS_PRESENT,
@@ -173,7 +174,9 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
   const patch = (key, value) => onChange({ [key]: value });
 
   const land = landDraft || {
-    city: client.city || '', gush: client.gush ?? '', helka: client.helka ?? '', migrash: client.migrash ?? '',
+    city: client.city || '', gush: client.gush ?? '',
+    helka: Array.isArray(client.helka) && client.helka.length ? client.helka.map(String) : [''],
+    migrash: client.migrash ?? '',
   };
 
   const updateLand = (key, value) => {
@@ -186,6 +189,12 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
         payload[k] = payload[k] === '' ? payload[k] : Number(payload[k]);
       });
       payload.migrash = String(payload.migrash ?? '').trim() || null;
+      const helkaNums = (payload.helka || [])
+        .map(h => String(h ?? '').trim())
+        .filter(Boolean)
+        .map(Number)
+        .filter(n => Number.isInteger(n) && n > 0);
+      payload.helka = helkaNums.length ? helkaNums : null;
       onUpdateClient?.(payload);
       setLandDraft(null);
     }, DEBOUNCE_DELAY_MS);
@@ -226,11 +235,15 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
             {LAND_FIELDS.map(f => (
               <div key={f.key} className="form-group">
                 <label>{f.label}</label>
-                <input
-                  type="text"
-                  value={land[f.key] ?? ''}
-                  onChange={e => updateLand(f.key, e.target.value)}
-                />
+                {f.key === 'helka' ? (
+                  <HelkaList values={land.helka} onChange={vals => updateLand('helka', vals)} />
+                ) : (
+                  <input
+                    type="text"
+                    value={land[f.key] ?? ''}
+                    onChange={e => updateLand(f.key, e.target.value)}
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -238,7 +251,11 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
           LAND_FIELDS.map(f => (
             <div key={f.key} className="detail-row">
               <span className="detail-label">{f.label}</span>
-              <span>{land[f.key] || <span className="muted">—</span>}</span>
+              <span>
+                {f.key === 'helka'
+                  ? (land.helka.filter(Boolean).join(', ') || <span className="muted">—</span>)
+                  : (land[f.key] || <span className="muted">—</span>)}
+              </span>
             </div>
           ))
         )}

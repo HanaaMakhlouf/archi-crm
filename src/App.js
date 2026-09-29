@@ -34,7 +34,7 @@ function resolveNavHint(sectionKey) {
 
 const EMPTY_FORM = {
   label: LABEL_NEW, name: '', phone: '', city: '', email: '',
-  gush: '', helka: '', migrash: '', notes: '', client_type: [], type_attributes: {},
+  gush: '', helka: [''], migrash: '', notes: '', client_type: [], type_attributes: {},
   planning_data: {},
 };
 
@@ -99,7 +99,8 @@ export default function App() {
       setForm({
         label: client.label || LABEL_NEW,
         name: client.name, phone: client.phone, city: client.city, email: client.email || '',
-        gush: client.gush?.toString() || '', helka: client.helka?.toString() || '',
+        gush: client.gush?.toString() || '',
+        helka: Array.isArray(client.helka) && client.helka.length ? client.helka.map(String) : [''],
         migrash: client.migrash?.toString() || '', notes: client.notes || '',
         client_type: client.client_type || [],
         type_attributes: client.type_attributes || {},
@@ -401,7 +402,10 @@ export default function App() {
                       </td>
                       <td className="cell-secondary">{client.city || '—'}</td>
                       <td className="cell-plot">
-                        {client.gush || client.helka ? `${client.gush || '—'} / ${client.helka || '—'}` : '—'}
+                        {(() => {
+                          const helkaText = client.helka && client.helka.length ? client.helka.join(', ') : '';
+                          return client.gush || helkaText ? `${client.gush || '—'} / ${helkaText || '—'}` : '—';
+                        })()}
                       </td>
                       <td>
                         {(client.client_type || []).length > 0

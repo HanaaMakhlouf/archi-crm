@@ -206,8 +206,9 @@ export const ROLE_VIEWER = 'viewer'; // read-only: can view everything, cannot e
 // ── SHARED FIELD GROUPS ──
 // Land/property fields that live directly on the client row (single source of truth
 // for the property info shown/edited from Licensing and Detailed tabs).
-export const NUMERIC_LAND_FIELDS = ['gush', 'helka'];
+export const NUMERIC_LAND_FIELDS = ['gush'];
 // migrash (plot) allows letter suffixes like "6א" — kept as text, not numeric.
+// helka is a list of positive integers (a client can have several) — handled separately.
 
 // ── DATABASE TABLES ──
 export const TABLE_CLIENTS = 'clients';

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import HelkaList from './HelkaList';
 import {
   TABLE_CLIENTS,
 } from '../constants';
@@ -62,17 +63,22 @@ export default function ClientForm({
       return fail('יש לבחור לפחות סוג לקוח אחד');
     }
     const gushNum = Number(form.gush);
-    const helkaNum = form.helka ? Number(form.helka) : null;
     const migrash = form.migrash.trim() || null; // free text — plots can be "6א" etc., not always a plain number
     if (!Number.isInteger(gushNum) || gushNum <= 0) return fail('גוש חייב להיות מספר שלם חיובי');
-    if (helkaNum !== null && (!Number.isInteger(helkaNum) || helkaNum <= 0)) {
-      return fail('חלקה חייבת להיות מספר שלם חיובי');
+
+    const helkaEntries = form.helka.map(h => h.trim()).filter(Boolean);
+    const helkaNums = [];
+    for (const h of helkaEntries) {
+      const n = Number(h);
+      if (!Number.isInteger(n) || n <= 0) return fail('חלקה חייבת להיות מספר שלם חיובי');
+      helkaNums.push(n);
     }
+    const helka = helkaNums.length ? helkaNums : null;
 
     setSaving(true);
     const payload = {
       label: form.label, name: form.name.trim(), phone: form.phone.trim(), city: form.city.trim(), email: form.email.trim() || null,
-      gush: gushNum, helka: helkaNum,
+      gush: gushNum, helka,
       migrash,
       notes: form.notes || null,
       client_type: form.client_type,
@@ -215,12 +221,9 @@ export default function ClientForm({
         <div className="form-row">
           <div className="form-group">
             <label>חלקה</label>
-            <input
-              type="text"
-              value={form.helka}
-              onChange={e =>
-                setForm({ ...form, helka: e.target.value })
-              }
+            <HelkaList
+              values={form.helka}
+              onChange={vals => setForm({ ...form, helka: vals })}
             />
           </div>
 

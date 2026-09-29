@@ -93,7 +93,10 @@ export default function ClientDetail({
           <h3 className="detail-section-title">פרטי נכס</h3>
           <div className="detail-row"><span className="detail-label">עיר</span><span>{client.city}</span></div>
           <div className="detail-row"><span className="detail-label">גוש</span><span>{client.gush}</span></div>
-          <div className="detail-row"><span className="detail-label">חלקה</span><span>{client.helka}</span></div>
+          <div className="detail-row">
+            <span className="detail-label">חלקה</span>
+            <span>{(client.helka || []).length ? client.helka.join(', ') : <span className="muted">לא הוגדר</span>}</span>
+          </div>
           <div className="detail-row">
             <span className="detail-label">מגרש</span>
             <span>{client.migrash ?? <span className="muted">לא הוגדר</span>}</span>

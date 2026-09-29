@@ -3,6 +3,7 @@ import PersonForm, { makeEmptyPerson } from './licensing/PersonForm';
 import { InfoCard, PersonReadOnly } from './licensing/InfoPhase';
 import StatusTable from './licensing/StatusTable';
 import GrayOut from './GrayOut';
+import HelkaList from './HelkaList';
 import {
   FIELD_DETAILED_DATA,
   DETAILED_HACHANA_BE_TIPUL, DETAILED_HACHANA_KEN, DETAILED_HACHANA_LO,
@@ -125,7 +126,9 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
   const updateInfo = (patch) => updateField('info', patch);
 
   const land = landDraft || {
-    city: client.city || '', gush: client.gush ?? '', helka: client.helka ?? '', migrash: client.migrash ?? '',
+    city: client.city || '', gush: client.gush ?? '',
+    helka: Array.isArray(client.helka) && client.helka.length ? client.helka.map(String) : [''],
+    migrash: client.migrash ?? '',
   };
 
   const updateLand = (key, value) => {
@@ -138,6 +141,12 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
         payload[k] = payload[k] === '' ? payload[k] : Number(payload[k]);
       });
       payload.migrash = String(payload.migrash ?? '').trim() || null;
+      const helkaNums = (payload.helka || [])
+        .map(h => String(h ?? '').trim())
+        .filter(Boolean)
+        .map(Number)
+        .filter(n => Number.isInteger(n) && n > 0);
+      payload.helka = helkaNums.length ? helkaNums : null;
       onUpdate(payload);
       setLandDraft(null);
     }, DEBOUNCE_DELAY_MS);
@@ -218,11 +227,15 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
               {LAND_FIELDS.map(f => (
                 <div key={f.key} className="form-group">
                   <label>{f.label}</label>
-                  <input
-                    type="text"
-                    value={land[f.key] ?? ''}
-                    onChange={(e) => updateLand(f.key, e.target.value)}
-                  />
+                  {f.key === 'helka' ? (
+                    <HelkaList values={land.helka} onChange={(vals) => updateLand('helka', vals)} />
+                  ) : (
+                    <input
+                      type="text"
+                      value={land[f.key] ?? ''}
+                      onChange={(e) => updateLand(f.key, e.target.value)}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -248,7 +261,11 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
               {LAND_FIELDS.map(f => (
                 <div key={f.key} className="detail-row">
                   <span className="detail-label">{f.label}</span>
-                  <span>{land[f.key] || <span className="muted">—</span>}</span>
+                  <span>
+                    {f.key === 'helka'
+                      ? (land.helka.filter(Boolean).join(', ') || <span className="muted">—</span>)
+                      : (land[f.key] || <span className="muted">—</span>)}
+                  </span>
                 </div>
               ))}
             </InfoCard>
