@@ -9,6 +9,7 @@ import ClientForm from './components/ClientForm';
 import Inbox from './components/Inbox';
 import ColumnFilterButton from './components/ColumnFilterButton';
 import SettingsView from './components/SettingsView';
+import PriorityDot from './components/PriorityDot';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
 import { getCurrentPlanningStageLabel } from './components/PlanningTab';
 import { useNotifications } from './notifications/useNotifications';
@@ -19,7 +20,7 @@ import {
   TABLE_CLIENTS, TABLE_ROW_REMINDERS,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
-  FILE_LINK_2_PATH,
+  FILE_LINK_2_PATH, ROLE_MANAGER,
 } from './constants';
 
 // Maps a reminder's section_key to the tab + licensing phase to navigate to.
@@ -41,7 +42,8 @@ const EMPTY_FORM = {
 };
 
 export default function App() {
-  const { officeId, isViewer } = useAuth();
+  const { officeId, isViewer, isAdmin, userRole } = useAuth();
+  const canEditPriority = isAdmin || userRole === ROLE_MANAGER;
 
   // ── DATA ──
   const [clients, setClients] = useState([]);
@@ -367,6 +369,7 @@ export default function App() {
                         </ColumnFilterButton>
                       </div>
                     </th>
+                    <th>עדיפות</th>
                     <th>עיר</th>
                     <th>גוש / חלקה</th>
                     <th>
@@ -415,6 +418,13 @@ export default function App() {
                             </div>
                           )}
                         </div>
+                      </td>
+                      <td>
+                        <PriorityDot
+                          value={client.priority}
+                          editable={canEditPriority}
+                          onChange={(v) => handleUpdateClient(client.id, { priority: v })}
+                        />
                       </td>
                       <td className="cell-secondary">{client.city || '—'}</td>
                       <td className="cell-plot">

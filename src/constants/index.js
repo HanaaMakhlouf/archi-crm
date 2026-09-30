@@ -203,6 +203,18 @@ export const ROLE_MANAGER = 'manager';
 export const ROLE_USER = 'user';
 export const ROLE_VIEWER = 'viewer'; // read-only: can view everything, cannot edit or add users
 
+// ── CLIENT PRIORITY ── (managers/admins only — see App.js)
+export const PRIORITY_GREEN = 'green';
+export const PRIORITY_YELLOW = 'yellow';
+export const PRIORITY_ORANGE = 'orange';
+export const PRIORITY_RED = 'red';
+export const PRIORITY_OPTIONS = [
+  { value: PRIORITY_GREEN,  label: 'נמוכה',  color: '#22c55e' },
+  { value: PRIORITY_YELLOW, label: 'בינונית', color: '#eab308' },
+  { value: PRIORITY_ORANGE, label: 'גבוהה',  color: '#f97316' },
+  { value: PRIORITY_RED,    label: 'דחופה',  color: '#ef4444' },
+];
+
 // ── SHARED FIELD GROUPS ──
 // Land/property fields that live directly on the client row (single source of truth
 // for the property info shown/edited from Licensing and Detailed tabs).
