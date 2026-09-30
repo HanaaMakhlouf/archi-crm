@@ -15,7 +15,7 @@ import {
 
 // ── Column / option definitions ──
 
-const HACHANA_OPTIONS = [
+export const HACHANA_OPTIONS = [
   { value: DETAILED_HACHANA_BE_TIPUL, label: 'בטיפול' },
   { value: DETAILED_HACHANA_KEN,      label: 'כן' },
   { value: DETAILED_HACHANA_LO,       label: 'לא' },
@@ -26,7 +26,7 @@ const HACHANA_COLORS = {
   [DETAILED_HACHANA_LO]:       'red',
 };
 
-const HAFKADA_ISHUR_OPTIONS = [
+export const HAFKADA_ISHUR_OPTIONS = [
   { value: DETAILED_SHUBATS,    label: 'שובץ' },
   { value: DETAILED_LO_SHUBATS, label: 'לא שובץ' },
 ];
@@ -35,7 +35,7 @@ const HAFKADA_ISHUR_COLORS = {
   [DETAILED_LO_SHUBATS]: 'red',
 };
 
-const PIRSOOM_OPTIONS = [
+export const PIRSOOM_OPTIONS = [
   { value: DETAILED_LO_NISHLACH, label: 'לא נשלח' },
   { value: DETAILED_NISHLACH,    label: 'נשלח' },
   { value: DETAILED_HITKABEL,    label: 'התקבל' },

@@ -10,7 +10,7 @@ import {
 
 // ── Status options ──
 
-const OFFER_OPTIONS = [
+export const OFFER_OPTIONS = [
   { value: 'not_required',   label: 'לא נדרש' },
   { value: STATUS_NOT_STARTED, label: 'לא התחלנו' },
   { value: STATUS_IN_PROGRESS, label: 'בסדר עבודה' },
@@ -25,7 +25,7 @@ const OFFER_COLORS = {
   [STATUS_AGREED]:      'green',
 };
 
-const DISCIPLINE_OPTIONS = [
+export const DISCIPLINE_OPTIONS = [
   { value: 'not_required',   label: 'לא נדרש' },
   { value: STATUS_NOT_READY, label: 'לא מוכן' },
   { value: STATUS_READY,     label: 'מוכן' },

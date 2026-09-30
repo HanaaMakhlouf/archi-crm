@@ -12,6 +12,7 @@ import SettingsView from './components/SettingsView';
 import PriorityDot from './components/PriorityDot';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
 import { getCurrentPlanningStageLabel } from './components/PlanningTab';
+import { describeClientChange, formatRelativeTime } from './utils/changeSummary';
 import { useNotifications } from './notifications/useNotifications';
 import {
   LABEL_NEW, LABEL_PERMANENT, LABEL_INACTIVE, LABEL_OPTIONS,
@@ -135,7 +136,12 @@ export default function App() {
 
   const handleUpdateClient = async (id, updates) => {
     if (isViewer) return;
-    const { error } = await supabase.from(TABLE_CLIENTS).update(updates).eq('id', id);
+    const previousClient = clients.find(c => c.id === id);
+    const summary = describeClientChange(updates, previousClient);
+    const payload = summary
+      ? { ...updates, last_updated_at: new Date().toISOString(), last_change_summary: summary }
+      : updates;
+    const { error } = await supabase.from(TABLE_CLIENTS).update(payload).eq('id', id);
     if (error) {
       console.error('Update client error:', error.message);
     } else {
@@ -417,6 +423,11 @@ export default function App() {
                               תכנון: {getCurrentPlanningStageLabel(client)}
                             </div>
                           )}
+                          <div className="muted" style={{ fontSize: 12 }}>
+                            {client.last_change_summary
+                              ? `עדכון אחרון (${formatRelativeTime(client.last_updated_at)}): ${client.last_change_summary}`
+                              : `לקוח חדש נוסף (${formatRelativeTime(client.created_at)})`}
+                          </div>
                         </div>
                       </td>
                       <td>
@@ -489,6 +500,7 @@ export default function App() {
             form={form}
             setForm={setForm}
             editingId={editingId}
+            editingClient={clients.find(c => c.id === editingId) || null}
             formError={formError}
             setFormError={setFormError}
             onCancel={() => { setView(VIEW_CLIENTS); setEditingId(null); }}

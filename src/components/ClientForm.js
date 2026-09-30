@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import HelkaList from './HelkaList';
+import { describeClientChange } from '../utils/changeSummary';
 import {
   TABLE_CLIENTS,
 } from '../constants';
@@ -10,6 +11,7 @@ export default function ClientForm({
   form,
   setForm,
   editingId,
+  editingClient,
   formError,
   setFormError,
   onCancel,
@@ -85,9 +87,16 @@ export default function ClientForm({
       type_attributes: form.type_attributes,
       ...(form.planning_data && { planning_data: form.planning_data }),
     };
-    const { error } = editingId
-      ? await supabase.from(TABLE_CLIENTS).update(payload).eq('id', editingId)
-      : await supabase.from(TABLE_CLIENTS).insert([{ ...payload, office_id: officeId }]);
+    let error;
+    if (editingId) {
+      const summary = describeClientChange(payload, editingClient);
+      const updatePayload = summary
+        ? { ...payload, last_updated_at: new Date().toISOString(), last_change_summary: summary }
+        : payload;
+      ({ error } = await supabase.from(TABLE_CLIENTS).update(updatePayload).eq('id', editingId));
+    } else {
+      ({ error } = await supabase.from(TABLE_CLIENTS).insert([{ ...payload, office_id: officeId }]));
+    }
     setSaving(false);
 
     if (error) {
