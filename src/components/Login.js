@@ -9,6 +9,7 @@ let pendingError = '';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
   const [officeName, setOfficeName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(() => { const e = pendingError; pendingError = ''; return e; });
@@ -98,15 +99,28 @@ export default function Login() {
 
           <div className="form-group">
             <label htmlFor="password">סיסמה</label>
-            <input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                id="password"
+                type={showPw ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
+                style={{ paddingLeft: 40, width: '100%', boxSizing: 'border-box' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(v => !v)}
+                style={{
+                  position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', color: '#999', padding: 0,
+                }}
+              >
+                {showPw ? '🙈' : '👁'}
+              </button>
+            </div>
           </div>
 
           <div className="form-group">
