@@ -1,15 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import { PRIORITY_OPTIONS } from '../constants';
+import { PRIORITY_OPTIONS, PRIORITY_GREEN } from '../constants';
 
 // Small color-coded priority dot. Read-only for most roles; when `editable`,
 // clicking it opens a small custom popover (colored dot + label per option) —
-// no native <select> chrome, matches the app's own look.
+// no native <select> chrome, matches the app's own look. Every client always
+// has a priority (defaults to green/low in the DB), so there's no "unset" state.
 export default function PriorityDot({ value, editable, onChange, size = 14 }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
-  const opt = PRIORITY_OPTIONS.find(o => o.value === value);
-  const color = opt?.color || '#d1d5db';
-  const title = opt?.label || 'לא הוגדרה עדיפות';
+  const opt = PRIORITY_OPTIONS.find(o => o.value === value) || PRIORITY_OPTIONS.find(o => o.value === PRIORITY_GREEN);
 
   useEffect(() => {
     if (!open) return;
@@ -20,29 +19,26 @@ export default function PriorityDot({ value, editable, onChange, size = 14 }) {
     return () => document.removeEventListener('mousedown', onDocClick);
   }, [open]);
 
-  const dot = (color2, dashed) => (
+  const dot = (c) => (
     <span style={{
       display: 'inline-block', width: size, height: size, borderRadius: '50%',
-      background: dashed ? 'transparent' : color2, border: dashed ? '1px dashed #9ca3af' : 'none',
-      flexShrink: 0,
+      background: c, flexShrink: 0,
     }} />
   );
 
   if (!editable) {
-    return <span title={title}>{dot(color, !value)}</span>;
+    return <span title={opt.label}>{dot(opt.color)}</span>;
   }
-
-  const pick = (v) => { onChange(v); setOpen(false); };
 
   return (
     <span ref={wrapRef} style={{ position: 'relative', display: 'inline-block' }} onClick={e => e.stopPropagation()}>
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        title={title}
+        title={opt.label}
         style={{ background: 'none', border: 'none', padding: 4, margin: -4, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
       >
-        {dot(color, !value)}
+        {dot(opt.color)}
       </button>
       {open && (
         <div style={{
@@ -53,25 +49,14 @@ export default function PriorityDot({ value, editable, onChange, size = 14 }) {
           {PRIORITY_OPTIONS.map(o => (
             <div
               key={o.value}
-              onClick={() => pick(o.value)}
+              onClick={() => { onChange(o.value); setOpen(false); }}
               className="priority-menu-item"
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 13 }}
             >
-              {dot(o.color, false)}
+              {dot(o.color)}
               {o.label}
             </div>
           ))}
-          <div
-            onClick={() => pick(null)}
-            className="priority-menu-item"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
-              fontSize: 13, color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', marginTop: 2, paddingTop: 8,
-            }}
-          >
-            {dot(null, true)}
-            לא הוגדר
-          </div>
         </div>
       )}
     </span>

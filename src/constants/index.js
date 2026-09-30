@@ -209,10 +209,10 @@ export const PRIORITY_YELLOW = 'yellow';
 export const PRIORITY_ORANGE = 'orange';
 export const PRIORITY_RED = 'red';
 export const PRIORITY_OPTIONS = [
-  { value: PRIORITY_GREEN,  label: 'נמוכה',  color: '#22c55e' },
-  { value: PRIORITY_YELLOW, label: 'בינונית', color: '#facc15' },
-  { value: PRIORITY_ORANGE, label: 'גבוהה',  color: '#ea580c' },
-  { value: PRIORITY_RED,    label: 'דחופה',  color: '#dc2626' },
+  { value: PRIORITY_GREEN,  label: 'נמוכה',  color: '#2e7d32' },
+  { value: PRIORITY_YELLOW, label: 'בינונית', color: '#fbc02d' },
+  { value: PRIORITY_ORANGE, label: 'גבוהה',  color: '#ef6c00' },
+  { value: PRIORITY_RED,    label: 'דחופה',  color: '#c62828' },
 ];
 
 // ── SHARED FIELD GROUPS ──
