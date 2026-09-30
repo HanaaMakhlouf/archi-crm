@@ -109,6 +109,17 @@ const buildInitialPd = (client) => {
   };
 };
 
+// For the clients list: which planning stage this client is currently at
+// (furthest table in progress — visualization only once the offer is agreed).
+export function getCurrentPlanningStageLabel(client) {
+  const pd = buildInitialPd(client);
+  const label = (status) => OFFER_OPTIONS.find(o => o.value === status)?.label || '';
+  if (pd.tables.offer.status !== STATUS_AGREED) {
+    return `הצעה - ${label(pd.tables.offer.status)}`;
+  }
+  return `הדמיה - ${label(pd.tables.visualization.status)}`;
+}
+
 // ── Component ──
 
 export default function PlanningTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {

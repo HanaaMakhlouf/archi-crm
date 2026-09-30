@@ -9,6 +9,8 @@ import ClientForm from './components/ClientForm';
 import Inbox from './components/Inbox';
 import ColumnFilterButton from './components/ColumnFilterButton';
 import SettingsView from './components/SettingsView';
+import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
+import { getCurrentPlanningStageLabel } from './components/PlanningTab';
 import { useNotifications } from './notifications/useNotifications';
 import {
   LABEL_NEW, LABEL_PERMANENT, LABEL_INACTIVE, LABEL_OPTIONS,
@@ -393,12 +395,26 @@ export default function App() {
                       className="clients-table-row"
                     >
                       <td className="cell-name">
-                        {client.name}
-                        {client.label !== LABEL_PERMANENT && (
-                          <span className={`label-badge ${getLabelClass(client.label)}`}>
-                            {client.label}
-                          </span>
-                        )}
+                        <div>
+                          <div>
+                            {client.name}
+                            {client.label !== LABEL_PERMANENT && (
+                              <span className={`label-badge ${getLabelClass(client.label)}`}>
+                                {client.label}
+                              </span>
+                            )}
+                          </div>
+                          {(client.client_type || []).includes(TYPE_LICENSING) && (
+                            <div className="muted" style={{ fontSize: 12 }}>
+                              רישוי: {getCurrentLicensingPhaseLabel(client)}
+                            </div>
+                          )}
+                          {(client.client_type || []).includes(TYPE_PLANNING) && (
+                            <div className="muted" style={{ fontSize: 12 }}>
+                              תכנון: {getCurrentPlanningStageLabel(client)}
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="cell-secondary">{client.city || '—'}</td>
                       <td className="cell-plot">

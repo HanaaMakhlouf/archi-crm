@@ -10,6 +10,7 @@ import {
   FIELD_LICENSING_DATA,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
+  LICENSING_PHASES,
   LICENSING_DOCUMENTS,
   DOC_STATUS_MISSING,
   INFO_NOTE_NOT_SENT,
@@ -116,6 +117,12 @@ const computeCurrentPhase = (ld) => {
   if (!conditionsComplete) return LICENSING_PHASE_CONDITIONS;
   return LICENSING_PHASE_CONFIRMATION;
 };
+
+// For the clients list: which licensing phase this client is currently at.
+export function getCurrentLicensingPhaseLabel(client) {
+  const phaseKey = computeCurrentPhase(buildInitialLd(client));
+  return LICENSING_PHASES.find(p => p.key === phaseKey)?.label || '';
+}
 
 export default function LicensingTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {
   const [ld, setLd] = useState(() => buildInitialLd(client));
