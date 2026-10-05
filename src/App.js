@@ -43,6 +43,16 @@ const EMPTY_FORM = {
   planning_data: {},
 };
 
+const NAV_STORAGE_KEY = 'nav_state';
+
+function readSavedNav() {
+  try {
+    return JSON.parse(sessionStorage.getItem(NAV_STORAGE_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
 export default function App() {
   const { officeId, isViewer, isAdmin, userRole } = useAuth();
   const canEditPriority = isAdmin || userRole === ROLE_MANAGER;
@@ -52,7 +62,13 @@ export default function App() {
   const [reminders, setReminders] = useState([]);
 
   // ── NAVIGATION / VIEW ──
-  const [view, setView] = useState(VIEW_CLIENTS);
+  // The current page survives a refresh (per browser tab). An unsaved form
+  // can't be restored, so a refresh mid-edit lands on that client's page.
+  const [view, setView] = useState(() => {
+    const { view: v, clientId } = readSavedNav();
+    if (v === VIEW_FORM) return clientId ? VIEW_DETAIL : VIEW_CLIENTS;
+    return v || VIEW_CLIENTS;
+  });
   const [selectedClient, setSelectedClient] = useState(null);
   const [initialTab, setInitialTab] = useState(null); // set when navigating from Inbox
 
@@ -99,6 +115,21 @@ export default function App() {
       return fresh || prev;
     });
   }, [clients]);
+
+  // After a refresh on a client's page, re-select that client once loaded.
+  useEffect(() => {
+    if (loading || view !== VIEW_DETAIL || selectedClient) return;
+    const saved = clients.find(c => c.id === readSavedNav().clientId);
+    if (saved) setSelectedClient(saved);
+    else setView(VIEW_CLIENTS); // client was deleted or belongs to another office
+  }, [loading, view, selectedClient, clients]);
+
+  useEffect(() => {
+    const clientId = view === VIEW_FORM ? editingId : selectedClient?.id;
+    try {
+      sessionStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ view, clientId: clientId || null }));
+    } catch { /* storage unavailable — just don't persist */ }
+  }, [view, selectedClient, editingId]);
 
   const openForm = (client = null) => {
     if (client) {

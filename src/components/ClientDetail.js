@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PlanningTab from './PlanningTab';
 import LicensingTab from './LicensingTab';
 import DetailedTab from './DetailedTab';
@@ -22,7 +22,18 @@ export default function ClientDetail({
   onClearReminders,
   initialTab,
 }) {
-  const [activeTab, setActiveTab] = useState(initialTab || TAB_GENERAL);
+  const tabStorageKey = `client_tab_${client.id}`;
+  const [activeTab, setActiveTab] = useState(() => {
+    if (initialTab) return initialTab;
+    let saved = null;
+    try { saved = sessionStorage.getItem(tabStorageKey); } catch { /* storage unavailable */ }
+    // Only restore a work-type tab the client still has.
+    return saved && (saved === TAB_GENERAL || (client.client_type || []).includes(saved)) ? saved : TAB_GENERAL;
+  });
+
+  useEffect(() => {
+    try { sessionStorage.setItem(tabStorageKey, activeTab); } catch { /* storage unavailable */ }
+  }, [tabStorageKey, activeTab]);
   const { userRole, isAdmin, isViewer } = useAuth();
   const canSeeFiles = isAdmin || userRole === ROLE_MANAGER;
 

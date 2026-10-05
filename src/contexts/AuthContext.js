@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let active = true;
     let profileRequest = 0;
+    let loadedUserId = null;
 
     const resolveSession = async (session) => {
       const requestId = ++profileRequest;
@@ -20,13 +21,17 @@ export function AuthProvider({ children }) {
       setUser(nextUser);
 
       if (!nextUser) {
+        loadedUserId = null;
         setOfficeId(null);
         setUserRole(ROLE_USER);
         setLoading(false);
         return;
       }
 
-      setLoading(true);
+      // Token refreshes and tab re-focus re-fire auth events for the same
+      // user. Only show the loading screen for a genuinely new login —
+      // flipping to loading unmounts the app and resets the current page.
+      if (nextUser.id !== loadedUserId) setLoading(true);
       const { data } = await supabase
         .from('profiles')
         .select('office_id, role')
@@ -36,6 +41,7 @@ export function AuthProvider({ children }) {
       if (!active || requestId !== profileRequest) return;
       setOfficeId(data?.office_id || null);
       setUserRole(data?.role || ROLE_USER);
+      loadedUserId = nextUser.id;
       setLoading(false);
     };
 
