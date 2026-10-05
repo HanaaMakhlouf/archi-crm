@@ -15,7 +15,12 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const [officeName, setOfficeName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(() => { const e = pendingError; pendingError = ''; return e; });
+  const [error, setError] = useState(() => {
+    const e = pendingError || authMsg.error;
+    pendingError = '';
+    authMsg.error = '';
+    return e;
+  });
   const [success] = useState(() => { const s = authMsg.success; authMsg.success = ''; return s; });
 
   useEffect(() => {

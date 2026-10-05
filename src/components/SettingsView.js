@@ -138,6 +138,7 @@ export default function SettingsView() {
       {inviteSentTo && (
         <div className="login-success" style={{ marginBottom: 16 }}>
           נשלחה הזמנה ל-{inviteSentTo}. העובד יקבל אימייל עם קישור לאימות הכתובת ולבחירת סיסמה.
+          אם האימייל לא הגיע תוך כמה דקות — כדאי לבדוק בתיקיית הספאם.
         </div>
       )}
 
