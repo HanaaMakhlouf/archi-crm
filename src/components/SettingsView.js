@@ -47,10 +47,10 @@ export default function SettingsView() {
   const [error, setError] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newEmail, setNewEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState(ROLE_USER);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState(null);
+  const [inviteSentTo, setInviteSentTo] = useState(null);
   const [actionError, setActionError] = useState(null);
 
   const fetchUsers = useCallback(async () => {
@@ -69,18 +69,18 @@ export default function SettingsView() {
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (!newEmail.trim() || !newPassword.trim()) return;
+    if (!newEmail.trim()) return;
     setAdding(true);
     setAddError(null);
+    setInviteSentTo(null);
     try {
       await callAdminUsers('create', {
         email: newEmail.trim(),
-        password: newPassword,
         role: newRole,
         officeId,
       });
+      setInviteSentTo(newEmail.trim());
       setNewEmail('');
-      setNewPassword('');
       setNewRole(ROLE_USER);
       setShowAddForm(false);
       await fetchUsers();
@@ -122,35 +122,30 @@ export default function SettingsView() {
         <div className="page-actions">
           <button
             className={`btn ${showAddForm ? 'btn-ghost' : 'btn-primary'}`}
-            onClick={() => { setShowAddForm(s => !s); setAddError(null); }}
+            onClick={() => { setShowAddForm(s => !s); setAddError(null); setInviteSentTo(null); }}
           >
-            {showAddForm ? 'ביטול' : '+ הוספת עובד'}
+            {showAddForm ? 'ביטול' : '+ הזמנת עובד'}
           </button>
         </div>
       </div>
 
+      {inviteSentTo && (
+        <div className="login-success" style={{ marginBottom: 16 }}>
+          נשלחה הזמנה ל-{inviteSentTo}. העובד יקבל אימייל עם קישור לאימות הכתובת ולבחירת סיסמה.
+        </div>
+      )}
+
       {showAddForm && (
         <form className="detail-section" style={{ marginBottom: 16 }} onSubmit={handleAddUser}>
-          <h3 className="detail-section-title">הוספת עובד חדש</h3>
+          <h3 className="detail-section-title">הזמנת עובד חדש</h3>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div className="form-group" style={{ flex: 2, minWidth: 200 }}>
+            <div className="form-group" style={{ flex: 2, minWidth: 220 }}>
               <label>אימייל</label>
               <input
                 type="email"
                 value={newEmail}
                 onChange={e => setNewEmail(e.target.value)}
                 placeholder="worker@example.com"
-                required
-              />
-            </div>
-            <div className="form-group" style={{ flex: 2, minWidth: 160 }}>
-              <label>סיסמה</label>
-              <input
-                type="text"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder="לפחות 6 תווים"
-                minLength={6}
                 required
               />
             </div>
@@ -163,12 +158,12 @@ export default function SettingsView() {
               </select>
             </div>
             <button className="btn btn-primary" type="submit" disabled={adding} style={{ marginBottom: 16 }}>
-              {adding ? '...' : 'הוסף עובד'}
+              {adding ? 'שולח...' : 'שליחת הזמנה'}
             </button>
           </div>
           {addError && <p style={{ color: 'var(--color-error)', marginTop: 8, fontSize: 13 }}>{addError}</p>}
           <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-            העובד יוכל להתחבר מיד עם האימייל והסיסמה שהוגדרו כאן.
+            העובד יקבל אימייל לאימות הכתובת ויבחר סיסמה בעצמו. עד אז יופיע ברשימה כ״ממתין לאישור״.
           </p>
         </form>
       )}
@@ -202,7 +197,12 @@ export default function SettingsView() {
                   const editable = canAct(userRole, u.role);
                   return (
                     <tr key={u.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                      <td style={{ padding: '10px 12px', fontSize: 14 }}>{u.email}</td>
+                      <td style={{ padding: '10px 12px', fontSize: 14 }}>
+                        {u.email}
+                        {u.pending && (
+                          <span className="label-badge label-inactive" style={{ marginRight: 8 }}>ממתין לאישור</span>
+                        )}
+                      </td>
                       <td style={{ padding: '10px 12px' }}>
                         {editable ? (
                           <select

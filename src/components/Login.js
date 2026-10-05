@@ -45,6 +45,11 @@ export default function Login() {
       // Office is assigned once, on first login only — otherwise a user
       // could move themselves between offices just by typing a new name.
       if (!existingProfile?.office_id) {
+        if (!officeName.trim()) {
+          pendingError = 'בכניסה הראשונה יש להזין את שם המשרד';
+          await supabase.auth.signOut();
+          return;
+        }
         const { data: officeData, error: officeError } = await supabase
           .from('offices')
           .select('id')
@@ -148,7 +153,7 @@ export default function Login() {
             <button
               type="submit"
               className="btn btn-primary btn-large"
-              disabled={loading || !email || !password || !officeName.trim()}
+              disabled={loading || !email || !password}
             >
               {loading ? 'מתחבר...' : 'כניסה למערכת'}
             </button>
