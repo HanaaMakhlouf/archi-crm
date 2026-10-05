@@ -4,6 +4,7 @@ import LicensingTab from './LicensingTab';
 import DetailedTab from './DetailedTab';
 import QuickFileLinks from './QuickFileLinks';
 import { useAuth } from '../contexts/AuthContext';
+import Icon, { getInitials } from './Icon';
 import {
   LABEL_NEW, LABEL_INACTIVE,
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
@@ -28,24 +29,35 @@ export default function ClientDetail({
   return (
     <>
       <div className="page-header">
-        <div>
-          <h1 className="page-title">{client.name}</h1>
-          {(client.label === LABEL_NEW || client.label === LABEL_INACTIVE) && (
-            <span className={`badge ${getLabelClass(client.label)}`}>
-              {client.label}
-            </span>
-          )}
+        <div className="detail-identity">
+          <div className="client-avatar client-avatar-lg">{getInitials(client.name)}</div>
+          <div style={{ minWidth: 0 }}>
+            <div className="page-eyebrow"><strong>לקוחות</strong> / פרופיל לקוח</div>
+            <h1 className="page-title">
+              {client.name}
+              {(client.label === LABEL_NEW || client.label === LABEL_INACTIVE) && (
+                <span className={`label-badge ${getLabelClass(client.label)}`}>{client.label}</span>
+              )}
+            </h1>
+            <div className="detail-meta">
+              {client.city && <span className="detail-meta-item"><Icon name="mapPin" size={14} />{client.city}</span>}
+              {client.phone && <span className="detail-meta-item" dir="ltr"><Icon name="phone" size={14} />{client.phone}</span>}
+              {(client.client_type || []).map(t => <span key={t} className="type-tag">{t}</span>)}
+            </div>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="page-actions">
+          <button className="btn btn-ghost" onClick={onBack}>
+            <Icon name="arrowRight" size={16} />
+            חזרה
+          </button>
           {!isViewer && (
-            <button className="btn btn-ghost" onClick={onEdit}>
-              ✏️ עריכה
+            <button className="btn btn-primary" onClick={onEdit}>
+              <Icon name="edit" size={16} />
+              עריכת פרטים
             </button>
           )}
-          <button className="btn btn-ghost" onClick={onBack}>
-            חזרה ←
-          </button>
         </div>
       </div>
 

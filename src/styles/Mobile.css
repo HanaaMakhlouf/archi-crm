@@ -69,12 +69,32 @@
     padding-top: 8px;
   }
 
-  .row-actions .btn-ghost {
-    min-height: 40px;
-    min-width: 40px;
-    font-size: 16px;
-    padding: 6px 10px;
+  .row-actions .icon-btn {
+    width: 40px;
+    height: 40px;
+    border-color: var(--color-border);
   }
+
+  /* Table card wrapper: let the row-cards carry the chrome */
+  .table-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .list-toolbar {
+    padding: 0 0 12px;
+    border-bottom: none;
+  }
+
+  .search-bar {
+    min-width: 0;
+    width: 100%;
+    background: var(--color-surface);
+  }
+
+  .client-cell { min-width: 0; }
 }
 
 /* ── docs-table (StatusTable): card layout on mobile ── */
@@ -221,8 +241,11 @@
   .client-form  { padding: 18px 14px; }
   .detail-section { padding: 14px 16px; }
   .licensing-tab .detail-section { padding: 16px; }
-  .page-title   { font-size: 20px; }
-  .page-header  { flex-direction: column; gap: 12px; }
+  .page-title   { font-size: 22px; }
+  .page-header  { flex-direction: column; align-items: stretch; gap: 14px; }
+  .page-actions { flex-wrap: wrap; }
+  .detail-identity { align-items: flex-start; }
+  .client-avatar-lg { width: 48px; height: 48px; font-size: 18px; }
 
   /* ── Touch targets ── */
   .btn        { min-height: 44px; }
@@ -233,11 +256,14 @@
   .filter-bar        { flex-direction: column; align-items: stretch; }
   .filter-bar select { width: 100%; }
 
-  /* ── Login ── */
-  .login-box { padding: 24px 20px; }
+  /* ── Login card (set-password) ── */
+  .login-box { padding: 28px 20px; }
 
-  /* ── Clients stats row: wrap ── */
-  .clients-stats-row { flex-wrap: wrap; gap: 10px; }
+  /* ── Clients stats row: 2 per row ── */
+  .clients-stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .client-stat { padding: 14px; gap: 10px; }
+  .stat-icon { width: 38px; height: 38px; }
+  .client-stat .stat-number { font-size: 22px; }
 
   /* ── Sub-tabs: wrap ── */
   .sub-tabs { flex-wrap: wrap; }

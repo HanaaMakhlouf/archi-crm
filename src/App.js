@@ -10,6 +10,7 @@ import Inbox from './components/Inbox';
 import ColumnFilterButton from './components/ColumnFilterButton';
 import SettingsView from './components/SettingsView';
 import PriorityDot from './components/PriorityDot';
+import Icon, { getInitials } from './components/Icon';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
 import { getCurrentPlanningStageLabel } from './components/PlanningTab';
 import { describeClientChange, formatRelativeTime } from './utils/changeSummary';
@@ -21,7 +22,7 @@ import {
   TABLE_CLIENTS, TABLE_ROW_REMINDERS,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
-  FILE_LINK_2_PATH, ROLE_MANAGER,
+  FILE_LINK_2_PATH, ROLE_MANAGER, PRIORITY_RED,
 } from './constants';
 
 // Maps a reminder's section_key to the tab + licensing phase to navigate to.
@@ -267,6 +268,14 @@ export default function App() {
 
   const permanentCount = useMemo(() => clients.filter(c => c.label === LABEL_PERMANENT).length, [clients]);
   const newCount = useMemo(() => clients.filter(c => c.label === LABEL_NEW).length, [clients]);
+  const urgentCount = useMemo(() => clients.filter(c => c.priority === PRIORITY_RED).length, [clients]);
+
+  const STATS = [
+    { label: 'סה״כ לקוחות', value: clients.length, icon: 'users', tone: '' },
+    { label: 'לקוחות פעילים', value: permanentCount, icon: 'userCheck', tone: 'success' },
+    { label: 'לקוחות חדשים', value: newCount, icon: 'sparkle', tone: 'accent' },
+    { label: 'בעדיפות דחופה', value: urgentCount, icon: 'flag', tone: 'danger' },
+  ];
 
   // RENDER LAYER
   return (
@@ -288,199 +297,213 @@ export default function App() {
             )}
             <div className="page-header">
               <div>
+                <div className="page-eyebrow"><strong>ראשי</strong> / לקוחות</div>
                 <h1 className="page-title">לקוחות</h1>
-                <p className="page-subtitle">{filtered.length} לקוחות נמצאו</p>
+                <p className="page-subtitle">כל תיקי הלקוחות של המשרד, במקום אחד.</p>
               </div>
               {!isViewer && (
-                <button className="btn btn-primary" onClick={() => openForm()}>+ הוסף לקוח</button>
+                <div className="page-actions">
+                  <button className="btn btn-primary" onClick={() => openForm()}>
+                    <Icon name="plus" size={16} strokeWidth={2.4} />
+                    לקוח חדש
+                  </button>
+                </div>
               )}
             </div>
 
-            <div className="search-bar">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input
-                type="text"
-                placeholder="חפש לפי שם או עיר..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-
             <div className="clients-stats-row">
-              <div className="client-stat">
-                <span className="stat-number">{clients.length}</span>
-                <span className="stat-label">סה״כ</span>
-              </div>
-              <div className="client-stat">
-                <span className="stat-number">{permanentCount}</span>
-                <span className="stat-label">קבועים</span>
-              </div>
-              <div className="client-stat">
-                <span className="stat-number">{newCount}</span>
-                <span className="stat-label">חדשים</span>
-              </div>
+              {STATS.map(s => (
+                <div key={s.label} className="client-stat">
+                  <div className={`stat-icon ${s.tone}`}><Icon name={s.icon} size={21} /></div>
+                  <div className="stat-body">
+                    <span className="stat-label">{s.label}</span>
+                    <span className="stat-number">{s.value}</span>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* ── LOADING SKELETON ── */}
-            {loading ? (
-              <div className="loading-state">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="skeleton-card">
-                    <div className="skeleton skeleton-heading" />
-                    <div className="skeleton skeleton-text" />
-                    <div className="skeleton skeleton-text" />
-                  </div>
-                ))}
+            <div className="table-card">
+              <div className="list-toolbar">
+                <div className="list-toolbar-title">
+                  רשימת לקוחות
+                  <span className="list-toolbar-count">{filtered.length} תוצאות</span>
+                </div>
+                <div className="search-bar">
+                  <Icon name="search" size={16} />
+                  <input
+                    type="text"
+                    placeholder="חיפוש לפי שם או עיר..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
+                </div>
               </div>
 
-              /* ── EMPTY STATE ── */
-            ) : filtered.length === 0 ? (
-              <div className="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                </svg>
-                <h3>אין לקוחות עדיין</h3>
-                <p>הוסף את הלקוח הראשון שלך כדי להתחיל</p>
-                {!isViewer && (
-                  <button className="btn btn-primary" onClick={() => openForm()}>הוסף לקוח</button>
-                )}
-              </div>
-
-              /* ── CLIENTS TABLE ── */
-            ) : (
-              <table className="clients-table">
-                <thead>
-                  <tr>
-                    <th>
-                      <div className="th-filter-row">
-                        <span>שם</span>
-                        <ColumnFilterButton active={!!filterLabel || sortBy !== 'date'}>
-                          <div className="form-group">
-                            <label>סטטוס לקוח</label>
-                            <select value={filterLabel} onChange={e => setFilterLabel(e.target.value)}>
-                              <option value="">כל הלקוחות</option>
-                              {LABEL_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                            </select>
-                          </div>
-                          <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>מיון</label>
-                            <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                              <option value="date">תאריך יצירה</option>
-                              <option value="alpha">א-ב</option>
-                            </select>
-                          </div>
-                        </ColumnFilterButton>
-                      </div>
-                    </th>
-                    <th>עדיפות</th>
-                    <th>עיר</th>
-                    <th>גוש / חלקה</th>
-                    <th>
-                      <div className="th-filter-row">
-                        <span>סוג תיק</span>
-                        <ColumnFilterButton active={!!filterType}>
-                          <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label>סוג לקוח</label>
-                            <select value={filterType} onChange={e => setFilterType(e.target.value)}>
-                              <option value="">כל הסוגים</option>
-                              {CLIENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                            </select>
-                          </div>
-                        </ColumnFilterButton>
-                      </div>
-                    </th>
-                    <th>טלפון</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(client => (
-                    <tr
-                      key={client.id}
-                      onClick={() => { setSelectedClient(client); setView(VIEW_DETAIL); }}
-                      className="clients-table-row"
-                    >
-                      <td className="cell-name">
-                        <div>
-                          <div>
-                            {client.name}
-                            {client.label !== LABEL_PERMANENT && (
-                              <span className={`label-badge ${getLabelClass(client.label)}`}>
-                                {client.label}
-                              </span>
-                            )}
-                          </div>
-                          {(client.client_type || []).includes(TYPE_LICENSING) && (
-                            <div className="muted" style={{ fontSize: 12 }}>
-                              רישוי: {getCurrentLicensingPhaseLabel(client)}
-                            </div>
-                          )}
-                          {(client.client_type || []).includes(TYPE_PLANNING) && (
-                            <div className="muted" style={{ fontSize: 12 }}>
-                              תכנון: {getCurrentPlanningStageLabel(client)}
-                            </div>
-                          )}
-                          <div className="muted" style={{ fontSize: 12 }}>
-                            {client.last_change_summary
-                              ? `עדכון אחרון (${formatRelativeTime(client.last_updated_at)}): ${client.last_change_summary}`
-                              : `לקוח חדש נוסף (${formatRelativeTime(client.created_at)})`}
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <PriorityDot
-                          value={client.priority}
-                          editable={canEditPriority}
-                          onChange={(v) => handleUpdateClient(client.id, { priority: v })}
-                        />
-                      </td>
-                      <td className="cell-secondary">{client.city || '—'}</td>
-                      <td className="cell-plot">
-                        {(() => {
-                          const helkaText = client.helka && client.helka.length ? client.helka.join(', ') : '';
-                          return client.gush || helkaText ? `${client.gush || '—'} / ${helkaText || '—'}` : '—';
-                        })()}
-                      </td>
-                      <td>
-                        {(client.client_type || []).length > 0
-                          ? (client.client_type).map(t => (
-                            <span key={t} className="type-tag">{t}</span>
-                          ))
-                          : <span className="cell-secondary">—</span>
-                        }
-                      </td>
-                      <td className="cell-phone">{client.phone || '—'}</td>
-                      <td className="cell-actions" onClick={e => e.stopPropagation()}>
-                        <div className="row-actions">
-                          {client[FILE_LINK_2_PATH] && (
-                            <button
-                              className="btn btn-ghost btn-sm folder-btn folder-btn--set"
-                              onClick={e => { e.stopPropagation(); window.electronAPI?.openFolder(client[FILE_LINK_2_PATH]); }}
-                              title={`פתח תיקייה: ${client[FILE_LINK_2_PATH]}`}
-                            >
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                            </button>
-                          )}
-                          {!isViewer && (
-                            <>
-                              <button className="btn btn-ghost btn-sm" onClick={() => openForm(client)}>✏️</button>
-                              <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(client.id)}>🗑️</button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+              {/* ── LOADING SKELETON ── */}
+              {loading ? (
+                <div className="loading-state" style={{ padding: 18 }}>
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="skeleton-card">
+                      <div className="skeleton skeleton-heading" />
+                      <div className="skeleton skeleton-text" />
+                      <div className="skeleton skeleton-text" />
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            )}
+                </div>
+
+                /* ── EMPTY STATE ── */
+              ) : filtered.length === 0 ? (
+                <div className="empty-state">
+                  <Icon name="users" size={48} strokeWidth={1.5} />
+                  <h3>{clients.length === 0 ? 'אין לקוחות עדיין' : 'לא נמצאו לקוחות'}</h3>
+                  <p>{clients.length === 0 ? 'הוסיפו את הלקוח הראשון כדי להתחיל' : 'נסו לשנות את החיפוש או הסינון'}</p>
+                  {!isViewer && clients.length === 0 && (
+                    <button className="btn btn-primary" onClick={() => openForm()}>
+                      <Icon name="plus" size={16} strokeWidth={2.4} />
+                      הוספת לקוח
+                    </button>
+                  )}
+                </div>
+
+                /* ── CLIENTS TABLE ── */
+              ) : (
+                <table className="clients-table">
+                  <thead>
+                    <tr>
+                      <th>
+                        <div className="th-filter-row">
+                          <span>לקוח</span>
+                          <ColumnFilterButton active={!!filterLabel || sortBy !== 'date'}>
+                            <div className="form-group">
+                              <label>סטטוס לקוח</label>
+                              <select value={filterLabel} onChange={e => setFilterLabel(e.target.value)}>
+                                <option value="">כל הלקוחות</option>
+                                {LABEL_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                              </select>
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label>מיון</label>
+                              <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+                                <option value="date">תאריך יצירה</option>
+                                <option value="alpha">א-ב</option>
+                              </select>
+                            </div>
+                          </ColumnFilterButton>
+                        </div>
+                      </th>
+                      <th>עדיפות</th>
+                      <th>
+                        <div className="th-filter-row">
+                          <span>סוג תיק</span>
+                          <ColumnFilterButton active={!!filterType}>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label>סוג לקוח</label>
+                              <select value={filterType} onChange={e => setFilterType(e.target.value)}>
+                                <option value="">כל הסוגים</option>
+                                {CLIENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                              </select>
+                            </div>
+                          </ColumnFilterButton>
+                        </div>
+                      </th>
+                      <th>עיר</th>
+                      <th>גוש / חלקה</th>
+                      <th>טלפון</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(client => {
+                      const types = client.client_type || [];
+                      const helkaText = client.helka && client.helka.length ? client.helka.join(', ') : '';
+                      return (
+                        <tr
+                          key={client.id}
+                          onClick={() => { setSelectedClient(client); setView(VIEW_DETAIL); }}
+                          className="clients-table-row"
+                        >
+                          <td className="cell-name">
+                            <div className="client-cell">
+                              <div className="client-avatar">{getInitials(client.name)}</div>
+                              <div>
+                                <div className="client-name">
+                                  {client.name}
+                                  {client.label !== LABEL_PERMANENT && (
+                                    <span className={`label-badge ${getLabelClass(client.label)}`}>
+                                      {client.label}
+                                    </span>
+                                  )}
+                                </div>
+                                {types.includes(TYPE_LICENSING) && (
+                                  <div className="client-sub">
+                                    <span className="client-sub-key">רישוי · </span>{getCurrentLicensingPhaseLabel(client)}
+                                  </div>
+                                )}
+                                {types.includes(TYPE_PLANNING) && (
+                                  <div className="client-sub">
+                                    <span className="client-sub-key">תכנון · </span>{getCurrentPlanningStageLabel(client)}
+                                  </div>
+                                )}
+                                <div className="client-sub-faint">
+                                  {client.last_change_summary
+                                    ? `עודכן ${formatRelativeTime(client.last_updated_at)} · ${client.last_change_summary}`
+                                    : `נוסף ${formatRelativeTime(client.created_at)}`}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <PriorityDot
+                              value={client.priority}
+                              editable={canEditPriority}
+                              onChange={(v) => handleUpdateClient(client.id, { priority: v })}
+                            />
+                          </td>
+                          <td>
+                            {types.length > 0
+                              ? types.map(t => <span key={t} className="type-tag">{t}</span>)
+                              : <span className="muted">—</span>}
+                          </td>
+                          <td className="cell-secondary">{client.city || '—'}</td>
+                          <td className="cell-plot">
+                            {client.gush || helkaText ? `${client.gush || '—'} / ${helkaText || '—'}` : '—'}
+                          </td>
+                          <td className="cell-phone">{client.phone || '—'}</td>
+                          <td className="cell-actions" onClick={e => e.stopPropagation()}>
+                            <div className="row-actions">
+                              {client[FILE_LINK_2_PATH] && (
+                                <button
+                                  className="icon-btn folder-btn--set"
+                                  onClick={() => window.electronAPI?.openFolder(client[FILE_LINK_2_PATH])}
+                                  title={`פתח תיקייה: ${client[FILE_LINK_2_PATH]}`}
+                                >
+                                  <Icon name="folder" size={16} />
+                                </button>
+                              )}
+                              {!isViewer && (
+                                <>
+                                  <button className="icon-btn" onClick={() => openForm(client)} title="עריכה">
+                                    <Icon name="edit" size={16} />
+                                  </button>
+                                  <button className="icon-btn danger" onClick={() => handleDelete(client.id)} title="מחיקה">
+                                    <Icon name="trash" size={16} />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </>
         )}
 
-        {/* ── OTHER VIEWS (unchanged) ── */}
+        {/* ── OTHER VIEWS ── */}
         {view === VIEW_DETAIL && selectedClient && (
           <ClientDetail
             key={selectedClient.id}

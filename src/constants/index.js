@@ -202,6 +202,11 @@ export const ROLE_ADMIN = 'admin';
 export const ROLE_MANAGER = 'manager';
 export const ROLE_USER = 'user';
 export const ROLE_VIEWER = 'viewer'; // read-only: can view everything, cannot edit or add users
+export const ROLE_LABELS = { [ROLE_USER]: 'עובד', [ROLE_VIEWER]: 'צופה', [ROLE_MANAGER]: 'מנהל', [ROLE_ADMIN]: 'אדמין' };
+
+// ── BRANDING ── (change per customer when white-labeling the product)
+export const BRAND_NAME = 'משרד פלוס';
+export const BRAND_TAGLINE = 'ניהול משרד פשוט וברור';
 
 // ── CLIENT PRIORITY ── (managers/admins only — see App.js)
 export const PRIORITY_GREEN = 'green';

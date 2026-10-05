@@ -1,16 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
-import { ROLE_ADMIN, ROLE_MANAGER, ROLE_USER, ROLE_VIEWER } from '../constants';
+import { ROLE_ADMIN, ROLE_MANAGER, ROLE_USER, ROLE_VIEWER, ROLE_LABELS } from '../constants';
 
-const ROLE_OPTIONS = [
-  { value: ROLE_USER,    label: 'עובד' },
-  { value: ROLE_VIEWER,  label: 'צופה' },
-  { value: ROLE_MANAGER, label: 'מנהל' },
-  { value: ROLE_ADMIN,   label: 'אדמין' },
-];
-
-const ROLE_LABELS = { [ROLE_USER]: 'עובד', [ROLE_VIEWER]: 'צופה', [ROLE_MANAGER]: 'מנהל', [ROLE_ADMIN]: 'אדמין' };
+const ROLE_OPTIONS = [ROLE_USER, ROLE_VIEWER, ROLE_MANAGER, ROLE_ADMIN]
+  .map(value => ({ value, label: ROLE_LABELS[value] }));
 
 function canAct(myRole, targetRole) {
   if (myRole === ROLE_ADMIN) return true;
@@ -121,12 +115,18 @@ export default function SettingsView() {
     <>
       <div className="page-header">
         <div>
-          <h1 className="page-title">הגדרות</h1>
-          <p className="page-subtitle">ניהול משתמשים</p>
+          <div className="page-eyebrow"><strong>ראשי</strong> / הגדרות</div>
+          <h1 className="page-title">ניהול משתמשים</h1>
+          <p className="page-subtitle">הוספת עובדים, הגדרת הרשאות וניהול גישה למערכת.</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setShowAddForm(s => !s); setAddError(null); }}>
-          {showAddForm ? 'ביטול' : '+ הוסף עובד'}
-        </button>
+        <div className="page-actions">
+          <button
+            className={`btn ${showAddForm ? 'btn-ghost' : 'btn-primary'}`}
+            onClick={() => { setShowAddForm(s => !s); setAddError(null); }}
+          >
+            {showAddForm ? 'ביטול' : '+ הוספת עובד'}
+          </button>
+        </div>
       </div>
 
       {showAddForm && (

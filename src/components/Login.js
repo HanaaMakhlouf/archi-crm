@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { authMsg } from '../utils/authMessages';
+import Icon from './Icon';
+import { BRAND_NAME, BRAND_TAGLINE } from '../constants';
+import heroImg from '../assets/login-hero.jpg';
 import '../styles/Login.css';
 
 // Survives component remount (which happens when signOut clears the user)
@@ -72,84 +75,103 @@ export default function Login() {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <h1>מערכת לקוחות</h1>
-        <p className="login-subtitle">התחברות לחשבון</p>
+    <div className="login-page">
 
-        <form onSubmit={handleLogin} className="login-form">
-          {success && (
-            <div style={{ background: '#e6f9ec', color: '#1a7a3a', padding: '12px', borderRadius: 6, fontSize: 14, border: '1px solid #a8ddb5' }}>
-              {success}
-            </div>
-          )}
+      {/* ── Form side ── */}
+      <section className="login-panel">
+        <div className="login-brand">
+          <div className="brand-logo"><Icon name="building" size={20} /></div>
+          <div className="login-brand-text">
+            <span className="login-brand-name">{BRAND_NAME}</span>
+            <span className="login-brand-tagline">{BRAND_TAGLINE}</span>
+          </div>
+        </div>
 
-          <div className="form-group">
-            <label htmlFor="email">דוא״ל</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              required
-            />
+        <div className="login-form-wrap">
+          <div className="login-heading">
+            <h1>ברוכים הבאים</h1>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">סיסמה</label>
-            <div style={{ position: 'relative' }}>
+          <form onSubmit={handleLogin} className="login-form">
+            {success && <div className="login-success">{success}</div>}
+
+            <div className="form-group">
+              <label htmlFor="email">כתובת אימייל</label>
               <input
-                id="password"
-                type={showPw ? 'text' : 'password'}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="name@office.co.il"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
                 required
-                style={{ paddingLeft: 40, width: '100%', boxSizing: 'border-box' }}
               />
-              <button
-                type="button"
-                onClick={() => setShowPw(v => !v)}
-                style={{
-                  position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
-                  background: 'none', border: 'none', cursor: 'pointer', color: '#999', padding: 0,
-                }}
-              >
-                {showPw ? '🙈' : '👁'}
-              </button>
             </div>
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="office">שם המשרד (רק בכניסה ראשונה)</label>
-            <input
-              id="office"
-              type="text"
-              placeholder="הכנס שם משרד"
-              value={officeName}
-              onChange={(e) => setOfficeName(e.target.value)}
-              disabled={loading}
-            />
-          </div>
+            <div className="form-group">
+              <label htmlFor="password">סיסמה</label>
+              <div className="login-password">
+                <input
+                  id="password"
+                  type={showPw ? 'text' : 'password'}
+                  placeholder="הקלידו סיסמה"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+                <button
+                  type="button"
+                  className="login-eye"
+                  onClick={() => setShowPw(v => !v)}
+                  title={showPw ? 'הסתר סיסמה' : 'הצג סיסמה'}
+                >
+                  <Icon name={showPw ? 'eyeOff' : 'eye'} size={18} />
+                </button>
+              </div>
+            </div>
 
-          {error && <div className="error-message">{error}</div>}
+            <div className="form-group">
+              <label htmlFor="office">שם המשרד <span className="login-hint">(בכניסה ראשונה בלבד)</span></label>
+              <input
+                id="office"
+                type="text"
+                placeholder="הקלידו את שם המשרד"
+                value={officeName}
+                onChange={(e) => setOfficeName(e.target.value)}
+                disabled={loading}
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="btn btn-primary btn-large"
-            disabled={loading || !email || !password || !officeName.trim()}
-          >
-            {loading ? 'טוען...' : 'התחברות'}
-          </button>
-        </form>
+            {error && <div className="error-message">{error}</div>}
 
-        <p className="login-note">
-          צור קשר עם מנהל המערכת כדי ליצור חשבון חדש
-        </p>
-      </div>
+            <button
+              type="submit"
+              className="btn btn-primary btn-large"
+              disabled={loading || !email || !password || !officeName.trim()}
+            >
+              {loading ? 'מתחבר...' : 'כניסה למערכת'}
+            </button>
+          </form>
+
+          <p className="login-note">אין לכם חשבון? <strong>פנו למנהל המשרד</strong></p>
+        </div>
+
+        <div className="login-footer">© {new Date().getFullYear()} {BRAND_NAME}</div>
+      </section>
+
+      {/* ── Photo side ── */}
+      <aside className="login-visual" style={{ backgroundImage: `url(${heroImg})` }} aria-hidden="true">
+        <div className="login-visual-caption">
+          <span className="login-visual-date">
+            {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </span>
+          <blockquote>
+            ״אדריכלות היא המשחק המיומן, המדויק והמרהיב של צורות המתחברות באור.״
+          </blockquote>
+          <cite>לה קורבוזיה</cite>
+        </div>
+      </aside>
     </div>
   );
 }

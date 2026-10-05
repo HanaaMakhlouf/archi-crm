@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import HelkaList from './HelkaList';
+import Icon from './Icon';
 import { describeClientChange } from '../utils/changeSummary';
 import {
   TABLE_CLIENTS,
@@ -126,18 +127,19 @@ export default function ClientForm({
     <>
       <div className="page-header">
         <div>
+          <div className="page-eyebrow"><strong>לקוחות</strong> / {editingId ? 'עריכה' : 'לקוח חדש'}</div>
           <h1 className="page-title">
-            {editingId ? 'עריכת לקוח' : 'הוסף לקוח חדש'}
+            {editingId ? 'עריכת לקוח' : 'הוספת לקוח חדש'}
           </h1>
           <p className="page-subtitle">שדות המסומנים ב-* הם חובה</p>
         </div>
 
-        <button
-          className="btn btn-ghost"
-          onClick={handleBack}
-        >
-          חזרה ←
-        </button>
+        <div className="page-actions">
+          <button className="btn btn-ghost" onClick={handleBack}>
+            <Icon name="arrowRight" size={16} />
+            חזרה
+          </button>
+        </div>
       </div>
 
       <form className="client-form" onSubmit={handleSubmit} ref={formRef}>
@@ -285,7 +287,7 @@ export default function ClientForm({
           </button>
 
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'שומר...' : editingId ? 'שמור' : 'הוסף'}
+            {saving ? 'שומר...' : editingId ? 'שמירת שינויים' : 'הוספת לקוח'}
           </button>
         </div>
       </form>

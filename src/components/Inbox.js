@@ -35,8 +35,11 @@ export default function Inbox({ notifications, snoozeNotification, onUpdateRemin
     <>
       <div className="page-header">
         <div>
-          <h1 className="page-title">תיבה נכנסת</h1>
-          <p className="page-subtitle">{notifications.length} התראות</p>
+          <div className="page-eyebrow"><strong>ראשי</strong> / התראות</div>
+          <h1 className="page-title">התראות ועדכונים</h1>
+          <p className="page-subtitle">
+            {notifications.length > 0 ? `${notifications.length} התראות ממתינות לטיפול` : 'הכול מטופל — אין התראות פתוחות'}
+          </p>
         </div>
       </div>
 
