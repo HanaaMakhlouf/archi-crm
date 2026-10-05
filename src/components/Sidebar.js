@@ -7,8 +7,8 @@ import {
 import { useTheme } from '../utils/useTheme';
 import Icon from './Icon';
 
-export default function Sidebar({ view, setView, openForm, notificationCount }) {
-  const { user, logout, isAdmin, isViewer, userRole, officeId, setOfficeId } = useAuth();
+export default function Sidebar({ view, setView, notificationCount }) {
+  const { user, logout, isAdmin, userRole, officeId, setOfficeId } = useAuth();
   const { theme, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [offices, setOffices] = useState([]);
@@ -85,17 +85,6 @@ export default function Sidebar({ view, setView, openForm, notificationCount }) 
               </button>
             )}
           </nav>
-
-          {!isViewer && (
-            <div className="sidebar-cta">
-              <div className="sidebar-cta-title">לקוח חדש?</div>
-              <div className="sidebar-cta-text">פתחו תיק לקוח והתחילו לעקוב אחרי התהליך.</div>
-              <button className="sidebar-new-btn" onClick={() => { openForm(); setMobileOpen(false); }}>
-                <Icon name="plus" size={15} strokeWidth={2.4} />
-                הוספת לקוח
-              </button>
-            </div>
-          )}
         </div>
 
         {/* User section */}

@@ -283,7 +283,6 @@ export default function App() {
       <Sidebar
         view={view}
         setView={setView}
-        openForm={openForm}
         notificationCount={notificationCount}
       />
 
