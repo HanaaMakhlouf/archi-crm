@@ -40,6 +40,9 @@ async function callAdminUsers(action, payload = {}) {
   return data;
 }
 
+const TH = { padding: '8px 12px', fontWeight: 600, fontSize: 13 };
+const TD_MUTED = { padding: '10px 12px', fontSize: 13, color: 'var(--color-text-muted)' };
+
 export default function SettingsView() {
   const { userRole, officeId, isAdmin } = useAuth();
   const [users, setUsers] = useState([]);
@@ -90,6 +93,9 @@ export default function SettingsView() {
     setAdding(false);
   };
 
+  const pendingUsers = users.filter(u => u.pending);
+  const activeUsers = users.filter(u => !u.pending);
+
   const handleRoleChange = async (userId, newRoleVal) => {
     setActionError(null);
     try {
@@ -100,8 +106,8 @@ export default function SettingsView() {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm('למחוק משתמש זה לצמיתות?')) return;
+  const handleDeleteUser = async (userId, confirmMsg = 'למחוק משתמש זה לצמיתות?') => {
+    if (!window.confirm(confirmMsg)) return;
     setActionError(null);
     try {
       await callAdminUsers('delete', { userId });
@@ -163,7 +169,7 @@ export default function SettingsView() {
           </div>
           {addError && <p style={{ color: 'var(--color-error)', marginTop: 8, fontSize: 13 }}>{addError}</p>}
           <p className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-            העובד יקבל אימייל לאימות הכתובת ויבחר סיסמה בעצמו. עד אז יופיע ברשימה כ״ממתין לאישור״.
+            העובד יקבל אימייל לאימות הכתובת ויבחר סיסמה בעצמו. עד אז יופיע בטבלת ״הזמנות ממתינות״.
           </p>
         </form>
       )}
@@ -177,73 +183,109 @@ export default function SettingsView() {
       ) : error ? (
         <p style={{ color: 'var(--color-error)' }}>{error}</p>
       ) : (
-        <div className="detail-section">
-          <h3 className="detail-section-title">משתמשים ({users.length})</h3>
-          {users.length === 0 ? (
-            <p className="muted">אין משתמשים</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'right' }}>
-                  <th style={{ padding: '8px 12px', fontWeight: 600, fontSize: 13 }}>אימייל</th>
-                  <th style={{ padding: '8px 12px', fontWeight: 600, fontSize: 13 }}>תפקיד</th>
-                  {isAdmin && <th style={{ padding: '8px 12px', fontWeight: 600, fontSize: 13 }}>משרד</th>}
-                  <th style={{ padding: '8px 12px', fontWeight: 600, fontSize: 13 }}>תאריך הצטרפות</th>
-                  <th style={{ padding: '8px 12px' }} />
-                </tr>
-              </thead>
-              <tbody>
-                {users.map(u => {
-                  const editable = canAct(userRole, u.role);
-                  return (
+        <>
+          {/* ── Pending invites — only shown while someone hasn't finished signing up ── */}
+          {pendingUsers.length > 0 && (
+            <div className="detail-section" style={{ marginBottom: 16 }}>
+              <h3 className="detail-section-title">הזמנות ממתינות ({pendingUsers.length})</h3>
+              <p className="muted" style={{ fontSize: 12.5, marginBottom: 10 }}>
+                עובדים שהוזמנו וטרם אימתו את האימייל והגדירו סיסמה.
+              </p>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'right' }}>
+                    <th style={TH}>אימייל</th>
+                    <th style={TH}>תפקיד</th>
+                    {isAdmin && <th style={TH}>משרד</th>}
+                    <th style={TH}>נשלחה בתאריך</th>
+                    <th style={{ padding: '8px 12px' }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingUsers.map(u => (
                     <tr key={u.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                      <td style={{ padding: '10px 12px', fontSize: 14 }}>
-                        {u.email}
-                        {u.pending && (
-                          <span className="label-badge label-inactive" style={{ marginRight: 8 }}>ממתין לאישור</span>
-                        )}
-                      </td>
+                      <td style={{ padding: '10px 12px', fontSize: 14 }}>{u.email}</td>
                       <td style={{ padding: '10px 12px' }}>
-                        {editable ? (
-                          <select
-                            value={u.role}
-                            onChange={e => handleRoleChange(u.id, e.target.value)}
-                            style={{ fontSize: 13 }}
-                          >
-                            {allowedRoles(userRole).map(r => (
-                              <option key={r.value} value={r.value}>{r.label}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <span className="type-tag">{ROLE_LABELS[u.role] || u.role}</span>
-                        )}
+                        <span className="type-tag">{ROLE_LABELS[u.role] || u.role}</span>
                       </td>
-                      {isAdmin && (
-                        <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--color-text-muted)' }}>
-                          {u.officeName || '—'}
-                        </td>
-                      )}
-                      <td style={{ padding: '10px 12px', fontSize: 13, color: 'var(--color-text-muted)' }}>
-                        {new Date(u.createdAt).toLocaleDateString('he-IL')}
-                      </td>
+                      {isAdmin && <td style={TD_MUTED}>{u.officeName || '—'}</td>}
+                      <td style={TD_MUTED}>{new Date(u.createdAt).toLocaleDateString('he-IL')}</td>
                       <td style={{ padding: '10px 12px', textAlign: 'left' }}>
-                        {editable && (
+                        {canAct(userRole, u.role) && (
                           <button
                             className="btn btn-ghost btn-sm"
                             style={{ color: 'var(--color-error)' }}
-                            onClick={() => handleDeleteUser(u.id)}
+                            onClick={() => handleDeleteUser(u.id, 'לבטל את ההזמנה? הקישור שנשלח לעובד יפסיק לעבוד.')}
                           >
-                            מחק
+                            ביטול הזמנה
                           </button>
                         )}
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-        </div>
+
+          {/* ── Active users ── */}
+          <div className="detail-section">
+            <h3 className="detail-section-title">משתמשים ({activeUsers.length})</h3>
+            {activeUsers.length === 0 ? (
+              <p className="muted">אין משתמשים</p>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'right' }}>
+                    <th style={TH}>אימייל</th>
+                    <th style={TH}>תפקיד</th>
+                    {isAdmin && <th style={TH}>משרד</th>}
+                    <th style={TH}>תאריך הצטרפות</th>
+                    <th style={{ padding: '8px 12px' }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeUsers.map(u => {
+                    const editable = canAct(userRole, u.role);
+                    return (
+                      <tr key={u.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                        <td style={{ padding: '10px 12px', fontSize: 14 }}>{u.email}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          {editable ? (
+                            <select
+                              value={u.role}
+                              onChange={e => handleRoleChange(u.id, e.target.value)}
+                              style={{ fontSize: 13 }}
+                            >
+                              {allowedRoles(userRole).map(r => (
+                                <option key={r.value} value={r.value}>{r.label}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="type-tag">{ROLE_LABELS[u.role] || u.role}</span>
+                          )}
+                        </td>
+                        {isAdmin && <td style={TD_MUTED}>{u.officeName || '—'}</td>}
+                        <td style={TD_MUTED}>{new Date(u.createdAt).toLocaleDateString('he-IL')}</td>
+                        <td style={{ padding: '10px 12px', textAlign: 'left' }}>
+                          {editable && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              style={{ color: 'var(--color-error)' }}
+                              onClick={() => handleDeleteUser(u.id)}
+                            >
+                              מחק
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </>
       )}
     </>
   );

@@ -31,7 +31,9 @@ export default function SetPassword({ onDone }) {
     if (password !== confirm) { setError('הסיסמאות אינן תואמות'); return; }
 
     setLoading(true);
-    const { error: err } = await supabase.auth.updateUser({ password });
+    // password_set marks the invite as complete — the users list in Settings
+    // shows the worker as pending until this flag exists.
+    const { error: err } = await supabase.auth.updateUser({ password, data: { password_set: true } });
     if (err) { setError(err.message); setLoading(false); return; }
 
     window.history.replaceState(null, '', window.location.pathname);
