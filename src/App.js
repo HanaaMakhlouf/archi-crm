@@ -561,6 +561,13 @@ export default function App() {
             clientTypes={CLIENT_TYPES}
             labelOptions={LABEL_OPTIONS}
             fetchClients={fetchClients}
+            clients={clients}
+            onOpenClient={(client) => {
+              setEditingId(null);
+              setInitialTab(null);
+              setSelectedClient(client);
+              setView(VIEW_DETAIL);
+            }}
           />
         )}
         {view === VIEW_INBOX && (

@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import HelkaList from './HelkaList';
 import Icon from './Icon';
+import ClientNameInput from './ClientNameInput';
 import { describeClientChange } from '../utils/changeSummary';
 import {
   TABLE_CLIENTS,
@@ -20,6 +21,8 @@ export default function ClientForm({
   clientTypes,
   labelOptions,
   fetchClients,
+  clients = [],
+  onOpenClient,
 }) {
   const errorRef = useRef(null);
   const formRef = useRef(null);
@@ -165,13 +168,22 @@ export default function ClientForm({
 
           <div className="form-group">
             <label>שם לקוח *</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={e =>
-                setForm({ ...form, name: e.target.value })
-              }
-            />
+            {editingId ? (
+              <input
+                type="text"
+                value={form.name}
+                onChange={e =>
+                  setForm({ ...form, name: e.target.value })
+                }
+              />
+            ) : (
+              <ClientNameInput
+                value={form.name}
+                onChange={name => setForm({ ...form, name })}
+                clients={clients}
+                onOpenClient={onOpenClient}
+              />
+            )}
           </div>
         </div>
 

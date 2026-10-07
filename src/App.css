@@ -1344,6 +1344,87 @@ textarea {
   background: var(--color-surface-2);
 }
 
+/* ── Client-name suggestions (new client form) ── */
+.suggest-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.suggest-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.suggest-header {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-warning);
+  padding: 6px 8px 8px;
+}
+
+.suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  cursor: pointer;
+  text-align: right;
+  font-family: var(--font-body);
+  color: var(--color-text);
+}
+
+.suggest-item.active {
+  background: var(--color-surface-2);
+}
+
+.suggest-avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 12.5px;
+}
+
+.suggest-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.suggest-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.suggest-name mark {
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+.suggest-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .type-tag-lg {
   font-size: 13px;
   padding: 6px 15px;
