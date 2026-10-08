@@ -21,9 +21,13 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron": "electron .",
-    "electron:dev": "concurrently \"BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:build": "npm run build && electron-builder"
+    "electron": "node scripts/start-electron.js",
+    "electron:dev": "concurrently -k \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && node scripts/start-electron.js\"",
+    "electron:build": "npm run build:electron && electron-builder --win --publish never",
+    "electron:build:mac": "npm run build:electron && electron-builder --mac --publish never",
+    "electron:publish": "npm run build:electron && electron-builder --win --publish always",
+    "build:electron": "cross-env GENERATE_SOURCEMAP=false react-scripts build",
+    "electron:icon": "node scripts/start-electron.js scripts/make-icon.js"
   },
   "eslintConfig": {
     "extends": [
@@ -46,32 +50,62 @@
   "build": {
     "appId": "com.clientmanager.app",
     "productName": "Client Manager",
+    "copyright": "Copyright © 2026 Hanaa Makhlouf",
     "extends": null,
     "extraMetadata": {
       "main": "electron/main.js"
     },
+    "directories": {
+      "output": "dist",
+      "buildResources": "buildResources"
+    },
     "files": [
       "build/**/*",
-      "electron/**/*"
+      "electron/**/*",
+      "buildResources/icon.png",
+      "!**/node_modules/**/*"
     ],
-    "directories": {
-      "output": "dist"
-    },
-    "mac": {
-      "target": "dmg"
-    },
+    "artifactName": "${productName}-Setup-${version}.${ext}",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "HanaaMakhlouf",
+        "repo": "archi-crm",
+        "releaseType": "draft"
+      }
+    ],
     "win": {
-      "target": "nsis"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "buildResources/icon.png"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Client Manager"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.business",
+      "icon": "buildResources/icon.png"
     }
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "cross-env": "^7.0.3",
     "electron": "^33.4.11",
     "electron-builder": "^26.8.1",
     "wait-on": "^9.0.10"
-  }
+  },
+  "description": "משרד פלוס – office and client management",
+  "author": "Hanaa Makhlouf"
 }

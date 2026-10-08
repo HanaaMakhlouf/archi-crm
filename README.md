@@ -140,3 +140,19 @@ Visualization tab is locked until offer reaches `agreed`.
 Run after making changes to catch issues early. Fix errors first, then re-run to verify the score improved.
 
 npx -y react-doctor@latest . --verbose --diff
+
+---
+
+## Desktop App (Electron)
+
+`.env` is baked into the build, so make sure it points at the production Supabase project first.
+
+| Command | What it does |
+|---|---|
+| `npm run electron:dev` | Dev server + Electron window with hot reload |
+| `npm run electron:build` | Windows installer → `dist/Client Manager-Setup-<version>.exe` |
+| `npm run electron:build:mac` | macOS `.dmg` (must run on a Mac) |
+| `npm run electron:publish` | Builds and uploads the installer to a **draft** GitHub Release (needs `GH_TOKEN` with repo scope) |
+| `npm run electron:icon` | Regenerates `buildResources/icon.png` from the brand logo |
+
+Bump `version` in `package.json` before each release. The installer is unsigned, so Windows SmartScreen shows "unknown publisher" until a code-signing certificate is configured (`win.certificateFile` / `CSC_LINK`).
