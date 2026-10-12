@@ -198,6 +198,21 @@ h6 {
   color: var(--color-text-muted);
 }
 
+/* Office logo (see utils/officeBrand.js) — logos are drawn on white, so they
+   sit on a white card in the dark sidebar. */
+.sidebar-brand--office {
+  padding: 16px 14px 14px;
+}
+
+.office-banner {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 6px 8px;
+  background: #fff;
+  border-radius: var(--radius);
+}
+
 .sidebar-body {
   flex: 1;
   overflow-y: auto;

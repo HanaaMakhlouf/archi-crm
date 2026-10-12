@@ -37,6 +37,12 @@
   border-radius: 12px;
 }
 
+.login-office-logo {
+  height: 64px;
+  width: auto;
+  flex-shrink: 0;
+}
+
 .login-brand-text {
   display: flex;
   flex-direction: column;

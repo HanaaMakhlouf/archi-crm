@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { authMsg } from '../utils/authMessages';
 import Icon from './Icon';
 import { BRAND_NAME, BRAND_TAGLINE } from '../constants';
+import { getRememberedBrand } from '../utils/officeBrand';
 import heroImg from '../assets/login-hero.jpg';
 import '../styles/Login.css';
 
@@ -22,6 +23,7 @@ export default function Login() {
     return e;
   });
   const [success] = useState(() => { const s = authMsg.success; authMsg.success = ''; return s; });
+  const [officeBrand] = useState(getRememberedBrand);
 
   useEffect(() => {
     const prev = document.documentElement.getAttribute('data-theme');
@@ -90,10 +92,12 @@ export default function Login() {
       {/* ── Form side ── */}
       <section className="login-panel">
         <div className="login-brand">
-          <div className="brand-logo"><Icon name="building" size={20} /></div>
+          {officeBrand
+            ? <img className="login-office-logo" src={officeBrand.logo} alt="" />
+            : <div className="brand-logo"><Icon name="building" size={20} /></div>}
           <div className="login-brand-text">
-            <span className="login-brand-name">{BRAND_NAME}</span>
-            <span className="login-brand-tagline">{BRAND_TAGLINE}</span>
+            <span className="login-brand-name">{officeBrand?.name || BRAND_NAME}</span>
+            <span className="login-brand-tagline">{officeBrand?.tagline || BRAND_TAGLINE}</span>
           </div>
         </div>
 

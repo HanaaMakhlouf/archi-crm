@@ -5,11 +5,13 @@ import {
   VIEW_CLIENTS, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, ROLE_MANAGER, ROLE_LABELS, BRAND_NAME, BRAND_TAGLINE,
 } from '../constants';
 import { useTheme } from '../utils/useTheme';
+import { useOfficeBrand } from '../utils/officeBrand';
 import Icon from './Icon';
 
 export default function Sidebar({ view, setView, notificationCount }) {
   const { user, logout, isAdmin, userRole, officeId, setOfficeId } = useAuth();
   const { theme, toggle } = useTheme();
+  const officeBrand = useOfficeBrand(officeId);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [offices, setOffices] = useState([]);
 
@@ -42,14 +44,20 @@ export default function Sidebar({ view, setView, notificationCount }) {
       <div className={`mobile-nav-overlay${mobileOpen ? ' mobile-open' : ''}`} onClick={() => setMobileOpen(false)} />
       <aside className={`sidebar${mobileOpen ? ' mobile-open' : ''}`}>
 
-        {/* Brand */}
-        <div className="sidebar-brand">
-          <div className="brand-logo"><Icon name="building" size={20} /></div>
-          <div className="sidebar-brand-text">
-            <span className="sidebar-brand-name">{BRAND_NAME}</span>
-            <span className="sidebar-brand-tagline">{BRAND_TAGLINE}</span>
+        {/* Brand — the office's own logo when it has one */}
+        {officeBrand ? (
+          <div className="sidebar-brand sidebar-brand--office">
+            <img className="office-banner" src={officeBrand.banner} alt={`${officeBrand.name} · ${officeBrand.tagline}`} />
           </div>
-        </div>
+        ) : (
+          <div className="sidebar-brand">
+            <div className="brand-logo"><Icon name="building" size={20} /></div>
+            <div className="sidebar-brand-text">
+              <span className="sidebar-brand-name">{BRAND_NAME}</span>
+              <span className="sidebar-brand-tagline">{BRAND_TAGLINE}</span>
+            </div>
+          </div>
+        )}
 
         {/* Scrollable body */}
         <div className="sidebar-body">
