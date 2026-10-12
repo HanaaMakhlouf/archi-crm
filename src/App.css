@@ -2678,7 +2678,7 @@ textarea {
 .activity-time {
   margin-inline-start: auto;
   font-size: 12px;
-  color: var(--color-text-faint);
+  color: var(--color-text-muted);
   white-space: nowrap;
 }
 
