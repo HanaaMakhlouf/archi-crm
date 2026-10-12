@@ -63,7 +63,7 @@ export const DOC_MAPI_APPROVAL = 'mapi_approval';
 export const LICENSING_DOCUMENTS = [
   { type: DOC_SITE_IMAGE, label: 'תמונת שטח' },
   { type: DOC_INFO_FEE, label: 'אגרת מידע' },
-  { type: DOC_SIGNED_MAP, label: 'מפה מצפית חתומה' },
+  { type: DOC_SIGNED_MAP, label: 'דיגיטלית מפה מצפית חתומה' },
   { type: DOC_MAPI_APPROVAL, label: 'אישור מפ"י' },
 ];
 
