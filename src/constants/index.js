@@ -188,7 +188,35 @@ export const VIEW_DETAIL = 'detail';
 export const VIEW_FORM = 'form';
 export const VIEW_INBOX = 'inbox';
 export const VIEW_SETTINGS = 'settings';
+export const VIEW_ACTIVITY = 'activity';
 export const TAB_GENERAL = 'general';
+export const TAB_ACTIVITY = 'activity';
+
+// ── CLIENT ACTIVITY LOG ── (see supabase/migrations/*_client_activity.sql)
+// created/updated/deleted are written by a DB trigger; the rest are added by hand.
+export const ACTIVITY_CREATED = 'created';
+export const ACTIVITY_UPDATED = 'updated';
+export const ACTIVITY_DELETED = 'deleted';
+export const ACTIVITY_NOTE = 'note';
+export const ACTIVITY_CALL = 'call';
+export const ACTIVITY_MEETING = 'meeting';
+export const ACTIVITY_SITE_VISIT = 'site_visit';
+export const ACTIVITY_EMAIL = 'email';
+export const AUTO_ACTIVITY_TYPES = [ACTIVITY_CREATED, ACTIVITY_UPDATED, ACTIVITY_DELETED];
+export const MANUAL_ACTIVITY_OPTIONS = [
+  { value: ACTIVITY_CALL, label: 'שיחה', icon: 'phone' },
+  { value: ACTIVITY_MEETING, label: 'פגישה', icon: 'users' },
+  { value: ACTIVITY_SITE_VISIT, label: 'ביקור בשטח', icon: 'mapPin' },
+  { value: ACTIVITY_EMAIL, label: 'מייל / מסמכים', icon: 'mail' },
+  { value: ACTIVITY_NOTE, label: 'הערה', icon: 'note' },
+];
+export const ACTIVITY_META = {
+  [ACTIVITY_CREATED]: { label: 'לקוח נוצר', icon: 'plus' },
+  [ACTIVITY_UPDATED]: { label: 'עדכון', icon: 'edit' },
+  [ACTIVITY_DELETED]: { label: 'לקוח נמחק', icon: 'trash' },
+  ...Object.fromEntries(MANUAL_ACTIVITY_OPTIONS.map(o => [o.value, o])),
+};
+export const ACTIVITY_PAGE_SIZE = 50;
 
 // ── NOTIFICATION TYPES ──
 export const NOTIF_TYPE_NEW_CLIENT_STALE = 'new_client_stale';
@@ -231,6 +259,7 @@ export const NUMERIC_LAND_FIELDS = ['gush'];
 export const TABLE_CLIENTS = 'clients';
 export const TABLE_PROFILES = 'profiles';
 export const TABLE_ROW_REMINDERS = 'row_reminders';
+export const TABLE_CLIENT_ACTIVITY = 'client_activity';
 
 // ── TIME / DELAYS ──
 export const ONE_DAY_MS = 24 * 60 * 60 * 1000;

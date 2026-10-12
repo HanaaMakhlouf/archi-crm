@@ -3,12 +3,13 @@ import PlanningTab from './PlanningTab';
 import LicensingTab from './LicensingTab';
 import DetailedTab from './DetailedTab';
 import QuickFileLinks from './QuickFileLinks';
+import ActivityTab from './ActivityTab';
 import { useAuth } from '../contexts/AuthContext';
 import Icon, { getInitials } from './Icon';
 import {
   LABEL_NEW, LABEL_INACTIVE,
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
-  TAB_GENERAL, ROLE_MANAGER,
+  TAB_GENERAL, TAB_ACTIVITY, ROLE_MANAGER,
 } from '../constants';
 
 export default function ClientDetail({
@@ -28,7 +29,8 @@ export default function ClientDetail({
     let saved = null;
     try { saved = sessionStorage.getItem(tabStorageKey); } catch { /* storage unavailable */ }
     // Only restore a work-type tab the client still has.
-    return saved && (saved === TAB_GENERAL || (client.client_type || []).includes(saved)) ? saved : TAB_GENERAL;
+    const alwaysThere = saved === TAB_GENERAL || saved === TAB_ACTIVITY;
+    return saved && (alwaysThere || (client.client_type || []).includes(saved)) ? saved : TAB_GENERAL;
   });
 
   useEffect(() => {
@@ -94,7 +96,16 @@ export default function ClientDetail({
             </button>
           );
         })}
+        <button
+          className={`tab-button ${activeTab === TAB_ACTIVITY ? 'active' : ''}`}
+          onClick={() => setActiveTab(TAB_ACTIVITY)}
+        >
+          פעילות
+        </button>
       </div>
+
+      {/* Outside the viewer fieldset — viewers can still page through history. */}
+      {activeTab === TAB_ACTIVITY && <ActivityTab client={client} />}
 
       {/* ── TAB CONTENT ── */}
       {/* fieldset disabled: native way to block every input/select/button below for viewers,

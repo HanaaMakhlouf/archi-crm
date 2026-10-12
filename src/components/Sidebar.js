@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  VIEW_CLIENTS, VIEW_INBOX, VIEW_SETTINGS, ROLE_MANAGER, ROLE_LABELS, BRAND_NAME, BRAND_TAGLINE,
+  VIEW_CLIENTS, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, ROLE_MANAGER, ROLE_LABELS, BRAND_NAME, BRAND_TAGLINE,
 } from '../constants';
 import { useTheme } from '../utils/useTheme';
 import Icon from './Icon';
@@ -74,6 +74,16 @@ export default function Sidebar({ view, setView, notificationCount }) {
                 <span className="notification-badge">{notificationCount}</span>
               )}
             </button>
+
+            {(isAdmin || userRole === ROLE_MANAGER) && (
+              <button
+                className={`nav-item${view === VIEW_ACTIVITY ? ' active' : ''}`}
+                onClick={() => navigate(VIEW_ACTIVITY)}
+              >
+                <Icon name="activity" />
+                יומן פעילות
+              </button>
+            )}
 
             {(isAdmin || userRole === ROLE_MANAGER) && (
               <button

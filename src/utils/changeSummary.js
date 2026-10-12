@@ -61,43 +61,85 @@ const valueToText = (v) => {
 const isPlainObject = (x) => x && typeof x === 'object' && !Array.isArray(x);
 const jsonEq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-// Walks two (assumed similarly-shaped) values to find one leaf that differs,
-// so the summary can point at the specific thing that changed rather than
-// just saying "planning_data updated". Not exhaustive — stops at the first
-// difference found, which is enough for a "last change" summary.
-function findChangedLeaf(oldVal, newVal, path = []) {
-  if (oldVal === newVal) return null;
+const NESTED_DATA_KEYS = new Set(['planning_data', 'licensing_data', 'detailed_data', 'type_attributes']);
 
-  if (isPlainObject(oldVal) && isPlainObject(newVal)) {
-    for (const key of Object.keys(newVal)) {
-      const found = findChangedLeaf(oldVal?.[key], newVal[key], [...path, key]);
-      if (found) return found;
-    }
-    return null;
+// Walks two (assumed similarly-shaped) values and collects every leaf that
+// differs, so a summary can point at the specific thing that changed rather
+// than just saying "planning_data updated".
+function collectChangedLeaves(oldVal, newVal, path = [], out = []) {
+  if (oldVal === newVal) return out;
+
+  // A section that didn't exist yet is diffed against an empty one.
+  if (isPlainObject(newVal) && (isPlainObject(oldVal) || oldVal == null)) {
+    const base = oldVal || {};
+    const keys = [...Object.keys(newVal), ...Object.keys(base).filter(k => !(k in newVal))];
+    for (const key of keys) collectChangedLeaves(base[key], newVal[key], [...path, key], out);
+    return out;
   }
 
   if (Array.isArray(oldVal) && Array.isArray(newVal) && oldVal.length === newVal.length) {
     for (let i = 0; i < newVal.length; i++) {
       const rowKey = newVal[i]?.label || newVal[i]?.type || i;
-      const found = findChangedLeaf(oldVal[i], newVal[i], [...path, rowKey]);
-      if (found) return found;
+      collectChangedLeaves(oldVal[i], newVal[i], [...path, rowKey], out);
     }
-    return jsonEq(oldVal, newVal) ? null : { path, value: newVal };
+    return out;
   }
 
-  return jsonEq(oldVal, newVal) ? null : { path, value: newVal };
+  if (!jsonEq(oldVal, newVal)) out.push({ path, value: newVal, oldValue: oldVal });
+  return out;
 }
 
-function describeLeaf(sectionLabel, leaf) {
-  const { path, value } = leaf;
-  const leafKey = path[path.length - 1];
+// Rows added to / removed from a table read better as a count than as a list.
+const isRowList = (v) => Array.isArray(v) && v.some(isPlainObject);
+
+function leafValueText(leafKey, value) {
+  if (isRowList(value)) return `${value.length} שורות`;
+  return FREE_TEXT_KEYS.has(leafKey) ? truncate(valueToText(value), 40) : valueToText(value);
+}
+
+function describeLeaf(sectionLabel, leaf, withOld = false) {
+  const { path, value, oldValue } = leaf;
+  // Top-level columns have an empty path; their own key decides free-text truncation.
+  const leafKey = path.length ? path[path.length - 1] : leaf.key;
   const rowLabel = path.length >= 2 && typeof path[path.length - 2] === 'string'
     ? (FIELD_LABELS[path[path.length - 2]] || path[path.length - 2])
     : null;
-  const fieldLabel = FIELD_LABELS[leafKey] || leafKey;
-  const displayVal = FREE_TEXT_KEYS.has(leafKey) ? truncate(valueToText(value), 40) : valueToText(value);
+  const fieldLabel = path.length ? (FIELD_LABELS[leafKey] || leafKey) : null;
+
+  let displayVal;
+  if (Array.isArray(oldValue) && Array.isArray(value) && (isRowList(oldValue) || isRowList(value))) {
+    const diff = value.length - oldValue.length;
+    displayVal = diff > 0 ? `נוספו ${diff} שורות` : `נמחקו ${-diff} שורות`;
+    if (Math.abs(diff) === 1) displayVal = diff > 0 ? 'נוספה שורה' : 'נמחקה שורה';
+  } else {
+    displayVal = leafValueText(leafKey, value);
+    if (withOld && !isPlainObject(value)) displayVal = `${leafValueText(leafKey, oldValue)} ← ${displayVal}`;
+  }
+
+  if (!fieldLabel) return `${sectionLabel}: ${displayVal}`;
   const detail = rowLabel && rowLabel !== fieldLabel ? `${rowLabel} - ${fieldLabel}: ${displayVal}` : `${fieldLabel}: ${displayVal}`;
   return `${sectionLabel} · ${detail}`;
+}
+
+// One line per changed field. `all` lists every changed leaf (with its old
+// value) instead of only the first one per section.
+function describeChangeParts(updates, previousClient, all) {
+  const parts = [];
+  for (const key of Object.keys(updates)) {
+    const newVal = updates[key];
+    const oldVal = previousClient[key];
+    const sectionLabel = FIELD_LABELS[key] || key;
+
+    if (NESTED_DATA_KEYS.has(key)) {
+      const leaves = collectChangedLeaves(oldVal, newVal);
+      (all ? leaves : leaves.slice(0, 1)).forEach(leaf => parts.push(describeLeaf(sectionLabel, leaf, all)));
+      continue;
+    }
+
+    if (jsonEq(oldVal, newVal)) continue;
+    parts.push(describeLeaf(sectionLabel, { path: [], key, value: newVal, oldValue: oldVal }, all));
+  }
+  return parts;
 }
 
 // Builds a short Hebrew "what changed" summary from a partial update patch
@@ -106,25 +148,14 @@ function describeLeaf(sectionLabel, leaf) {
 // diff against (new client) or nothing actually changed.
 export function describeClientChange(updates, previousClient) {
   if (!previousClient) return null;
-
-  const parts = [];
-  for (const key of Object.keys(updates)) {
-    const newVal = updates[key];
-    const oldVal = previousClient[key];
-    const sectionLabel = FIELD_LABELS[key] || key;
-
-    if (key === 'planning_data' || key === 'licensing_data' || key === 'detailed_data') {
-      const leaf = findChangedLeaf(oldVal, newVal);
-      if (leaf) parts.push(describeLeaf(sectionLabel, leaf));
-      continue;
-    }
-
-    if (jsonEq(oldVal, newVal)) continue;
-    const displayVal = FREE_TEXT_KEYS.has(key) ? truncate(valueToText(newVal), 40) : valueToText(newVal);
-    parts.push(`${sectionLabel}: ${displayVal}`);
-  }
-
+  const parts = describeChangeParts(updates, previousClient, false);
   return parts.length ? parts.join(' · ') : null;
+}
+
+// Every changed field of an activity-log 'updated' row, as "before ← after" lines.
+export function describeChangeLines(newData, oldData) {
+  if (!newData) return [];
+  return describeChangeParts(newData, oldData || {}, true);
 }
 
 // "לפני 5 דקות" / "לפני שעתיים" style relative time.

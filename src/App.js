@@ -9,6 +9,7 @@ import ClientForm from './components/ClientForm';
 import Inbox from './components/Inbox';
 import ColumnFilterButton from './components/ColumnFilterButton';
 import SettingsView from './components/SettingsView';
+import ActivityView from './components/ActivityView';
 import PriorityDot from './components/PriorityDot';
 import Icon, { getInitials } from './components/Icon';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
@@ -18,7 +19,7 @@ import { useNotifications } from './notifications/useNotifications';
 import {
   LABEL_NEW, LABEL_PERMANENT, LABEL_INACTIVE, LABEL_OPTIONS,
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
-  VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS,
+  VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, TAB_ACTIVITY,
   TABLE_CLIENTS, TABLE_ROW_REMINDERS,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
@@ -55,7 +56,8 @@ function readSavedNav() {
 
 export default function App() {
   const { officeId, isViewer, isAdmin, userRole } = useAuth();
-  const canEditPriority = isAdmin || userRole === ROLE_MANAGER;
+  const isManager = isAdmin || userRole === ROLE_MANAGER;
+  const canEditPriority = isManager;
 
   // ── DATA ──
   const [clients, setClients] = useState([]);
@@ -450,7 +452,7 @@ export default function App() {
                       return (
                         <tr
                           key={client.id}
-                          onClick={() => { setSelectedClient(client); setView(VIEW_DETAIL); }}
+                          onClick={() => { setInitialTab(null); setSelectedClient(client); setView(VIEW_DETAIL); }}
                           className="clients-table-row"
                         >
                           <td className="cell-name">
@@ -589,6 +591,18 @@ export default function App() {
           />
         )}
         {view === VIEW_SETTINGS && <SettingsView />}
+        {view === VIEW_ACTIVITY && isManager && (
+          <ActivityView
+            clients={clients}
+            onOpenClient={(entry) => {
+              const client = clients.find(c => String(c.id) === entry.client_id);
+              if (!client) return;
+              setInitialTab(TAB_ACTIVITY);
+              setSelectedClient(client);
+              setView(VIEW_DETAIL);
+            }}
+          />
+        )}
       </main>
     </div>
   );
