@@ -636,7 +636,8 @@ h6 {
   margin-bottom: 14px;
 }
 
-.filter-popover select {
+.filter-popover select,
+.filter-popover input {
   width: 100%;
 }
 

@@ -2,17 +2,13 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useActivityLog } from '../utils/useActivityLog';
 import { callAdminUsers } from '../utils/adminUsers';
 import { useAuth } from '../contexts/AuthContext';
+import { startOfDay } from '../utils/format';
 import { ActivityFeed } from './ActivityList';
 import { AUTO_ACTIVITY_TYPES, MANUAL_ACTIVITY_OPTIONS } from '../constants';
 
 const TYPE_CHANGES = 'changes'; // filter value: every automatic (field change) row
 
-// "2026-10-12" (local day) → ISO timestamp of that day's start, shifted by `addDays`.
-const dayStartIso = (dateStr, addDays = 0) => {
-  const d = new Date(`${dateStr}T00:00`);
-  d.setDate(d.getDate() + addDays);
-  return d.toISOString();
-};
+const dayStartIso = (dateStr, addDays = 0) => startOfDay(dateStr, addDays).toISOString();
 
 // Managers' office-wide activity log: everything done on every client,
 // filterable by client, employee, type and date range.

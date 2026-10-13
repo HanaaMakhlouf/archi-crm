@@ -15,6 +15,7 @@ import Icon, { getInitials } from './components/Icon';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
 import { getCurrentPlanningStageLabel } from './components/PlanningTab';
 import { describeClientChange, formatRelativeTime } from './utils/changeSummary';
+import { DEFAULT_SORT, filterAndSortClients, cityOptionsOf } from './utils/clientList';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
 import {
@@ -37,6 +38,25 @@ function resolveNavHint(sectionKey) {
   if (sectionKey.startsWith('licensing.conditions'))   return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_CONDITIONS };
   if (sectionKey.startsWith('licensing.confirmation')) return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_CONFIRMATION };
   return null;
+}
+
+// Sort control inside a column's filter popover. Only one column sorts at a
+// time; "ללא" hands sorting back to the default.
+function SortSelect({ column, sort, onChange, ascLabel, descLabel, allowNone = true }) {
+  const value = sort.key === column ? sort.dir : '';
+  return (
+    <div className="form-group" style={{ marginBottom: 0 }}>
+      <label>מיון</label>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value ? { key: column, dir: e.target.value } : DEFAULT_SORT)}
+      >
+        {(allowNone || !value) && <option value="">ללא</option>}
+        <option value="asc">{ascLabel}</option>
+        <option value="desc">{descLabel}</option>
+      </select>
+    </div>
+  );
 }
 
 const EMPTY_FORM = {
@@ -83,7 +103,10 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [filterLabel, setFilterLabel] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [sortBy, setSortBy] = useState('date'); // 'date' | 'alpha'
+  const [filterCity, setFilterCity] = useState('');
+  const [createdFrom, setCreatedFrom] = useState(''); // 'YYYY-MM-DD', inclusive
+  const [createdTo, setCreatedTo] = useState('');     // 'YYYY-MM-DD', inclusive
+  const [sort, setSort] = useState(DEFAULT_SORT);     // one column sorts at a time
 
   // ── FORM STATE ──
   const [form, setForm] = useState(EMPTY_FORM);
@@ -284,26 +307,11 @@ export default function App() {
     return '';
   };
 
-  const filtered = useMemo(() => {
-    const result = clients.filter(c => {
-      const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
-        (c.city && c.city.toLowerCase().includes(search.toLowerCase()));
-      const matchLabel = filterLabel ? c.label === filterLabel : true;
-      const matchType = filterType ? (c.client_type && c.client_type.includes(filterType)) : true;
-      return matchSearch && matchLabel && matchType;
-    });
+  const filtered = useMemo(() => filterAndSortClients(clients, {
+    search, label: filterLabel, type: filterType, city: filterCity, createdFrom, createdTo,
+  }, sort), [clients, search, filterLabel, filterType, filterCity, createdFrom, createdTo, sort]);
 
-    return result.sort((a, b) => {
-      // Non-active always at bottom
-      const aInactive = a.label === LABEL_INACTIVE;
-      const bInactive = b.label === LABEL_INACTIVE;
-      if (aInactive !== bInactive) return aInactive ? 1 : -1;
-
-      if (sortBy === 'alpha') return a.name.localeCompare(b.name, 'he');
-      // default: newest first
-      return new Date(b.created_at) - new Date(a.created_at);
-    });
-  }, [clients, search, filterLabel, filterType, sortBy]);
+  const cityOptions = useMemo(() => cityOptionsOf(clients), [clients]);
 
   const permanentCount = useMemo(() => clients.filter(c => c.label === LABEL_PERMANENT).length, [clients]);
   const newCount = useMemo(() => clients.filter(c => c.label === LABEL_NEW).length, [clients]);
@@ -412,7 +420,7 @@ export default function App() {
                       <th>
                         <div className="th-filter-row">
                           <span>לקוח</span>
-                          <ColumnFilterButton active={!!filterLabel || sortBy !== 'date'}>
+                          <ColumnFilterButton active={!!filterLabel || sort.key === 'name'}>
                             <div className="form-group">
                               <label>סטטוס לקוח</label>
                               <select value={filterLabel} onChange={e => setFilterLabel(e.target.value)}>
@@ -420,13 +428,7 @@ export default function App() {
                                 {LABEL_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
                               </select>
                             </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                              <label>מיון</label>
-                              <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
-                                <option value="date">תאריך יצירה</option>
-                                <option value="alpha">א-ב</option>
-                              </select>
-                            </div>
+                            <SortSelect column="name" sort={sort} onChange={setSort} ascLabel="א → ת" descLabel="ת → א" />
                           </ColumnFilterButton>
                         </div>
                       </th>
@@ -445,9 +447,44 @@ export default function App() {
                           </ColumnFilterButton>
                         </div>
                       </th>
-                      <th>עיר</th>
+                      <th>
+                        <div className="th-filter-row">
+                          <span>עיר</span>
+                          <ColumnFilterButton active={!!filterCity || sort.key === 'city'}>
+                            <div className="form-group">
+                              <label>עיר</label>
+                              <select value={filterCity} onChange={e => setFilterCity(e.target.value)}>
+                                <option value="">כל הערים</option>
+                                {cityOptions.map(city => <option key={city} value={city}>{city}</option>)}
+                              </select>
+                            </div>
+                            <SortSelect column="city" sort={sort} onChange={setSort} ascLabel="א → ת" descLabel="ת → א" />
+                          </ColumnFilterButton>
+                        </div>
+                      </th>
                       <th>גוש / חלקה</th>
                       <th>טלפון</th>
+                      <th>
+                        <div className="th-filter-row">
+                          <span>תאריך יצירה</span>
+                          <ColumnFilterButton
+                            active={!!createdFrom || !!createdTo || (sort.key === 'created' && sort.dir === 'asc')}
+                          >
+                            <div className="form-group">
+                              <label>מתאריך</label>
+                              <input type="date" value={createdFrom} max={createdTo || undefined}
+                                onChange={e => setCreatedFrom(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                              <label>עד תאריך</label>
+                              <input type="date" value={createdTo} min={createdFrom || undefined}
+                                onChange={e => setCreatedTo(e.target.value)} />
+                            </div>
+                            <SortSelect column="created" sort={sort} onChange={setSort}
+                              ascLabel="מהישן לחדש" descLabel="מהחדש לישן" allowNone={false} />
+                          </ColumnFilterButton>
+                        </div>
+                      </th>
                       <th></th>
                     </tr>
                   </thead>
@@ -508,6 +545,9 @@ export default function App() {
                             {client.gush || helkaText ? `${client.gush || '—'} / ${helkaText || '—'}` : '—'}
                           </td>
                           <td className="cell-phone">{client.phone || '—'}</td>
+                          <td className="cell-secondary">
+                            <bdi dir="ltr">{new Date(client.created_at).toLocaleDateString('he-IL')}</bdi>
+                          </td>
                           <td className="cell-actions" onClick={e => e.stopPropagation()}>
                             <div className="row-actions">
                               {client[FILE_LINK_2_PATH] && (

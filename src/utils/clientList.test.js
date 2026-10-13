@@ -1,0 +1,56 @@
+import { filterAndSortClients, cityOptionsOf, DEFAULT_SORT } from './clientList';
+import { LABEL_INACTIVE, LABEL_PERMANENT } from '../constants';
+
+// Local-time timestamps, like a date picker means them.
+const at = (day, time = '12:00') => new Date(`${day}T${time}`).toISOString();
+
+const CLIENTS = [
+  { id: 1, name: 'בני', city: 'חיפה', label: LABEL_PERMANENT, created_at: at('2026-10-01') },
+  { id: 2, name: 'אבי', city: 'עכו', label: LABEL_PERMANENT, created_at: at('2026-10-05') },
+  { id: 3, name: 'גיל', city: '', label: LABEL_PERMANENT, created_at: at('2026-10-03') },
+  { id: 4, name: 'דנה', city: ' חיפה ', label: LABEL_INACTIVE, created_at: at('2026-10-09') },
+  { id: 5, name: 'הדר', city: 'אילת', label: LABEL_PERMANENT, created_at: at('2026-10-10', '23:30') },
+];
+
+const ids = (list) => list.map(c => c.id);
+const run = (filters = {}, sort = DEFAULT_SORT) => ids(filterAndSortClients([...CLIENTS], filters, sort));
+
+describe('filterAndSortClients', () => {
+  it('defaults to newest first, inactive clients last', () => {
+    expect(run()).toEqual([5, 2, 3, 1, 4]);
+  });
+
+  it('sorts by creation date oldest first', () => {
+    expect(run({}, { key: 'created', dir: 'asc' })).toEqual([1, 3, 2, 5, 4]);
+  });
+
+  it('sorts names alphabetically both ways', () => {
+    expect(run({}, { key: 'name', dir: 'asc' })).toEqual([2, 1, 3, 5, 4]);
+    expect(run({}, { key: 'name', dir: 'desc' })).toEqual([5, 3, 1, 2, 4]);
+  });
+
+  it('sorts by city both ways, clients without a city last', () => {
+    expect(run({}, { key: 'city', dir: 'asc' })).toEqual([5, 1, 2, 3, 4]);
+    expect(run({}, { key: 'city', dir: 'desc' })).toEqual([2, 1, 5, 3, 4]);
+  });
+
+  it('filters by city, ignoring stray spaces', () => {
+    expect(run({ city: 'חיפה' })).toEqual([1, 4]);
+  });
+
+  it('filters by creation date range, both ends inclusive', () => {
+    expect(run({ createdFrom: '2026-10-03', createdTo: '2026-10-09' })).toEqual([2, 3, 4]);
+    expect(run({ createdTo: '2026-10-10' })).toContain(5); // late in the day still counts
+    expect(run({ createdFrom: '2026-10-11' })).toEqual([]);
+  });
+
+  it('combines filters with search', () => {
+    expect(run({ search: 'חיפה', label: LABEL_PERMANENT })).toEqual([1]);
+  });
+});
+
+describe('cityOptionsOf', () => {
+  it('lists distinct trimmed cities alphabetically', () => {
+    expect(cityOptionsOf(CLIENTS)).toEqual(['אילת', 'חיפה', 'עכו']);
+  });
+});
