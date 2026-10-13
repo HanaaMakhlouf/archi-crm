@@ -63,7 +63,7 @@ export const DOC_MAPI_APPROVAL = 'mapi_approval';
 export const LICENSING_DOCUMENTS = [
   { type: DOC_SITE_IMAGE, label: 'תמונת שטח' },
   { type: DOC_INFO_FEE, label: 'אגרת מידע' },
-  { type: DOC_SIGNED_MAP, label: 'דיגיטלית מפה מצפית חתומה' },
+  { type: DOC_SIGNED_MAP, label: 'מפה מצבית חתומה דיגיטלית' },
   { type: DOC_MAPI_APPROVAL, label: 'אישור מפ"י' },
 ];
 
@@ -222,6 +222,11 @@ export const ACTIVITY_PAGE_SIZE = 50;
 export const NOTIF_TYPE_NEW_CLIENT_STALE = 'new_client_stale';
 export const NOTIF_TYPE_ROW_REMINDER = 'row_reminder';
 
+// ── NOTIFICATION MESSAGES ── (manager → employee; see supabase/migrations/*_notification_messages.sql)
+export const MESSAGES_HISTORY_DAYS = 60; // older messages drop out of the inbox
+export const MESSAGE_IMAGE_MAX_MB = 5;   // matches the storage bucket's file_size_limit
+export const MESSAGE_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+
 // ── REMINDER ──
 export const REMINDER_DAYS_PRESETS = [1, 3, 7]; // preset options for the תזכורת column
 
@@ -260,6 +265,8 @@ export const TABLE_CLIENTS = 'clients';
 export const TABLE_PROFILES = 'profiles';
 export const TABLE_ROW_REMINDERS = 'row_reminders';
 export const TABLE_CLIENT_ACTIVITY = 'client_activity';
+export const TABLE_NOTIFICATION_MESSAGES = 'notification_messages';
+export const BUCKET_NOTIFICATION_IMAGES = 'notification-images';
 
 // ── TIME / DELAYS ──
 export const ONE_DAY_MS = 24 * 60 * 60 * 1000;

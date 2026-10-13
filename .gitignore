@@ -20,9 +20,6 @@
 .env.test.local
 .env.production.local
 .vercel
-.plans
-.claude
-.agents
 supabase
 
 npm-debug.log*

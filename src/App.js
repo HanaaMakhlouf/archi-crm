@@ -16,6 +16,7 @@ import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
 import { getCurrentPlanningStageLabel } from './components/PlanningTab';
 import { describeClientChange, formatRelativeTime } from './utils/changeSummary';
 import { useNotifications } from './notifications/useNotifications';
+import { useMessages } from './notifications/useMessages';
 import {
   LABEL_NEW, LABEL_PERMANENT, LABEL_INACTIVE, LABEL_OPTIONS,
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
@@ -269,7 +270,12 @@ export default function App() {
     return { ...prev, client_type: newTypes, type_attributes: newAttrs };
   });
 
-  const { notifications, notificationCount, snoozeNotification } = useNotifications(clients, reminders);
+  // Automatic notifications are for managers only; everyone gets the
+  // messages managers forward to them.
+  const { notifications: allNotifications, snoozeNotification } = useNotifications(clients, reminders);
+  const notifications = isManager ? allNotifications : [];
+  const { messages, unreadCount, imageUrls, markRead } = useMessages({ onOpen: () => setView(VIEW_INBOX) });
+  const notificationCount = notifications.length + unreadCount;
 
   const getLabelClass = (label) => {
     if (label === LABEL_NEW) return 'label-new';
@@ -574,6 +580,11 @@ export default function App() {
         )}
         {view === VIEW_INBOX && (
           <Inbox
+            isManager={isManager}
+            messages={messages}
+            imageUrls={imageUrls}
+            onMarkRead={markRead}
+            clients={clients}
             notifications={notifications}
             snoozeNotification={snoozeNotification}
             onUpdateReminder={handleUpdateReminder}

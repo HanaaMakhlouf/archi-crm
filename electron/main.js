@@ -9,6 +9,9 @@ const DEV_URL = 'http://localhost:3000';
 // forces native <input> widgets dark even when the app itself is light.
 nativeTheme.themeSource = 'light';
 
+// Windows only shows desktop notifications for an app with an ID; matches build.appId.
+if (process.platform === 'win32') app.setAppUserModelId('com.clientmanager.app');
+
 // Only one running copy — a second launch just focuses the existing window.
 if (!app.requestSingleInstanceLock()) {
   app.quit();
@@ -94,6 +97,14 @@ ipcMain.handle('pick-folder', async (event) => {
 ipcMain.handle('open-folder', async (_, p) => {
   const err = await shell.openPath(p);
   return err || null; // empty string = success, non-empty = error message
+});
+
+// Clicking a desktop notification brings the app to the front.
+ipcMain.handle('focus-window', () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
 });
 
 ipcMain.handle('set-theme-source', (_, theme) => {

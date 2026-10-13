@@ -1,15 +1,7 @@
 import Icon from './Icon';
 import { describeChangeLines } from '../utils/changeSummary';
+import { formatDateTime, nameFromEmail } from '../utils/format';
 import { ACTIVITY_META, ACTIVITY_UPDATED } from '../constants';
-
-// "dana@office.co.il" → "dana". No actor = change made outside the app
-// (Supabase dashboard, script).
-const actorName = (entry) => (entry.actor_email ? entry.actor_email.split('@')[0] : 'מערכת');
-
-// "12.10.2026, 14:32"
-const fullDate = (iso) => new Date(iso).toLocaleString('he-IL', {
-  day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
-});
 
 // Timeline of client_activity rows. `showClient` adds the client's name to
 // each row (office-wide log); `onOpenClient(entry)` makes it clickable when
@@ -26,13 +18,13 @@ export default function ActivityList({ entries, showClient = false, onOpenClient
             <div className="activity-icon"><Icon name={meta.icon} size={15} /></div>
             <div className="activity-body">
               <div className="activity-head">
-                <span className="activity-actor" title={entry.actor_email || ''}>{actorName(entry)}</span>
+                <span className="activity-actor" title={entry.actor_email || ''}>{nameFromEmail(entry.actor_email)}</span>
                 <span className="activity-type">{meta.label}</span>
                 {showClient && (clickable
                   ? <button type="button" className="activity-client" onClick={() => onOpenClient(entry)}>{entry.client_name}</button>
                   : <span className="activity-client is-static">{entry.client_name}</span>)}
                 <time className="activity-time" dateTime={entry.created_at}>
-                  <bdi dir="ltr">{fullDate(entry.created_at)}</bdi>
+                  <bdi dir="ltr">{formatDateTime(entry.created_at)}</bdi>
                 </time>
               </div>
               {lines.length > 0 && (
