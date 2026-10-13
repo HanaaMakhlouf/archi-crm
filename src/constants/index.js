@@ -226,6 +226,10 @@ export const NOTIF_TYPE_ROW_REMINDER = 'row_reminder';
 export const MESSAGES_HISTORY_DAYS = 60; // older messages drop out of the inbox
 export const MESSAGE_IMAGE_MAX_MB = 5;   // matches the storage bucket's file_size_limit
 export const MESSAGE_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+export const MESSAGE_FILE_MAX_MB = 20; // matches the notification-files bucket's file_size_limit
+export const MESSAGE_MAX_FILES = 5;
+// Program/script files are never sent — they'd run when opened.
+export const BLOCKED_FILE_EXTENSIONS = ['exe', 'msi', 'bat', 'cmd', 'com', 'scr', 'ps1', 'vbs', 'js', 'jar', 'lnk', 'reg', 'hta'];
 
 // ── REMINDER ──
 export const REMINDER_DAYS_PRESETS = [1, 3, 7]; // preset options for the תזכורת column
@@ -267,6 +271,7 @@ export const TABLE_ROW_REMINDERS = 'row_reminders';
 export const TABLE_CLIENT_ACTIVITY = 'client_activity';
 export const TABLE_NOTIFICATION_MESSAGES = 'notification_messages';
 export const BUCKET_NOTIFICATION_IMAGES = 'notification-images';
+export const BUCKET_NOTIFICATION_FILES = 'notification-files';
 
 // ── TIME / DELAYS ──
 export const ONE_DAY_MS = 24 * 60 * 60 * 1000;

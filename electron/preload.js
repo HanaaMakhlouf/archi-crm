@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openFolder: (p) => ipcRenderer.invoke('open-folder', p),
   setThemeSource: (theme) => ipcRenderer.invoke('set-theme-source', theme),
   focusWindow: () => ipcRenderer.invoke('focus-window'),
+  openFileCopy: (name, data) => ipcRenderer.invoke('open-file-copy', name, data),
 });

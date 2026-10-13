@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, shell, nativeTheme } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 const isDev = !app.isPackaged;
 const DEV_URL = 'http://localhost:3000';
@@ -97,6 +98,21 @@ ipcMain.handle('pick-folder', async (event) => {
 ipcMain.handle('open-folder', async (_, p) => {
   const err = await shell.openPath(p);
   return err || null; // empty string = success, non-empty = error message
+});
+
+// Opens a received attachment in its default program (Acrobat, Word, ...),
+// where it can be printed. The copy goes to a temp folder; program files are
+// refused even if one got past the app's upload check.
+const BLOCKED_EXT = /\.(exe|msi|bat|cmd|com|scr|ps1|vbs|js|jar|lnk|reg|hta)$/i;
+
+ipcMain.handle('open-file-copy', async (_, name, data) => {
+  const safe = path.basename(String(name || '')).replace(/[<>:"/\\|?*\x00-\x1f]+/g, '_') || 'file';
+  if (BLOCKED_EXT.test(safe)) return 'blocked';
+  const dir = path.join(app.getPath('temp'), 'client-manager-files');
+  await fs.promises.mkdir(dir, { recursive: true });
+  const target = path.join(dir, `${Date.now()}-${safe}`);
+  await fs.promises.writeFile(target, Buffer.from(data));
+  return (await shell.openPath(target)) || null; // '' = opened
 });
 
 // Clicking a desktop notification brings the app to the front.

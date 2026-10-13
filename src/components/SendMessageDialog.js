@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { callAdminUsers } from '../utils/adminUsers';
-import { nameFromEmail } from '../utils/format';
+import { nameFromEmail, formatFileSize } from '../utils/format';
+import { fileExtension, isBlockedFile } from '../utils/fileActions';
 import Icon from './Icon';
 import ImageAnnotator from './ImageAnnotator';
 import {
-  TABLE_NOTIFICATION_MESSAGES, BUCKET_NOTIFICATION_IMAGES,
+  TABLE_NOTIFICATION_MESSAGES, BUCKET_NOTIFICATION_IMAGES, BUCKET_NOTIFICATION_FILES,
+  MESSAGE_FILE_MAX_MB, MESSAGE_MAX_FILES,
   MESSAGE_IMAGE_MAX_MB, MESSAGE_IMAGE_TYPES, ROLE_LABELS,
 } from '../constants';
 
@@ -23,6 +25,7 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
   const [edited, setEdited] = useState(null);
   const [strokes, setStrokes] = useState([]);
   const [editing, setEditing] = useState(false);
+  const [files, setFiles] = useState([]); // other attachments (PDF, Word, drawings...)
   const image = edited || original;
   const [preview, setPreview] = useState(null);
   const [sending, setSending] = useState(false);
@@ -84,6 +87,24 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
     setStrokes([]);
   };
 
+  const addFiles = (list) => {
+    const problems = [];
+    const next = [...files];
+    for (const file of list) {
+      if (isBlockedFile(file.name)) problems.push(`${file.name}: סוג קובץ לא מורשה`);
+      else if (file.size > MESSAGE_FILE_MAX_MB * 1024 * 1024) problems.push(`${file.name}: גדול מ-${MESSAGE_FILE_MAX_MB}MB`);
+      else if (next.length >= MESSAGE_MAX_FILES) { problems.push(`אפשר לצרף עד ${MESSAGE_MAX_FILES} קבצים`); break; }
+      else if (!next.some(f => f.name === file.name && f.size === file.size)) next.push(file);
+    }
+    setFiles(next);
+    setError(problems.length ? problems.join(' · ') : null);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer?.files?.length) addFiles([...e.dataTransfer.files]);
+  };
+
   const handlePaste = (e) => {
     const file = [...(e.clipboardData?.files || [])].find(f => f.type.startsWith('image/'));
     if (file) { e.preventDefault(); pickImage(file); }
@@ -97,7 +118,7 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
   const allSelected = !!users?.length && selected.size === users.length;
   const toggleAll = () => setSelected(allSelected ? new Set() : new Set(users.map(u => u.id)));
 
-  const canSend = selected.size > 0 && (text.trim() || image) && !sending;
+  const canSend = selected.size > 0 && (text.trim() || image || files.length) && !sending;
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -120,6 +141,23 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
       }
     }
 
+    const attachments = [];
+    for (const file of files) {
+      const ext = fileExtension(file.name);
+      const path = `${officeId}/${crypto.randomUUID()}${ext ? `.${ext}` : ''}`;
+      const type = file.type || 'application/octet-stream';
+      const { error: uploadError } = await supabase.storage
+        .from(BUCKET_NOTIFICATION_FILES)
+        .upload(path, file, { contentType: type });
+      if (uploadError) {
+        console.error('File upload error:', uploadError.message);
+        setError(`שגיאה בהעלאת הקובץ ${file.name}. נסה שוב.`);
+        setSending(false);
+        return;
+      }
+      attachments.push({ path, name: file.name, type, size: file.size });
+    }
+
     const rows = [...selected].map(recipientId => ({
       office_id: String(officeId),
       recipient_id: recipientId,
@@ -129,6 +167,7 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
       notification_text: notification.message,
       message: text.trim() || null,
       image_path: imagePath,
+      attachments,
     }));
     const { error: insertError } = await supabase.from(TABLE_NOTIFICATION_MESSAGES).insert(rows);
     setSending(false);
@@ -142,7 +181,8 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
 
   return (
     <div className="modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget && !sending) onClose(); }}>
-      <form className="modal send-dialog" onSubmit={handleSend} onPaste={handlePaste}>
+      <form className="modal send-dialog" onSubmit={handleSend} onPaste={handlePaste}
+        onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
         <h3>שליחת התראה לעובדים</h3>
 
         <div className="send-dialog-notif">
@@ -199,6 +239,28 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
             </div>
           ) : (
             <input type="file" accept={MESSAGE_IMAGE_TYPES.join(',')} onChange={e => pickImage(e.target.files?.[0])} />
+          )}
+        </div>
+
+        <div className="form-group">
+          <label>קבצים <span className="hint-inline">(PDF, Word, Excel, שרטוטים... עד {MESSAGE_MAX_FILES} קבצים, אפשר גם לגרור לכאן)</span></label>
+          {files.length > 0 && (
+            <ul className="attachment-list">
+              {files.map(f => (
+                <li key={`${f.name}_${f.size}`} className="attachment-item">
+                  <Icon name="note" size={16} />
+                  <span className="attachment-name" title={f.name}>{f.name}</span>
+                  <span className="muted">{formatFileSize(f.size)}</span>
+                  <button type="button" className="icon-btn danger" title="הסרה"
+                    onClick={() => setFiles(prev => prev.filter(x => x !== f))}>
+                    <Icon name="trash" size={14} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {files.length < MESSAGE_MAX_FILES && (
+            <input type="file" multiple onChange={e => { addFiles([...(e.target.files || [])]); e.target.value = ''; }} />
           )}
         </div>
 

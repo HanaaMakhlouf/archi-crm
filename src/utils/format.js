@@ -5,4 +5,11 @@ export const formatDateTime = (iso) => new Date(iso).toLocaleString('he-IL', {
 
 // "dana@office.co.il" → "dana". No email = done outside the app
 // (Supabase dashboard, script).
+// 2_457_600 → "2.3MB"
+export const formatFileSize = (bytes) => {
+  if (!bytes) return '';
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+};
+
 export const nameFromEmail = (email) => (email ? email.split('@')[0] : 'מערכת');
