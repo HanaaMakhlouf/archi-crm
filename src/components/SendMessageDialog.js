@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { callAdminUsers } from '../utils/adminUsers';
 import { nameFromEmail } from '../utils/format';
 import Icon from './Icon';
+import ImageAnnotator from './ImageAnnotator';
 import {
   TABLE_NOTIFICATION_MESSAGES, BUCKET_NOTIFICATION_IMAGES,
   MESSAGE_IMAGE_MAX_MB, MESSAGE_IMAGE_TYPES, ROLE_LABELS,
@@ -17,7 +18,12 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
   const [usersError, setUsersError] = useState(null);
   const [selected, setSelected] = useState(() => new Set());
   const [text, setText] = useState('');
-  const [image, setImage] = useState(null);
+  // The picture as chosen, plus pen drawings on it (kept so they stay removable).
+  const [original, setOriginal] = useState(null);
+  const [edited, setEdited] = useState(null);
+  const [strokes, setStrokes] = useState([]);
+  const [editing, setEditing] = useState(false);
+  const image = edited || original;
   const [preview, setPreview] = useState(null);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
@@ -51,10 +57,10 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
   }, [image]);
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape' && !sending) onClose(); };
+    const onKey = (e) => { if (e.key === 'Escape' && !sending && !editing) onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, sending]);
+  }, [onClose, sending, editing]);
 
   const pickImage = (file) => {
     if (!file) return;
@@ -67,7 +73,15 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
       return;
     }
     setError(null);
-    setImage(file);
+    setOriginal(file);
+    setEdited(null);
+    setStrokes([]);
+  };
+
+  const removeImage = () => {
+    setOriginal(null);
+    setEdited(null);
+    setStrokes([]);
   };
 
   const handlePaste = (e) => {
@@ -174,9 +188,14 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
           {preview ? (
             <div className="send-dialog-preview">
               <img src={preview} alt="תצוגה מקדימה" />
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setImage(null)}>
-                <Icon name="trash" size={14} /> הסרה
-              </button>
+              <div className="send-dialog-preview-actions">
+                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing(true)}>
+                  <Icon name="edit" size={14} /> עריכה
+                </button>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={removeImage}>
+                  <Icon name="trash" size={14} /> הסרה
+                </button>
+              </div>
             </div>
           ) : (
             <input type="file" accept={MESSAGE_IMAGE_TYPES.join(',')} onChange={e => pickImage(e.target.files?.[0])} />
@@ -192,6 +211,19 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
           </button>
         </div>
       </form>
+
+      {editing && (
+        <ImageAnnotator
+          image={original}
+          initialStrokes={strokes}
+          onCancel={() => setEditing(false)}
+          onSave={(file, newStrokes) => {
+            setEdited(newStrokes.length ? file : null);
+            setStrokes(newStrokes);
+            setEditing(false);
+          }}
+        />
+      )}
     </div>
   );
 }
