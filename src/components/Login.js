@@ -94,7 +94,7 @@ export default function Login() {
         <div className="login-brand">
           {officeBrand
             ? <img className="login-office-logo" src={officeBrand.logo} alt="" />
-            : <div className="brand-logo"><Icon name="building" size={20} /></div>}
+            : <div className="brand-logo"><Icon name="logo" size={20} /></div>}
           <div className="login-brand-text">
             <span className="login-brand-name">{officeBrand?.name || BRAND_NAME}</span>
             <span className="login-brand-tagline">{officeBrand?.tagline || BRAND_TAGLINE}</span>

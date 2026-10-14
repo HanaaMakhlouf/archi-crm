@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import habibBanner from '../assets/offices/habib-banner.jpg';
 import habibLogo from '../assets/offices/habib-logo.png';
 
-// Offices that show their own logo instead of the product brand, keyed by
-// the office's name in the `offices` table (lowercase).
-//   banner — wide logo for the sidebar
-//   logo   — compact logo for the login page
+// Offices that show their own logo and name instead of the product brand
+// (sidebar and login page), keyed by the office's name in the `offices`
+// table (lowercase).
 const OFFICE_BRANDS = {
   adeeb: {
     name: 'HABIB City Design',
     tagline: 'משרד הנדסה ועיצוב פנים',
-    banner: habibBanner,
     logo: habibLogo,
   },
 };

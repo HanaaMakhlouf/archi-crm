@@ -45,19 +45,15 @@ export default function Sidebar({ view, setView, notificationCount }) {
       <aside className={`sidebar${mobileOpen ? ' mobile-open' : ''}`}>
 
         {/* Brand — the office's own logo when it has one */}
-        {officeBrand ? (
-          <div className="sidebar-brand sidebar-brand--office">
-            <img className="office-banner" src={officeBrand.banner} alt={`${officeBrand.name} · ${officeBrand.tagline}`} />
+        <div className="sidebar-brand">
+          {officeBrand
+            ? <img className="office-logo" src={officeBrand.logo} alt="" />
+            : <div className="brand-logo"><Icon name="logo" size={20} /></div>}
+          <div className="sidebar-brand-text">
+            <span className="sidebar-brand-name">{officeBrand?.name || BRAND_NAME}</span>
+            <span className="sidebar-brand-tagline">{officeBrand?.tagline || BRAND_TAGLINE}</span>
           </div>
-        ) : (
-          <div className="sidebar-brand">
-            <div className="brand-logo"><Icon name="building" size={20} /></div>
-            <div className="sidebar-brand-text">
-              <span className="sidebar-brand-name">{BRAND_NAME}</span>
-              <span className="sidebar-brand-tagline">{BRAND_TAGLINE}</span>
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Scrollable body */}
         <div className="sidebar-body">

@@ -1,19 +1,26 @@
-// Renders the app icon (the sidebar's "building" brand logo) to
+// Renders the app icon (the sidebar's "logo" brand icon on its teal tile) to
 // buildResources/icon.png. Run with: npm run electron:icon
 const { app, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
 const SIZE = 512;
-const ACCENT = '#b5765a'; // --color-accent in src/App.css
+const TILE_FROM = '#2c7a6e'; // same gradient as .brand-logo in src/App.css
+const TILE_TO = '#1d5850';
 
 const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 24 24">
-  <rect x="0.5" y="0.5" width="23" height="23" rx="5.5" fill="${ACCENT}"/>
-  <g transform="translate(4.8 4.8) scale(0.6)" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="4" y="2" width="16" height="20" rx="1.5"/>
-    <path d="M9 22v-4h6v4"/>
-    <path d="M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${TILE_FROM}"/>
+      <stop offset="1" stop-color="${TILE_TO}"/>
+    </linearGradient>
+  </defs>
+  <rect x="0.5" y="0.5" width="23" height="23" rx="5.5" fill="url(#tile)"/>
+  <g transform="translate(4.2 4.2) scale(0.65)" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="8" cy="8" r="3"/>
+    <path d="M2.5 19.5a5.5 5.5 0 0 1 11 0"/>
+    <path d="M15.5 19.5v-4M18.5 19.5v-7M21.5 19.5v-10"/>
   </g>
 </svg>`;
 
