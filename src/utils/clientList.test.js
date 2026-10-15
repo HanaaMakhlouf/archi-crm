@@ -1,7 +1,7 @@
-import { filterAndSortClients, cityOptionsOf, DEFAULT_SORT } from './clientList';
+import { filterAndSortClients, DEFAULT_SORT } from './clientList';
 import { LABEL_INACTIVE, LABEL_PERMANENT } from '../constants';
 
-// Local-time timestamps, like a date picker means them.
+// Local-time timestamps.
 const at = (day, time = '12:00') => new Date(`${day}T${time}`).toISOString();
 
 const CLIENTS = [
@@ -34,23 +34,7 @@ describe('filterAndSortClients', () => {
     expect(run({}, { key: 'city', dir: 'desc' })).toEqual([2, 1, 5, 3, 4]);
   });
 
-  it('filters by city, ignoring stray spaces', () => {
-    expect(run({ city: 'חיפה' })).toEqual([1, 4]);
-  });
-
-  it('filters by creation date range, both ends inclusive', () => {
-    expect(run({ createdFrom: '2026-10-03', createdTo: '2026-10-09' })).toEqual([2, 3, 4]);
-    expect(run({ createdTo: '2026-10-10' })).toContain(5); // late in the day still counts
-    expect(run({ createdFrom: '2026-10-11' })).toEqual([]);
-  });
-
   it('combines filters with search', () => {
     expect(run({ search: 'חיפה', label: LABEL_PERMANENT })).toEqual([1]);
-  });
-});
-
-describe('cityOptionsOf', () => {
-  it('lists distinct trimmed cities alphabetically', () => {
-    expect(cityOptionsOf(CLIENTS)).toEqual(['אילת', 'חיפה', 'עכו']);
   });
 });

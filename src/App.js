@@ -15,7 +15,7 @@ import Icon, { getInitials } from './components/Icon';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
 import { getCurrentPlanningStageLabel } from './components/PlanningTab';
 import { describeClientChange, formatRelativeTime } from './utils/changeSummary';
-import { DEFAULT_SORT, filterAndSortClients, cityOptionsOf } from './utils/clientList';
+import { DEFAULT_SORT, filterAndSortClients } from './utils/clientList';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
 import {
@@ -40,22 +40,19 @@ function resolveNavHint(sectionKey) {
   return null;
 }
 
-// Sort control inside a column's filter popover. Only one column sorts at a
-// time; "ללא" hands sorting back to the default.
-function SortSelect({ column, sort, onChange, ascLabel, descLabel, allowNone = true }) {
-  const value = sort.key === column ? sort.dir : '';
+// Clickable column title. The first click sorts by `firstDir` (A→ת for text,
+// newest first for dates); each further click reverses it. One column at a time.
+function SortHeader({ column, label, sort, onChange, firstDir = 'asc' }) {
+  const active = sort !== DEFAULT_SORT && sort.key === column; // the untouched default shows no arrow
+  const toggle = () => onChange({
+    key: column,
+    dir: active ? (sort.dir === 'asc' ? 'desc' : 'asc') : firstDir,
+  });
   return (
-    <div className="form-group" style={{ marginBottom: 0 }}>
-      <label>מיון</label>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value ? { key: column, dir: e.target.value } : DEFAULT_SORT)}
-      >
-        {(allowNone || !value) && <option value="">ללא</option>}
-        <option value="asc">{ascLabel}</option>
-        <option value="desc">{descLabel}</option>
-      </select>
-    </div>
+    <button type="button" className={`th-sort-btn${active ? ' active' : ''}`} onClick={toggle}>
+      {label}
+      <span className="th-sort-arrow">{active ? (sort.dir === 'asc' ? '▲' : '▼') : '↕'}</span>
+    </button>
   );
 }
 
@@ -103,9 +100,6 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [filterLabel, setFilterLabel] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [filterCity, setFilterCity] = useState('');
-  const [createdFrom, setCreatedFrom] = useState(''); // 'YYYY-MM-DD', inclusive
-  const [createdTo, setCreatedTo] = useState('');     // 'YYYY-MM-DD', inclusive
   const [sort, setSort] = useState(DEFAULT_SORT);     // one column sorts at a time
 
   // ── FORM STATE ──
@@ -308,10 +302,8 @@ export default function App() {
   };
 
   const filtered = useMemo(() => filterAndSortClients(clients, {
-    search, label: filterLabel, type: filterType, city: filterCity, createdFrom, createdTo,
-  }, sort), [clients, search, filterLabel, filterType, filterCity, createdFrom, createdTo, sort]);
-
-  const cityOptions = useMemo(() => cityOptionsOf(clients), [clients]);
+    search, label: filterLabel, type: filterType,
+  }, sort), [clients, search, filterLabel, filterType, sort]);
 
   const permanentCount = useMemo(() => clients.filter(c => c.label === LABEL_PERMANENT).length, [clients]);
   const newCount = useMemo(() => clients.filter(c => c.label === LABEL_NEW).length, [clients]);
@@ -419,16 +411,15 @@ export default function App() {
                     <tr>
                       <th>
                         <div className="th-filter-row">
-                          <span>לקוח</span>
-                          <ColumnFilterButton active={!!filterLabel || sort.key === 'name'}>
-                            <div className="form-group">
+                          <SortHeader column="name" label="לקוח" sort={sort} onChange={setSort} />
+                          <ColumnFilterButton active={!!filterLabel}>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
                               <label>סטטוס לקוח</label>
                               <select value={filterLabel} onChange={e => setFilterLabel(e.target.value)}>
                                 <option value="">כל הלקוחות</option>
                                 {LABEL_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
                               </select>
                             </div>
-                            <SortSelect column="name" sort={sort} onChange={setSort} ascLabel="א → ת" descLabel="ת → א" />
                           </ColumnFilterButton>
                         </div>
                       </th>
@@ -447,43 +438,11 @@ export default function App() {
                           </ColumnFilterButton>
                         </div>
                       </th>
-                      <th>
-                        <div className="th-filter-row">
-                          <span>עיר</span>
-                          <ColumnFilterButton active={!!filterCity || sort.key === 'city'}>
-                            <div className="form-group">
-                              <label>עיר</label>
-                              <select value={filterCity} onChange={e => setFilterCity(e.target.value)}>
-                                <option value="">כל הערים</option>
-                                {cityOptions.map(city => <option key={city} value={city}>{city}</option>)}
-                              </select>
-                            </div>
-                            <SortSelect column="city" sort={sort} onChange={setSort} ascLabel="א → ת" descLabel="ת → א" />
-                          </ColumnFilterButton>
-                        </div>
-                      </th>
+                      <th><SortHeader column="city" label="עיר" sort={sort} onChange={setSort} /></th>
                       <th>גוש / חלקה</th>
                       <th>טלפון</th>
                       <th>
-                        <div className="th-filter-row">
-                          <span>תאריך יצירה</span>
-                          <ColumnFilterButton
-                            active={!!createdFrom || !!createdTo || (sort.key === 'created' && sort.dir === 'asc')}
-                          >
-                            <div className="form-group">
-                              <label>מתאריך</label>
-                              <input type="date" value={createdFrom} max={createdTo || undefined}
-                                onChange={e => setCreatedFrom(e.target.value)} />
-                            </div>
-                            <div className="form-group">
-                              <label>עד תאריך</label>
-                              <input type="date" value={createdTo} min={createdFrom || undefined}
-                                onChange={e => setCreatedTo(e.target.value)} />
-                            </div>
-                            <SortSelect column="created" sort={sort} onChange={setSort}
-                              ascLabel="מהישן לחדש" descLabel="מהחדש לישן" allowNone={false} />
-                          </ColumnFilterButton>
-                        </div>
+                        <SortHeader column="created" label="תאריך יצירה" sort={sort} onChange={setSort} firstDir="desc" />
                       </th>
                       <th></th>
                     </tr>

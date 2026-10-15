@@ -582,6 +582,27 @@ h6 {
   gap: 6px;
 }
 
+.th-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.th-sort-arrow {
+  font-size: 10px;
+  color: var(--color-text-faint);
+}
+
+.th-sort-btn.active .th-sort-arrow {
+  color: var(--color-primary);
+}
+
 .filter-icon-btn {
   position: relative;
   width: 22px;
