@@ -110,9 +110,26 @@ export const ACTION_STATUS_OPTIONS = [
   { value: ACTION_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
 ];
 
+// The פקדון row has its own dropdown instead of ACTION_STATUS_OPTIONS.
+// "not received" / "not required" reuse the generic codes so existing rows stay valid.
+export const ACTION_LABEL_DEPOSIT = 'פקדון';
+export const DEPOSIT_STATUS_NOT_RECEIVED = ACTION_STATUS_NOT_SENT;
+export const DEPOSIT_STATUS_RECEIVED = 'deposit_received';
+export const DEPOSIT_STATUS_PAID = 'deposit_paid';
+export const DEPOSIT_STATUS_UPDATED = 'deposit_updated';
+export const DEPOSIT_STATUS_NOT_REQUIRED = ACTION_STATUS_NOT_REQUIRED;
+
+export const DEPOSIT_STATUS_OPTIONS = [
+  { value: DEPOSIT_STATUS_NOT_RECEIVED, label: 'לא התקבל' },
+  { value: DEPOSIT_STATUS_RECEIVED, label: 'התקבל' },
+  { value: DEPOSIT_STATUS_PAID, label: 'שולם' },
+  { value: DEPOSIT_STATUS_UPDATED, label: 'עודכן' },
+  { value: DEPOSIT_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
+
 export const DEFAULT_REQUEST_ACTIONS = [
   'בעלות',
-  'פקדון',
+  ACTION_LABEL_DEPOSIT,
   'תקנה',
   'פרסום עזבון',
   'שיוך מבנים',

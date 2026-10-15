@@ -6,6 +6,8 @@ import {
   ACTION_STATUS_NOT_SENT, ACTION_STATUS_SENT, ACTION_STATUS_PRESENT, ACTION_STATUS_NOT_REQUIRED,
   ACTION_STATUS_OPTIONS, MEETING_OPTIONS,
   MEETING_IN_COMMUNICATION, MEETING_SCHEDULED, MEETING_APPROVED,
+  ACTION_LABEL_DEPOSIT, DEPOSIT_STATUS_OPTIONS, DEPOSIT_STATUS_NOT_RECEIVED, DEPOSIT_STATUS_RECEIVED,
+  DEPOSIT_STATUS_PAID, DEPOSIT_STATUS_UPDATED, DEPOSIT_STATUS_NOT_REQUIRED,
 } from '../../constants';
 
 const SK_SUBMISSION = 'licensing.application.submission';
@@ -24,6 +26,22 @@ const SUBMISSION_COLUMNS = [
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
+const DEPOSIT_SELECT = {
+  options: DEPOSIT_STATUS_OPTIONS,
+  statusColors: {
+    [DEPOSIT_STATUS_NOT_RECEIVED]: 'red',
+    [DEPOSIT_STATUS_RECEIVED]:     'red',
+    [DEPOSIT_STATUS_PAID]:         'red',
+    [DEPOSIT_STATUS_UPDATED]:      'green',
+    [DEPOSIT_STATUS_NOT_REQUIRED]: 'green',
+  },
+  doneValues: [DEPOSIT_STATUS_UPDATED, DEPOSIT_STATUS_NOT_REQUIRED],
+};
+
+const isActionDone = (a) => (a.label === ACTION_LABEL_DEPOSIT
+  ? DEPOSIT_SELECT.doneValues.includes(a.status)
+  : a.status === ACTION_STATUS_PRESENT || a.status === ACTION_STATUS_NOT_REQUIRED);
+
 const ACTION_COLUMNS = [
   { key: 'label',    type: 'text',   header: 'פעולה' },
   { key: 'status',   type: 'select', header: 'סטטוס', options: ACTION_STATUS_OPTIONS,
@@ -32,7 +50,8 @@ const ACTION_COLUMNS = [
       [ACTION_STATUS_SENT]:         'orange',
       [ACTION_STATUS_PRESENT]:      'green',
       [ACTION_STATUS_NOT_REQUIRED]: 'gray',
-    } },
+    },
+    rowSelect: (row) => (row.label === ACTION_LABEL_DEPOSIT ? DEPOSIT_SELECT : null) },
   { key: 'note',     type: 'input',  header: 'הערה', placeholder: 'הערה' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
@@ -54,9 +73,7 @@ export default function RequestPhase({ request, conditionsPassed, onChange, remi
   const [newLabel, setNewLabel] = useState('');
   const [addingRow, setAddingRow] = useState(false);
 
-  const allActionsDone = request.actions.every(
-    a => a.status === ACTION_STATUS_PRESENT || a.status === ACTION_STATUS_NOT_REQUIRED
-  );
+  const allActionsDone = request.actions.every(isActionDone);
 
   const confirmAddAction = () => {
     const label = newLabel.trim();

@@ -112,21 +112,24 @@ export default function StatusTable({
     if (col.type === 'text') return value;
 
     if (col.type === 'select') {
-      const colorName = col.statusColors?.[value];
-      const lastOptionValue = col.options?.length ? col.options[col.options.length - 1].value : null;
+      // rowSelect(row) may return { options, statusColors, doneValues } to give one row its own dropdown.
+      const { options, statusColors, doneValues } = { ...col, ...col.rowSelect?.(row) };
+      const colorName = statusColors?.[value];
+      const lastOptionValue = options?.length ? options[options.length - 1].value : null;
       return (
         <div className={`status-badge-wrap${colorName ? ` status-badge-${colorName}` : ''}`}>
           <select value={value} onChange={(e) => {
             const newVal = e.target.value;
             updateCell(rowIdx, col.key, newVal);
             // Auto-clear reminder on terminal statuses (done or not-needed).
-            const isTerminal = newVal && (newVal === lastOptionValue || newVal === 'not_required' || newVal === 'present');
+            const isTerminal = newVal && (newVal === lastOptionValue || newVal === 'not_required' || newVal === 'present'
+              || doneValues?.includes(newVal));
             if (isTerminal && onReminderChange) {
               const rowLabel = row.label || row.type || String(rowIdx);
               onReminderChange(rowLabel, null);
             }
           }}>
-            {col.options.map(opt => (
+            {options.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
