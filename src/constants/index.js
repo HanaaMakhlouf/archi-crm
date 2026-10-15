@@ -129,8 +129,16 @@ export const DEPOSIT_STATUS_OPTIONS = [
   { value: DEPOSIT_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
 ];
 
+// The בעלות row has its own dropdown too; all three reuse the generic codes.
+export const ACTION_LABEL_OWNERSHIP = 'בעלות';
+export const OWNERSHIP_STATUS_OPTIONS = [
+  { value: ACTION_STATUS_NOT_SENT, label: 'חסר' },
+  { value: ACTION_STATUS_SENT, label: 'בטיפול לקוח' },
+  { value: ACTION_STATUS_PRESENT, label: 'יש' },
+];
+
 export const DEFAULT_REQUEST_ACTIONS = [
-  'בעלות',
+  ACTION_LABEL_OWNERSHIP,
   ACTION_LABEL_DEPOSIT,
   'תקנה',
   'פרסום עזבון',

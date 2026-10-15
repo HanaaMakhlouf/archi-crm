@@ -8,6 +8,7 @@ import {
   MEETING_IN_COMMUNICATION, MEETING_SCHEDULED, MEETING_APPROVED,
   ACTION_LABEL_DEPOSIT, DEPOSIT_STATUS_OPTIONS, DEPOSIT_STATUS_NOT_RECEIVED, DEPOSIT_STATUS_RECEIVED,
   DEPOSIT_STATUS_PAID, DEPOSIT_STATUS_UPDATED, DEPOSIT_STATUS_NOT_REQUIRED,
+  ACTION_LABEL_OWNERSHIP, OWNERSHIP_STATUS_OPTIONS,
 } from '../../constants';
 
 const SK_SUBMISSION = 'licensing.application.submission';
@@ -39,8 +40,24 @@ const DEPOSIT_SELECT = {
   doneValues: [DEPOSIT_STATUS_UPDATED, DEPOSIT_STATUS_NOT_REQUIRED],
 };
 
-const isActionDone = (a) => (a.label === ACTION_LABEL_DEPOSIT
-  ? DEPOSIT_SELECT.doneValues.includes(a.status)
+const OWNERSHIP_SELECT = {
+  options: OWNERSHIP_STATUS_OPTIONS,
+  statusColors: {
+    [ACTION_STATUS_NOT_SENT]: 'red',
+    [ACTION_STATUS_SENT]:     'orange',
+    [ACTION_STATUS_PRESENT]:  'green',
+  },
+  doneValues: [ACTION_STATUS_PRESENT],
+};
+
+// Rows that get their own dropdown instead of ACTION_STATUS_OPTIONS, by label.
+const ROW_SELECTS = {
+  [ACTION_LABEL_DEPOSIT]:   DEPOSIT_SELECT,
+  [ACTION_LABEL_OWNERSHIP]: OWNERSHIP_SELECT,
+};
+
+const isActionDone = (a) => (ROW_SELECTS[a.label]
+  ? ROW_SELECTS[a.label].doneValues.includes(a.status)
   : a.status === ACTION_STATUS_PRESENT || a.status === ACTION_STATUS_NOT_REQUIRED);
 
 const ACTION_COLUMNS = [
@@ -52,7 +69,7 @@ const ACTION_COLUMNS = [
       [ACTION_STATUS_PRESENT]:      'green',
       [ACTION_STATUS_NOT_REQUIRED]: 'gray',
     },
-    rowSelect: (row) => (row.label === ACTION_LABEL_DEPOSIT ? DEPOSIT_SELECT : null) },
+    rowSelect: (row) => ROW_SELECTS[row.label] },
   { key: 'note',     type: 'input',  header: 'הערה', placeholder: 'הערה' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
