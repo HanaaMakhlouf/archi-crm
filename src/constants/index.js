@@ -90,11 +90,13 @@ export const INFO_NOTE_OPTIONS = [
 // Submission (הגשה)
 export const SUBMISSION_NOT_STARTED = 'not_started';
 export const SUBMISSION_IN_PROGRESS = 'in_progress';
+export const SUBMISSION_NEEDS_FIX = 'submission_needs_fix';
 export const SUBMISSION_DONE = 'done';
 export const SUBMISSION_OPTIONS = [
-  { value: SUBMISSION_NOT_STARTED, label: 'לא התחיל' },
+  { value: SUBMISSION_NOT_STARTED, label: 'לא התחלנו' },
   { value: SUBMISSION_IN_PROGRESS, label: 'בסדר עבודה' },
-  { value: SUBMISSION_DONE, label: 'הוגש' },
+  { value: SUBMISSION_NEEDS_FIX, label: 'נדרש תיקון' },
+  { value: SUBMISSION_DONE, label: 'מוכן' },
 ];
 
 // Actions table
