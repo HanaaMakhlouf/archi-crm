@@ -166,7 +166,7 @@ const LAND_FIELDS = [
   { key: 'migrash', label: 'מגרש' },
 ];
 
-export default function InfoPhase({ client, onUpdateClient, info, onChange, reminders = [], onReminderChange, onClearReminders }) {
+export default function InfoPhase({ client, onUpdateClient, info, onChange, reminders = [], onReminderChange, onClearReminders, onNext }) {
   const [editMode, setEditMode] = useState(false);
   const [landDraft, setLandDraft] = useState(null);
   const landDebounce = useRef(null);
@@ -351,7 +351,7 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
           reminders={sectionReminders(SK_CONDITIONS)}
           onReminderChange={(rl, days) => onReminderChange?.(SK_CONDITIONS)(rl, days)}
           footer={info.conditions_passed === CONDITIONS_STATUS_RECEIVED
-            ? <span style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 14 }}>✓ עבור לשלב הבא</span>
+            ? <button className="btn btn-primary btn-sm" onClick={onNext}>עבור לשלב הבא ←</button>
             : null}
         />
       </GrayOut>

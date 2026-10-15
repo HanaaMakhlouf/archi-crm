@@ -86,7 +86,7 @@ const MEETING_COLUMNS = [
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
-export default function RequestPhase({ request, conditionsPassed, onChange, reminders = [], onReminderChange, onClearReminders }) {
+export default function RequestPhase({ request, conditionsPassed, onChange, reminders = [], onReminderChange, onClearReminders, onNext }) {
   const patch = (key, value) => onChange({ [key]: value });
   const [newLabel, setNewLabel] = useState('');
   const [addingRow, setAddingRow] = useState(false);
@@ -184,7 +184,7 @@ export default function RequestPhase({ request, conditionsPassed, onChange, remi
           reminders={sectionReminders(SK_MEETING)}
           onReminderChange={(rl, days) => onReminderChange?.(SK_MEETING)(rl, days)}
           footer={request.meeting.status === MEETING_APPROVED
-            ? <span style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 14 }}>✓ עבור לשלב הבא</span>
+            ? <button className="btn btn-primary btn-sm" onClick={onNext}>עבור לשלב הבא ←</button>
             : null}
         />
       </GrayOut>

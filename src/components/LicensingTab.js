@@ -223,6 +223,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           reminders={licReminders}
           onReminderChange={makeReminderChange}
           onClearReminders={onClearReminders}
+          onNext={() => setActivePhase(LICENSING_PHASE_APPLICATION)}
         />
       )}
       {activePhase === LICENSING_PHASE_APPLICATION && (
@@ -233,6 +234,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           reminders={licReminders}
           onReminderChange={makeReminderChange}
           onClearReminders={onClearReminders}
+          onNext={() => setActivePhase(LICENSING_PHASE_CONDITIONS)}
         />
       )}
       {activePhase === LICENSING_PHASE_CONDITIONS && (
