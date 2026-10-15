@@ -4,19 +4,15 @@ import { callAdminUsers } from '../utils/adminUsers';
 import { useAuth } from '../contexts/AuthContext';
 import { startOfDay } from '../utils/format';
 import { ActivityFeed } from './ActivityList';
-import { AUTO_ACTIVITY_TYPES, MANUAL_ACTIVITY_OPTIONS } from '../constants';
-
-const TYPE_CHANGES = 'changes'; // filter value: every automatic (field change) row
 
 const dayStartIso = (dateStr, addDays = 0) => startOfDay(dateStr, addDays).toISOString();
 
 // Managers' office-wide activity log: everything done on every client,
-// filterable by client, employee, type and date range.
+// filterable by client, employee and date range.
 export default function ActivityView({ clients, onOpenClient }) {
   const { officeId } = useAuth();
   const [clientId, setClientId] = useState('');
   const [actorId, setActorId] = useState('');
-  const [type, setType] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [users, setUsers] = useState([]);
@@ -31,12 +27,10 @@ export default function ActivityView({ clients, onOpenClient }) {
     q = q.eq('office_id', String(officeId));
     if (clientId) q = q.eq('client_id', clientId);
     if (actorId) q = q.eq('actor_id', actorId);
-    if (type === TYPE_CHANGES) q = q.in('action', AUTO_ACTIVITY_TYPES);
-    else if (type) q = q.eq('action', type);
     if (from) q = q.gte('created_at', dayStartIso(from));
     if (to) q = q.lt('created_at', dayStartIso(to, 1)); // "to" day is inclusive
     return q;
-  }, [officeId, clientId, actorId, type, from, to]);
+  }, [officeId, clientId, actorId, from, to]);
 
   const log = useActivityLog(applyFilters);
 
@@ -45,10 +39,10 @@ export default function ActivityView({ clients, onOpenClient }) {
     [clients],
   );
   const clientIds = useMemo(() => new Set(clients.map(c => String(c.id))), [clients]);
-  const hasFilters = clientId || actorId || type || from || to;
+  const hasFilters = clientId || actorId || from || to;
 
   const clearFilters = () => {
-    setClientId(''); setActorId(''); setType(''); setFrom(''); setTo('');
+    setClientId(''); setActorId(''); setFrom(''); setTo('');
   };
 
   return (
@@ -77,14 +71,6 @@ export default function ActivityView({ clients, onOpenClient }) {
           <select value={actorId} onChange={e => setActorId(e.target.value)}>
             <option value="">כל העובדים</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.email}</option>)}
-          </select>
-        </div>
-        <div className="form-group">
-          <label>סוג</label>
-          <select value={type} onChange={e => setType(e.target.value)}>
-            <option value="">הכל</option>
-            <option value={TYPE_CHANGES}>שינויים בתיק</option>
-            {MANUAL_ACTIVITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
         <div className="form-group">
