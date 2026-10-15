@@ -98,7 +98,6 @@ export default function App() {
 
   // ── FILTERS / SEARCH / SORT ──
   const [search, setSearch] = useState('');
-  const [filterLabel, setFilterLabel] = useState('');
   const [filterType, setFilterType] = useState('');
   const [sort, setSort] = useState(DEFAULT_SORT);     // one column sorts at a time
 
@@ -302,8 +301,8 @@ export default function App() {
   };
 
   const filtered = useMemo(() => filterAndSortClients(clients, {
-    search, label: filterLabel, type: filterType,
-  }, sort), [clients, search, filterLabel, filterType, sort]);
+    search, type: filterType,
+  }, sort), [clients, search, filterType, sort]);
 
   const permanentCount = useMemo(() => clients.filter(c => c.label === LABEL_PERMANENT).length, [clients]);
   const newCount = useMemo(() => clients.filter(c => c.label === LABEL_NEW).length, [clients]);
@@ -409,20 +408,7 @@ export default function App() {
                 <table className="clients-table">
                   <thead>
                     <tr>
-                      <th>
-                        <div className="th-filter-row">
-                          <SortHeader column="name" label="לקוח" sort={sort} onChange={setSort} />
-                          <ColumnFilterButton active={!!filterLabel}>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                              <label>סטטוס לקוח</label>
-                              <select value={filterLabel} onChange={e => setFilterLabel(e.target.value)}>
-                                <option value="">כל הלקוחות</option>
-                                {LABEL_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                              </select>
-                            </div>
-                          </ColumnFilterButton>
-                        </div>
-                      </th>
+                      <th><SortHeader column="name" label="לקוח" sort={sort} onChange={setSort} /></th>
                       <th>עדיפות</th>
                       <th>
                         <div className="th-filter-row">
