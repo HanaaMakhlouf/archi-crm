@@ -4,6 +4,7 @@ import { callAdminUsers } from '../utils/adminUsers';
 import { useAuth } from '../contexts/AuthContext';
 import { startOfDay } from '../utils/format';
 import { ActivityFeed } from './ActivityList';
+import ClientPicker from './ClientPicker';
 
 const dayStartIso = (dateStr, addDays = 0) => startOfDay(dateStr, addDays).toISOString();
 
@@ -12,6 +13,7 @@ const dayStartIso = (dateStr, addDays = 0) => startOfDay(dateStr, addDays).toISO
 export default function ActivityView({ clients, onOpenClient }) {
   const { officeId } = useAuth();
   const [clientId, setClientId] = useState('');
+  const [clientText, setClientText] = useState('');
   const [actorId, setActorId] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -34,15 +36,11 @@ export default function ActivityView({ clients, onOpenClient }) {
 
   const log = useActivityLog(applyFilters);
 
-  const clientOptions = useMemo(
-    () => [...clients].sort((a, b) => a.name.localeCompare(b.name, 'he')),
-    [clients],
-  );
   const clientIds = useMemo(() => new Set(clients.map(c => String(c.id))), [clients]);
   const hasFilters = clientId || actorId || from || to;
 
   const clearFilters = () => {
-    setClientId(''); setActorId(''); setFrom(''); setTo('');
+    setClientId(''); setClientText(''); setActorId(''); setFrom(''); setTo('');
   };
 
   return (
@@ -61,10 +59,13 @@ export default function ActivityView({ clients, onOpenClient }) {
       <div className="detail-section activity-filters">
         <div className="form-group">
           <label>לקוח</label>
-          <select value={clientId} onChange={e => setClientId(e.target.value)}>
-            <option value="">כל הלקוחות</option>
-            {clientOptions.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
-          </select>
+          <ClientPicker
+            text={clientText}
+            onTextChange={setClientText}
+            clients={clients}
+            onPick={c => setClientId(c ? String(c.id) : '')}
+            placeholder="כל הלקוחות — הקלידו לחיפוש"
+          />
         </div>
         <div className="form-group">
           <label>עובד</label>

@@ -61,6 +61,11 @@ const valueToText = (v) => {
 const isPlainObject = (x) => x && typeof x === 'object' && !Array.isArray(x);
 const jsonEq = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
+// Equal, or scalars / scalar lists that read the same (29 vs "29" vs [29],
+// null vs ''), so a type-only difference isn't reported as "29 ← 29".
+const hasObject = (v) => isPlainObject(v) || (Array.isArray(v) && v.some(x => x && typeof x === 'object'));
+const sameValue = (a, b) => jsonEq(a, b) || (!hasObject(a) && !hasObject(b) && valueToText(a) === valueToText(b));
+
 const NESTED_DATA_KEYS = new Set(['planning_data', 'licensing_data', 'detailed_data', 'type_attributes']);
 
 // Walks two (assumed similarly-shaped) values and collects every leaf that
@@ -85,7 +90,7 @@ function collectChangedLeaves(oldVal, newVal, path = [], out = []) {
     return out;
   }
 
-  if (!jsonEq(oldVal, newVal)) out.push({ path, value: newVal, oldValue: oldVal });
+  if (!sameValue(oldVal, newVal)) out.push({ path, value: newVal, oldValue: oldVal });
   return out;
 }
 
@@ -136,7 +141,7 @@ function describeChangeParts(updates, previousClient, all) {
       continue;
     }
 
-    if (jsonEq(oldVal, newVal)) continue;
+    if (sameValue(oldVal, newVal)) continue;
     parts.push(describeLeaf(sectionLabel, { path: [], key, value: newVal, oldValue: oldVal }, all));
   }
   return parts;

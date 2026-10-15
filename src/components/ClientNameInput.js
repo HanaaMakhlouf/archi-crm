@@ -4,7 +4,7 @@ import { getInitials } from './Icon';
 const MAX_SUGGESTIONS = 6;
 
 // Highlights the matched part of a name.
-function Highlight({ text, query }) {
+export function Highlight({ text, query }) {
   const i = text.toLowerCase().indexOf(query.toLowerCase());
   if (i < 0) return text;
   return (
