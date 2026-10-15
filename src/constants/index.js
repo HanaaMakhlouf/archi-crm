@@ -303,6 +303,7 @@ export const BUCKET_NOTIFICATION_FILES = 'notification-files';
 // ── TIME / DELAYS ──
 export const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 export const DEBOUNCE_DELAY_MS = 400;
+export const TEXT_SAVE_IDLE_MS = 5000; // typed text saves on blur, or after this long without typing
 export const NOTIFICATION_REFRESH_MS = 60_000;
 
 // ── NOTIFICATION CONFIG ──

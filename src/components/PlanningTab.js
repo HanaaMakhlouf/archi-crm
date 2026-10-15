@@ -1,11 +1,11 @@
-import { useRef, useCallback, useEffect, useState, useMemo } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import StatusTable from './licensing/StatusTable';
 import GrayOut from './GrayOut';
+import { useDeferredSave } from '../utils/useDeferredSave';
 import {
   FIELD_PLANNING_DATA,
   STATUS_NOT_STARTED, STATUS_IN_PROGRESS, STATUS_READY, STATUS_AGREED,
   STATUS_NOT_READY, STATUS_READY_SIMPLE,
-  DEBOUNCE_DELAY_MS,
 } from '../constants';
 
 // ── Status options ──
@@ -124,7 +124,6 @@ export function getCurrentPlanningStageLabel(client) {
 
 export default function PlanningTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {
   const [pd, setPd] = useState(() => buildInitialPd(client));
-  const debounceTimer = useRef(null);
   const pdRef = useRef(pd);
   pdRef.current = pd;
 
@@ -133,22 +132,16 @@ export default function PlanningTab({ client, onUpdate, reminders = [], onRemind
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client.id]);
 
-  useEffect(() => () => clearTimeout(debounceTimer.current), []);
-
-  const persist = useCallback((next) => {
-    onUpdate({ [FIELD_PLANNING_DATA]: next });
-  }, [onUpdate]);
+  const { schedule: persist, flush } = useDeferredSave((next) => onUpdate({ [FIELD_PLANNING_DATA]: next }));
 
   const update = (next) => {
     setPd(next);
-    clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => persist(next), DEBOUNCE_DELAY_MS);
+    persist(next);
   };
 
   const handleText = (key, value) => {
     setPd(prev => ({ ...prev, [key]: value }));
-    clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => persist({ ...pdRef.current, [key]: value }), DEBOUNCE_DELAY_MS);
+    persist({ ...pdRef.current, [key]: value });
   };
 
   const onSingleTableChange = (tableKey) => (nextRows) => {
@@ -193,7 +186,7 @@ export default function PlanningTab({ client, onUpdate, reminders = [], onRemind
   ];
 
   return (
-    <div dir="rtl" className="planning-tab">
+    <div dir="rtl" className="planning-tab" onBlur={flush}>
 
       {/* ── Section A: פרטי תכנון (unchanged) ── */}
       <div className="detail-section">

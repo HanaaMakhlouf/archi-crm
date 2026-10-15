@@ -6,6 +6,7 @@ import ConditionsPhase from './licensing/ConditionsPhase';
 import ConfirmationPhase from './licensing/ConfirmationPhase';
 import GrayOut from './GrayOut';
 import { makeEmptyPerson } from './licensing/PersonForm';
+import { useDeferredSave } from '../utils/useDeferredSave';
 import {
   FIELD_LICENSING_DATA,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
@@ -21,7 +22,6 @@ import {
   DEFAULT_CONDITION_ROWS,
   DEFAULT_CONFIRMATION_ROWS,
   MEETING_APPROVED,
-  DEBOUNCE_DELAY_MS,
   CONDITIONS_STATUS_NOT_SENT,
   CONDITIONS_STATUS_RECEIVED,
 } from '../constants';
@@ -127,7 +127,6 @@ export function getCurrentLicensingPhaseLabel(client) {
 export default function LicensingTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {
   const [ld, setLd] = useState(() => buildInitialLd(client));
   const [activePhase, setActivePhase] = useState(() => computeCurrentPhase(ld));
-  const debounceTimer = useRef(null);
   const ldRef = useRef(ld);
   ldRef.current = ld;
 
@@ -138,19 +137,12 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client.id]);
 
-  useEffect(() => {
-    return () => clearTimeout(debounceTimer.current);
-  }, []);
-
-  const persist = useCallback((nextLd) => {
-    onUpdate({ [FIELD_LICENSING_DATA]: nextLd });
-  }, [onUpdate]);
+  const { schedule: persist, flush } = useDeferredSave((nextLd) => onUpdate({ [FIELD_LICENSING_DATA]: nextLd }));
 
   const updateSection = (section, patch) => {
     const next = { ...ldRef.current, [section]: { ...ldRef.current[section], ...patch } };
     setLd(next);
-    clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => persist(next), DEBOUNCE_DELAY_MS);
+    persist(next);
   };
 
   const handlePhaseClick = (phase) => setActivePhase(phase);
@@ -207,7 +199,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
   ];
 
   return (
-    <div dir="rtl" className="licensing-tab">
+    <div dir="rtl" className="licensing-tab" onBlur={flush}>
       <PhaseStepper
         activePhase={activePhase}
         unlockedPhases={unlockedPhases}

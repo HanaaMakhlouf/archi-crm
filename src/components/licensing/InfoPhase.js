@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useDeferredSave } from '../../utils/useDeferredSave';
 import { makeEmptyPerson } from './PersonForm';
 import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
@@ -10,7 +11,6 @@ import {
   DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS,
   CONDITIONS_STATUS_OPTIONS, CONDITIONS_STATUS_RECEIVED,
   CONDITIONS_STATUS_NOT_SENT,
-  DEBOUNCE_DELAY_MS,
   NUMERIC_LAND_FIELDS,
 } from '../../constants';
 
@@ -169,7 +169,6 @@ const LAND_FIELDS = [
 export default function InfoPhase({ client, onUpdateClient, info, onChange, reminders = [], onReminderChange, onClearReminders, onNext }) {
   const [editMode, setEditMode] = useState(false);
   const [landDraft, setLandDraft] = useState(null);
-  const landDebounce = useRef(null);
 
   const patch = (key, value) => onChange({ [key]: value });
 
@@ -179,28 +178,27 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
     migrash: client.migrash ?? '',
   };
 
+  const { schedule: saveLand, flush: flushLand } = useDeferredSave((next) => {
+    const payload = { ...next };
+    NUMERIC_LAND_FIELDS.forEach(k => {
+      payload[k] = payload[k] === '' ? payload[k] : Number(payload[k]);
+    });
+    payload.migrash = String(payload.migrash ?? '').trim() || null;
+    const helkaNums = (payload.helka || [])
+      .map(h => String(h ?? '').trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter(n => Number.isInteger(n) && n > 0);
+    payload.helka = helkaNums.length ? helkaNums : null;
+    onUpdateClient?.(payload);
+    setLandDraft(null);
+  });
+
   const updateLand = (key, value) => {
     const next = { ...land, [key]: value };
     setLandDraft(next);
-    clearTimeout(landDebounce.current);
-    landDebounce.current = setTimeout(() => {
-      const payload = { ...next };
-      NUMERIC_LAND_FIELDS.forEach(k => {
-        payload[k] = payload[k] === '' ? payload[k] : Number(payload[k]);
-      });
-      payload.migrash = String(payload.migrash ?? '').trim() || null;
-      const helkaNums = (payload.helka || [])
-        .map(h => String(h ?? '').trim())
-        .filter(Boolean)
-        .map(Number)
-        .filter(n => Number.isInteger(n) && n > 0);
-      payload.helka = helkaNums.length ? helkaNums : null;
-      onUpdateClient?.(payload);
-      setLandDraft(null);
-    }, DEBOUNCE_DELAY_MS);
+    saveLand(next);
   };
-
-  useEffect(() => () => clearTimeout(landDebounce.current), []);
 
   const allDocumentsDone = info.documents.every(d => d.status !== DOC_STATUS_MISSING);
   const infoNoteSent = info.info_note_status === INFO_NOTE_SENT;
@@ -216,7 +214,7 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
   const sectionReminders = (sk) => reminders.filter(r => r.section_key === sk);
 
   return (
-    <div className="licensing-info">
+    <div className="licensing-info" onBlur={flushLand}>
 
       {/* ── Edit toggle ── */}
       <div className="info-group-header">

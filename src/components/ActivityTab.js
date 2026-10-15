@@ -3,17 +3,16 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { useActivityLog } from '../utils/useActivityLog';
 import { ActivityFeed } from './ActivityList';
-import { TABLE_CLIENT_ACTIVITY, MANUAL_ACTIVITY_OPTIONS, ACTIVITY_CALL } from '../constants';
+import { TABLE_CLIENT_ACTIVITY, ACTIVITY_NOTE } from '../constants';
 
 // Client profile → פעילות tab: this client's full history, plus a form to
-// log work that doesn't change any field (calls, meetings, site visits...).
+// add a free-text note about work that doesn't change any field.
 export default function ActivityTab({ client }) {
   const { officeId, isViewer } = useAuth();
   const clientId = String(client.id);
   const applyFilters = useCallback(q => q.eq('client_id', clientId), [clientId]);
   const log = useActivityLog(applyFilters);
 
-  const [type, setType] = useState(ACTIVITY_CALL);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
@@ -27,7 +26,7 @@ export default function ActivityTab({ client }) {
       client_id: clientId,
       client_name: client.name,
       office_id: String(client.office_id ?? officeId),
-      action: type,
+      action: ACTIVITY_NOTE,
       note: note.trim(),
     });
     if (error) {
@@ -46,9 +45,6 @@ export default function ActivityTab({ client }) {
         <form className="detail-section activity-add" onSubmit={handleAdd}>
           <h3 className="detail-section-title">הוספת פעילות</h3>
           <div className="activity-add-row">
-            <select value={type} onChange={e => setType(e.target.value)} aria-label="סוג פעילות">
-              {MANUAL_ACTIVITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
             <textarea
               rows={2}
               value={note}

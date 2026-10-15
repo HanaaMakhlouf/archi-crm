@@ -2886,10 +2886,6 @@ textarea {
   align-items: flex-start;
 }
 
-.activity-add-row select {
-  flex: 0 0 150px;
-}
-
 .activity-add-row textarea {
   flex: 1;
   min-width: 0;
@@ -3036,9 +3032,5 @@ textarea {
   .activity-add-row {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .activity-add-row select {
-    flex-basis: auto;
   }
 }

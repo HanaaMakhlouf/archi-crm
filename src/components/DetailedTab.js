@@ -1,15 +1,15 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import PersonForm, { makeEmptyPerson } from './licensing/PersonForm';
 import { InfoCard, PersonReadOnly } from './licensing/InfoPhase';
 import StatusTable from './licensing/StatusTable';
 import GrayOut from './GrayOut';
 import HelkaList from './HelkaList';
+import { useDeferredSave } from '../utils/useDeferredSave';
 import {
   FIELD_DETAILED_DATA,
   DETAILED_HACHANA_BE_TIPUL, DETAILED_HACHANA_KEN, DETAILED_HACHANA_LO,
   DETAILED_SHUBATS, DETAILED_LO_SHUBATS,
   DETAILED_LO_NISHLACH, DETAILED_NISHLACH, DETAILED_HITKABEL,
-  DEBOUNCE_DELAY_MS,
   NUMERIC_LAND_FIELDS,
 } from '../constants';
 
@@ -97,8 +97,6 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
   const [dd, setDd] = useState(() => buildInitialDetailed(client, client[FIELD_DETAILED_DATA]));
   const [editMode, setEditMode] = useState(false);
   const [landDraft, setLandDraft] = useState(null);
-  const debounceTimer = useRef(null);
-  const landDebounce = useRef(null);
   const ddRef = useRef(dd);
   ddRef.current = dd;
 
@@ -107,20 +105,12 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client.id]);
 
-  useEffect(() => () => {
-    clearTimeout(debounceTimer.current);
-    clearTimeout(landDebounce.current);
-  }, []);
-
-  const persist = useCallback((next) => {
-    onUpdate({ [FIELD_DETAILED_DATA]: next });
-  }, [onUpdate]);
+  const { schedule: persist, flush: flushDd } = useDeferredSave((next) => onUpdate({ [FIELD_DETAILED_DATA]: next }));
 
   const updateField = (key, patch) => {
     const next = { ...ddRef.current, [key]: { ...ddRef.current[key], ...patch } };
     setDd(next);
-    clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => persist(next), DEBOUNCE_DELAY_MS);
+    persist(next);
   };
 
   const updateInfo = (patch) => updateField('info', patch);
@@ -131,25 +121,26 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
     migrash: client.migrash ?? '',
   };
 
+  const { schedule: saveLand, flush: flushLand } = useDeferredSave((next) => {
+    const payload = { ...next };
+    NUMERIC_LAND_FIELDS.forEach(k => {
+      payload[k] = payload[k] === '' ? payload[k] : Number(payload[k]);
+    });
+    payload.migrash = String(payload.migrash ?? '').trim() || null;
+    const helkaNums = (payload.helka || [])
+      .map(h => String(h ?? '').trim())
+      .filter(Boolean)
+      .map(Number)
+      .filter(n => Number.isInteger(n) && n > 0);
+    payload.helka = helkaNums.length ? helkaNums : null;
+    onUpdate(payload);
+    setLandDraft(null);
+  });
+
   const updateLand = (key, value) => {
     const next = { ...land, [key]: value };
     setLandDraft(next);
-    clearTimeout(landDebounce.current);
-    landDebounce.current = setTimeout(() => {
-      const payload = { ...next };
-      NUMERIC_LAND_FIELDS.forEach(k => {
-        payload[k] = payload[k] === '' ? payload[k] : Number(payload[k]);
-      });
-      payload.migrash = String(payload.migrash ?? '').trim() || null;
-      const helkaNums = (payload.helka || [])
-        .map(h => String(h ?? '').trim())
-        .filter(Boolean)
-        .map(Number)
-        .filter(n => Number.isInteger(n) && n > 0);
-      payload.helka = helkaNums.length ? helkaNums : null;
-      onUpdate(payload);
-      setLandDraft(null);
-    }, DEBOUNCE_DELAY_MS);
+    saveLand(next);
   };
 
   const tableRow = (key, label) => [{ id: key, label, status: dd[key].status, note: dd[key].note }];
@@ -202,7 +193,7 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
   const sectionReminders = useMemo(() => (sk) => reminders.filter(r => r.section_key === sk), [reminders]);
 
   return (
-    <div dir="rtl" className="licensing-tab">
+    <div dir="rtl" className="licensing-tab" onBlur={() => { flushDd(); flushLand(); }}>
 
       {/* ── Section 1: Info ── */}
       <div className="info-group-header">
