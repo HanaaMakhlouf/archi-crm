@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
+import Icon from './Icon';
 import {
   FILE_LINK_1_PATH, FILE_LINK_1_NAME,
   FILE_LINK_2_PATH, FILE_LINK_2_NAME,
@@ -66,13 +67,74 @@ function buildUri(raw) {
   return `ms-word:ofe|u|file:///${path}`;
 }
 
-function getFileIcon(raw) {
-  if (isWebUrl(raw)) return '🔗';
-  const ext = getExt(raw);
-  if (['docx', 'doc'].includes(ext)) return '📄';
-  if (['xlsx', 'xls'].includes(ext)) return '📊';
-  if (['pptx', 'ppt'].includes(ext)) return '📑';
-  return '📁';
+// Drawn glyphs for the file tiles — a folder with a tab, and a page with a
+// folded corner carrying a small type stamp.
+function TileGlyph({ kind }) {
+  if (kind === 'folder') {
+    return (
+      <svg className="file-tile-glyph" viewBox="0 0 48 40" aria-hidden="true">
+        <path className="glyph-back" d="M4 6a3 3 0 0 1 3-3h11l4 5h19a3 3 0 0 1 3 3v24a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" />
+        <path className="glyph-front" d="M4 15a3 3 0 0 1 3-3h34a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z" />
+      </svg>
+    );
+  }
+  const stamp = kind === 'pdf' ? 'PDF' : kind === 'link' ? 'URL' : 'DOC';
+  return (
+    <svg className="file-tile-glyph" viewBox="0 0 48 40" aria-hidden="true">
+      <path className="glyph-back" d="M12 2h17l9 9v25a2 2 0 0 1-2 2H12a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" />
+      <path className="glyph-fold" d="M29 2v7a2 2 0 0 0 2 2h7z" />
+      <rect className="glyph-stamp" x="4" y="21" width="26" height="12" rx="2" />
+      <text className="glyph-stamp-text" x="17" y="30" textAnchor="middle">{stamp}</text>
+    </svg>
+  );
+}
+
+// "W: › … › kfarem › כור סקר" — the folder's location without the full path noise.
+function Crumbs({ parts }) {
+  const shown = parts.length > 3 ? [parts[0], '…', ...parts.slice(-2)] : parts;
+  return (
+    <span className="file-tile-crumbs" dir="ltr">
+      {shown.map((p, i) => (
+        <span key={i}>{i > 0 && <span className="crumb-sep">›</span>}<bdi>{p}</bdi></span>
+      ))}
+    </span>
+  );
+}
+
+function FileTile({
+  kind, label, name, meta, crumbs, title, error,
+  empty, emptyText, emptyHint,
+  onOpen, href, external, onReplace, onRemove,
+}) {
+  const body = (
+    <>
+      <TileGlyph kind={kind} />
+      <span className="file-tile-text">
+        <span className="file-tile-label">{label}</span>
+        <span className="file-tile-name">{empty ? emptyText : name}</span>
+        {empty ? <span className="file-tile-meta">{emptyHint}</span>
+          : error ? <span className="file-tile-meta is-error">{error}</span>
+          : crumbs?.length ? <Crumbs parts={crumbs} />
+          : meta && <span className="file-tile-meta">{meta}</span>}
+      </span>
+    </>
+  );
+  const mainClass = 'file-tile-main';
+  return (
+    <div className={`file-tile file-tile--${kind}${empty ? ' is-empty' : ''}${error ? ' has-error' : ''}`}>
+      {href ? (
+        <a className={mainClass} href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>{body}</a>
+      ) : (
+        <button type="button" className={mainClass} onClick={onOpen || undefined} disabled={!onOpen} title={title}>{body}</button>
+      )}
+      {!empty && (onReplace || onRemove) && (
+        <div className="file-tile-actions">
+          {onReplace && <button type="button" className="file-tile-action" onClick={onReplace} title="החלפה"><Icon name="edit" size={14} /></button>}
+          {onRemove && <button type="button" className="file-tile-action is-danger" onClick={onRemove} title="הסרה"><Icon name="trash" size={14} /></button>}
+        </div>
+      )}
+    </div>
+  );
 }
 
 const SLOTS = [
@@ -94,6 +156,7 @@ export default function QuickFileLinks({ client, onUpdateClient }) {
   const [pdfViewer, setPdfViewer] = useState(false);
   const [pdfSignedUrl, setPdfSignedUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [folderError, setFolderError] = useState(null);
   const dialogRef = useRef(null);
   const folderInputRef = useRef(null);
   const pdfInputRef = useRef(null);
@@ -192,85 +255,81 @@ export default function QuickFileLinks({ client, onUpdateClient }) {
   const badge = draftPath && valid ? getFileBadge(draftPath) : null;
   const activeLabel = modalSlot ? SLOTS.find(s => s.slot === modalSlot)?.label : '';
 
+  async function openPdf() {
+    const { data, error } = await supabase.storage.from(PDF_BUCKET).createSignedUrl(client[FILE_LINK_1_PATH], 300);
+    if (error) { alert('שגיאה בפתיחת הקובץ'); return; }
+    setPdfSignedUrl(data.signedUrl);
+    setPdfViewer(true);
+  }
+
+  async function openFolder(path) {
+    setFolderError(null);
+    const err = await window.electronAPI.openFolder(path);
+    if (err) setFolderError('התיקייה לא נמצאה — ייתכן שהועברה או נמחקה');
+  }
+
+  // Slot 2 (מחיצה) is usually a folder, but older clients may hold a web link or an Office file.
+  const folderTile = (() => {
+    const { slot, label, pathKey, nameKey } = SLOTS[1];
+    const path = client[pathKey];
+    const common = { label, kind: 'folder', onReplace: () => handlePickFolder(slot), onRemove: () => setConfirmUnlink(slot) };
+    if (!path) {
+      return <FileTile {...common} empty emptyText="קישור תיקייה" emptyHint="בחירת תיקייה מהמחשב" onOpen={() => handlePickFolder(slot)} />;
+    }
+    if (isAbsoluteFolderPath(path)) {
+      const canOpen = !!window.electronAPI?.isElectron;
+      return (
+        <FileTile
+          {...common}
+          name={client[nameKey] || getPathBasename(path)}
+          crumbs={path.split(/[\\/]/).filter(Boolean).slice(0, -1)}
+          title={canOpen ? `פתיחת ${path}` : 'ניתן לפתוח רק מהאפליקציה במחשב'}
+          onOpen={canOpen ? () => openFolder(path) : null}
+          error={folderError}
+        />
+      );
+    }
+    if (isFolderLink(path)) return <FileTile {...common} name={getFolderName(path)} meta="נבחרה בדפדפן — לא ניתן לפתוח מכאן" />;
+    const isUrl = isWebUrl(path);
+    return (
+      <FileTile
+        {...common}
+        kind={isUrl ? 'link' : 'doc'}
+        name={isUrl ? 'קישור' : client[nameKey]}
+        meta={isUrl ? path : getFileBadge(path).label}
+        href={buildUri(path)}
+        external={isUrl}
+      />
+    );
+  })();
+
   return (
     <>
       <div className="detail-section" style={{ gridColumn: '1 / -1' }}>
         <h3 className="detail-section-title">קבצים מהירים</h3>
-        <p className="muted" style={{ marginBottom: 16, fontSize: 13 }}>קשר תיקיות מקומיות, קבצי Office או קישורי רשת</p>
-
-        {/* Slot 1 — PDF הצעה */}
-        <div className="detail-row" style={{ padding: '12px 0', alignItems: 'center' }}>
-          <span className="detail-label" style={{ minWidth: 80 }}>{FILE_LINK_LABEL_1}</span>
+        <div className="file-tiles">
+          {folderTile}
           {client[FILE_LINK_1_PATH] ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, justifyContent: 'flex-end' }}>
-              <span style={{ fontSize: 20 }}>📄</span>
-              <div style={{ textAlign: 'right', flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{client[FILE_LINK_1_NAME] || 'הצעה.pdf'}</div>
-              </div>
-              <button className="btn btn-primary btn-sm" onClick={async () => {
-                const { data, error } = await supabase.storage.from(PDF_BUCKET).createSignedUrl(client[FILE_LINK_1_PATH], 300);
-                if (error) { alert('שגיאה בפתיחת הקובץ'); return; }
-                setPdfSignedUrl(data.signedUrl);
-                setPdfViewer(true);
-              }}>צפה</button>
-              <button className="btn btn-ghost btn-sm" onClick={() => pdfInputRef.current.click()} disabled={uploading}>
-                {uploading ? '...' : 'החלף'}
-              </button>
-              <button className="btn btn-ghost btn-sm" style={{ padding: '6px 8px', color: 'var(--color-error)' }} onClick={() => setConfirmUnlink(1)}>✕</button>
-            </div>
+            <FileTile
+              kind="pdf"
+              label={FILE_LINK_LABEL_1}
+              name={client[FILE_LINK_1_NAME] || 'הצעה.pdf'}
+              meta={uploading ? 'מעלה...' : 'לחיצה לצפייה'}
+              onOpen={openPdf}
+              onReplace={() => pdfInputRef.current.click()}
+              onRemove={() => setConfirmUnlink(1)}
+            />
           ) : (
-            <button className="btn btn-ghost btn-sm" onClick={() => pdfInputRef.current.click()} disabled={uploading}>
-              {uploading ? 'מעלה...' : '+ העלה PDF'}
-            </button>
+            <FileTile
+              kind="pdf"
+              label={FILE_LINK_LABEL_1}
+              empty
+              emptyText={uploading ? 'מעלה...' : 'העלאת PDF'}
+              emptyHint="קובץ ההצעה ללקוח"
+              onOpen={uploading ? null : () => pdfInputRef.current.click()}
+            />
           )}
         </div>
-
-        {/* Slot 2 — folder מחיצה */}
-        {(() => {
-          const { slot, label, pathKey, nameKey } = SLOTS[1];
-          const path = client[pathKey];
-          const name = client[nameKey];
-          const isUrl = path && isWebUrl(path);
-          const isLegacyFolder = path && isFolderLink(path);
-          const isNativeFolder = path && isAbsoluteFolderPath(path);
-          const isFolder = isLegacyFolder || isNativeFolder;
-          return (
-            <div key={slot} className="detail-row" style={{ padding: '12px 0', alignItems: 'center' }}>
-              <span className="detail-label" style={{ minWidth: 80 }}>{label}</span>
-              {isFolder ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, justifyContent: 'flex-end' }}>
-                  <span style={{ fontSize: 20 }}>📁</span>
-                  <div style={{ textAlign: 'right', flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>
-                      {isLegacyFolder ? getFolderName(path) : (name || getPathBasename(path))}
-                    </div>
-                    {isNativeFolder && (
-                      <div className="muted" style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260, direction: 'ltr', textAlign: 'left' }}>
-                        {path}
-                      </div>
-                    )}
-                  </div>
-                  {isNativeFolder && window.electronAPI?.isElectron && (
-                    <button className="btn btn-primary btn-sm" onClick={() => window.electronAPI.openFolder(path)}>פתח</button>
-                  )}
-                  <button className="btn btn-ghost btn-sm" style={{ padding: '6px 8px', color: 'var(--color-error)' }} onClick={() => setConfirmUnlink(slot)}>✕</button>
-                </div>
-              ) : path ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, justifyContent: 'flex-end' }}>
-                  <span style={{ fontSize: 20 }}>{getFileIcon(path)}</span>
-                  <div style={{ textAlign: 'right', flex: 1, overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>{isUrl ? 'קישור' : name}</div>
-                    <div className="muted" style={{ fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260, direction: 'ltr', textAlign: 'left' }}>{path}</div>
-                  </div>
-                  <a href={buildUri(path)} className="btn btn-primary btn-sm" style={{ textDecoration: 'none' }} target={isUrl ? '_blank' : undefined} rel={isUrl ? 'noopener noreferrer' : undefined}>פתח</a>
-                  <button className="btn btn-ghost btn-sm" style={{ padding: '6px 8px', color: 'var(--color-error)' }} onClick={() => setConfirmUnlink(slot)}>✕</button>
-                </div>
-              ) : (
-                <button className="btn btn-ghost btn-sm" onClick={() => handlePickFolder(slot)}>+ קשר תיקייה</button>
-              )}
-            </div>
-          );
-        })()}
       </div>
 
       <input ref={folderInputRef} type="file" webkitdirectory="" style={{ display: 'none' }} onChange={handleFolderInputChange} />
