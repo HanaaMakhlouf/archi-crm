@@ -2858,6 +2858,103 @@ textarea {
   opacity: 1;
 }
 
+/* ── FOLDER CHIP (client header, every tab) ── */
+.folder-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 260px;
+  padding: 6px 12px 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.folder-chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 18%, transparent);
+}
+
+.folder-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-primary-light), 0 0 0 4px var(--color-primary);
+}
+
+.folder-chip:disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.folder-chip-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.folder-chip-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.folder-chip-label {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.folder-chip-name {
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-chip-go {
+  font-size: 14px;
+  opacity: 0;
+  transform: translateX(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.folder-chip:hover .folder-chip-go {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.folder-chip--empty {
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.folder-chip--empty .folder-chip-icon {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+
+.folder-chip--empty:hover {
+  color: var(--color-primary);
+}
+
+.folder-chip--error {
+  border-color: var(--color-error);
+}
+
 /* ── MOBILE MENU ── */
 .mobile-menu-btn {
   display: none;

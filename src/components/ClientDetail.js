@@ -3,6 +3,7 @@ import PlanningTab from './PlanningTab';
 import LicensingTab from './LicensingTab';
 import DetailedTab from './DetailedTab';
 import QuickFileLinks from './QuickFileLinks';
+import FolderChip from './FolderChip';
 import ActivityTab from './ActivityTab';
 import { useAuth } from '../contexts/AuthContext';
 import Icon, { getInitials } from './Icon';
@@ -61,6 +62,13 @@ export default function ClientDetail({
         </div>
 
         <div className="page-actions">
+          {canSeeFiles && (
+            <FolderChip
+              client={client}
+              onUpdateClient={(updates) => onUpdateClient(client.id, updates)}
+              canEdit={!isViewer}
+            />
+          )}
           <button className="btn btn-ghost" onClick={onBack}>
             <Icon name="arrowRight" size={16} />
             חזרה

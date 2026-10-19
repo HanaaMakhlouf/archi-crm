@@ -12,14 +12,14 @@ function stripQuotes(str) {
   return str.replace(/^"|"$/g, '').trim();
 }
 
-function isWebUrl(raw) {
+export function isWebUrl(raw) {
   return /^https?:\/\/.+/i.test(raw.trim());
 }
 
-function isFolderLink(raw) { return raw?.startsWith('folder:'); }
-function getFolderName(raw) { return raw?.replace('folder:', '') || ''; }
+export function isFolderLink(raw) { return raw?.startsWith('folder:'); }
+export function getFolderName(raw) { return raw?.replace('folder:', '') || ''; }
 
-function isAbsoluteFolderPath(raw) {
+export function isAbsoluteFolderPath(raw) {
   if (!raw) return false;
   if (isWebUrl(raw)) return false;
   if (raw.startsWith('folder:')) return false;
@@ -29,7 +29,7 @@ function isAbsoluteFolderPath(raw) {
   return /^([a-zA-Z]:[\\/]|\/)/.test(raw);
 }
 
-function getPathBasename(p) {
+export function getPathBasename(p) {
   return p.split(/[\\/]/).filter(Boolean).pop() || p;
 }
 
