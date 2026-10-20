@@ -26,14 +26,24 @@ export const STATUS_READY_SIMPLE = 'ready';
 // {
 //   client_requirements: string,
 //   notes: string,
-//   work_plan_notes: string,
+//   architecture_required: boolean,          // אדריכלות part toggle (default true)
 //   tables: {
+//     // אדריכלות
 //     offer:          { status, notes },
 //     visualization:  { status, notes },
+//     work_plan:      { status, notes },     // was the free-text work_plan_notes
 //     disciplines: {
-//       construction: { status, notes },
-//       electricity:  { status, notes },
 //       water:        { status, notes },
+//       electricity:  { status, notes },
+//       construction: { status, notes },     // legacy, no longer shown
+//     },
+//     architecture_extra: [{ id, label, status, notes }],
+//     // קונסטרוקציה
+//     construction: {
+//       survey:    { status, notes },        // מדידה בשטח (מבנים קיימים)
+//       placement: { status, notes },        // העמדה
+//       work_plans: { status, notes },       // תוכניות עבודה (adds 'schematic' = סכימתי)
+//       extra:     [{ id, label, status, notes }],
 //     },
 //   },
 // }

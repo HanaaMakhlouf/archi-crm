@@ -2389,6 +2389,17 @@ textarea {
   overflow: hidden;
 }
 
+/* In tables every status dropdown fills its column, so they line up whatever the text. */
+.docs-table .status-badge-wrap {
+  display: flex;
+  width: 100%;
+}
+
+.docs-table .status-badge-wrap select {
+  flex: 1;
+  min-width: 0;
+}
+
 .status-badge-wrap select {
   border: none;
   background: transparent;
@@ -2411,6 +2422,15 @@ textarea {
 
 .status-badge-gray {
   background: var(--color-neutral-light);
+}
+
+.status-badge-blue {
+  background: var(--color-blue-light);
+}
+
+.docs-table .status-badge-blue select {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
 }
 
 .docs-table .status-badge-green select {
@@ -2593,6 +2613,109 @@ textarea {
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px dashed var(--color-border);
+}
+
+/* ── PLANNING PARTS: required toggle, added rows, locked rows ── */
+.required-toggle {
+  display: inline-flex;
+  margin-inline-start: 8px;
+  padding: 3px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+}
+
+.required-toggle button {
+  padding: 4px 14px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: 500 13px var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.required-toggle button:hover:not(.is-on):not(.is-off) { color: var(--color-text); }
+
+.required-toggle button.is-on {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.required-toggle button.is-off {
+  background: var(--color-text-muted);
+  color: var(--color-surface);
+  font-weight: 700;
+}
+
+.part-off-note {
+  margin: 0;
+  font-size: 13px;
+}
+
+.row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.row-remove-btn {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-faint);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.docs-table tr:hover .row-remove-btn,
+.row-remove-btn:focus-visible { opacity: 1; }
+
+.row-remove-btn:hover {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.add-row-btn {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: 600 13px var(--font-body);
+  cursor: pointer;
+}
+
+.add-row-btn:hover { text-decoration: underline; }
+
+.add-row-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.add-row-form input {
+  flex: 0 1 240px;
+  padding: 7px 11px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font: 13px var(--font-body);
+}
+
+.add-row-error {
+  font-size: 12px;
+  color: var(--color-error);
 }
 
 .docs-table th,

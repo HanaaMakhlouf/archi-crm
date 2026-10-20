@@ -2,7 +2,7 @@ import {
   DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS, SUBMISSION_OPTIONS, DEPOSIT_STATUS_OPTIONS, ACTION_STATUS_OPTIONS,
   MEETING_OPTIONS, CONDITIONS_STATUS_OPTIONS, PERMIT_STATUS_OPTIONS, PRIORITY_OPTIONS,
 } from '../constants';
-import { OFFER_OPTIONS, DISCIPLINE_OPTIONS } from '../components/PlanningTab';
+import { OFFER_OPTIONS, DISCIPLINE_OPTIONS, WORK_PLANS_OPTIONS } from '../components/PlanningTab';
 import { HACHANA_OPTIONS, HAFKADA_ISHUR_OPTIONS, PIRSOOM_OPTIONS } from '../components/DetailedTab';
 
 // Hebrew names for the fields/sections that can show up in a change summary.
@@ -17,7 +17,9 @@ const FIELD_LABELS = {
   // planning_data sections
   offer: 'הצעה', visualization: 'הדמיה', disciplines: 'תחומים',
   construction: 'קונסטרוקציה', water: 'מים', electricity: 'חשמל',
-  client_requirements: 'דרישות לקוח', work_plan_notes: 'תוכנית עבודה',
+  client_requirements: 'דרישות לקוח', work_plan_notes: 'תוכנית עבודה', work_plan: 'תוכנית עבודה',
+  architecture_required: 'אדריכלות נדרשת', architecture_extra: 'אדריכלות',
+  survey: 'מדידה בשטח', placement: 'העמדה', work_plans: 'תוכניות עבודה', extra: 'שלבים נוספים',
   // licensing_data sections
   info: 'מידע', application: 'בקשה', conditions: 'תנאים', confirmation: 'אישור התחלת עבודה',
   requesters: 'מבקשים', rights_holders: 'בעלי זכויות', documents: 'מסמכים',
@@ -43,7 +45,7 @@ const STATUS_LABELS = {};
 [
   DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS, SUBMISSION_OPTIONS, DEPOSIT_STATUS_OPTIONS, ACTION_STATUS_OPTIONS,
   MEETING_OPTIONS, CONDITIONS_STATUS_OPTIONS, PERMIT_STATUS_OPTIONS, PRIORITY_OPTIONS,
-  OFFER_OPTIONS, DISCIPLINE_OPTIONS, HACHANA_OPTIONS, HAFKADA_ISHUR_OPTIONS, PIRSOOM_OPTIONS,
+  OFFER_OPTIONS, DISCIPLINE_OPTIONS, WORK_PLANS_OPTIONS, HACHANA_OPTIONS, HAFKADA_ISHUR_OPTIONS, PIRSOOM_OPTIONS,
 ].forEach(list => (list || []).forEach(o => {
   if (o && o.value !== undefined && o.value !== '') STATUS_LABELS[o.value] = o.label;
 }));

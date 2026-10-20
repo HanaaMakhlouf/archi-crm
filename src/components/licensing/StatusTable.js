@@ -109,7 +109,7 @@ export default function StatusTable({
   const renderCell = (row, col, rowIdx) => {
     const value = row[col.key] ?? '';
 
-    if (col.type === 'text') return value;
+    if (col.type === 'text') return col.render ? col.render(row) : value;
 
     if (col.type === 'select') {
       // rowSelect(row) may return { options, statusColors, doneValues } to give one row its own dropdown.
