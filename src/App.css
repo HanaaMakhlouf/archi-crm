@@ -125,7 +125,7 @@ h6 {
 }
 
 .tabular-nums,
-.cell-phone,
+.cell-request,
 .cell-plot,
 .stat-number {
   font-variant-numeric: tabular-nums;
@@ -1029,7 +1029,7 @@ h6 {
   margin-left: 4px;
 }
 
-.clients-table td.cell-phone {
+.clients-table td.cell-request {
   direction: ltr;
   text-align: right;
   color: var(--color-text-muted);

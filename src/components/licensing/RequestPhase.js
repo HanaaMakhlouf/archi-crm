@@ -121,6 +121,19 @@ export default function RequestPhase({ request, conditionsPassed, onChange, remi
 
   return (
     <div className="licensing-info">
+      <div className="detail-section">
+        <h3 className="detail-section-title">מס' בקשה</h3>
+        <div className="form-group request-number-field">
+          <input
+            type="text"
+            dir="ltr"
+            value={request.request_number}
+            onChange={(e) => patch('request_number', e.target.value)}
+            placeholder="מספר הבקשה ברשות הרישוי"
+          />
+        </div>
+      </div>
+
       {/* Section 1 — Submission */}
       <StatusTable
         title="הגשה"

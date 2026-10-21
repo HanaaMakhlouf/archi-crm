@@ -25,7 +25,7 @@ const FIELD_LABELS = {
   requesters: 'מבקשים', rights_holders: 'בעלי זכויות', documents: 'מסמכים',
   description: 'מהות הבקשה', info_note_status: 'הודעת מידע', info_note_note: 'הערת מידע',
   conditions_passed: 'עמידה בתנאים', conditions_note: 'הערת תנאים',
-  submission: 'הגשה', actions: 'פעולות', meeting: 'ישיבה',
+  submission: 'הגשה', actions: 'פעולות', meeting: 'ישיבה', request_number: "מס' בקשה",
   rows: 'שורות', permit_status: 'סטטוס היתר', permit_note: 'הערת היתר',
   needs_start_approval: 'נדרש אישור תחילת עבודה',
   // detailed_data sections

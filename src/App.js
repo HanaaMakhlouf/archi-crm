@@ -426,7 +426,7 @@ export default function App() {
                       </th>
                       <th><SortHeader column="city" label="עיר" sort={sort} onChange={setSort} /></th>
                       <th>גוש / חלקה</th>
-                      <th>טלפון</th>
+                      <th>מס' בקשה</th>
                       <th>
                         <SortHeader column="created" label="תאריך יצירה" sort={sort} onChange={setSort} firstDir="desc" />
                       </th>
@@ -489,7 +489,7 @@ export default function App() {
                           <td className="cell-plot">
                             {client.gush || helkaText ? `${client.gush || '—'} / ${helkaText || '—'}` : '—'}
                           </td>
-                          <td className="cell-phone">{client.phone || '—'}</td>
+                          <td className="cell-request">{client.licensing_data?.application?.request_number || '—'}</td>
                           <td className="cell-secondary">
                             <bdi dir="ltr">{new Date(client.created_at).toLocaleDateString('he-IL')}</bdi>
                           </td>
