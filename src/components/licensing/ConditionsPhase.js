@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
 import {
-  DOC_STATUS_PRESENT, DOC_STATUS_MISSING, DOC_STATUS_NOT_REQUIRED, DOC_STATUS_OPTIONS,
+  DOC_STATUS_PRESENT, DOC_STATUS_MISSING, DOC_STATUS_NOT_REQUIRED,
+  CONDITION_ROW_STATUS_SENT, CONDITION_ROW_STATUS_OPTIONS,
   PERMIT_STATUS_OPTIONS, PERMIT_STATUS_SIGNED,
   PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_FEE_GIVEN, PERMIT_STATUS_PRINTED,
 } from '../../constants';
@@ -12,11 +13,12 @@ const SK_PERMIT     = 'licensing.conditions.permit';
 
 const CONDITION_COLUMNS = [
   { key: 'label',    type: 'text',   header: 'תנאי' },
-  { key: 'status',   type: 'select', header: 'סטטוס', options: DOC_STATUS_OPTIONS,
+  { key: 'status',   type: 'select', header: 'סטטוס', options: CONDITION_ROW_STATUS_OPTIONS,
     statusColors: {
-      [DOC_STATUS_PRESENT]:      'green',
-      [DOC_STATUS_MISSING]:      'red',
-      [DOC_STATUS_NOT_REQUIRED]: 'gray',
+      [DOC_STATUS_PRESENT]:         'green',
+      [DOC_STATUS_MISSING]:         'red',
+      [CONDITION_ROW_STATUS_SENT]:  'orange',
+      [DOC_STATUS_NOT_REQUIRED]:    'gray',
     } },
   { key: 'note',     type: 'input',  header: 'הערה', placeholder: 'הערה' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },

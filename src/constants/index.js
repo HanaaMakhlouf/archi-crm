@@ -87,6 +87,15 @@ export const DOC_STATUS_OPTIONS = [
   { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
 ];
 
+// רישוי → תנאים rows: the document statuses plus נשלח (sent, waiting for an answer).
+export const CONDITION_ROW_STATUS_SENT = 'sent';
+export const CONDITION_ROW_STATUS_OPTIONS = [
+  { value: DOC_STATUS_MISSING, label: 'חסר' },
+  { value: CONDITION_ROW_STATUS_SENT, label: 'נשלח' },
+  { value: DOC_STATUS_PRESENT, label: 'יש' },
+  { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
+
 // Info-note send status
 export const INFO_NOTE_NOT_SENT = 'not_sent';
 export const INFO_NOTE_SENT = 'sent';
