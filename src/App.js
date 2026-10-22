@@ -14,8 +14,10 @@ import PriorityDot from './components/PriorityDot';
 import Icon, { getInitials } from './components/Icon';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
 import { getCurrentPlanningStageLabel } from './components/PlanningTab';
-import { describeClientChange, formatRelativeTime } from './utils/changeSummary';
+import { describeClientChange } from './utils/changeSummary';
+import { formatDate } from './utils/format';
 import { DEFAULT_SORT, filterAndSortClients } from './utils/clientList';
+import { openClientFolder } from './utils/openClientFolder';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
 import {
@@ -467,8 +469,8 @@ export default function App() {
                                 )}
                                 <div className="client-sub-faint">
                                   {client.last_change_summary
-                                    ? `עודכן ${formatRelativeTime(client.last_updated_at)} · ${client.last_change_summary}`
-                                    : `נוסף ${formatRelativeTime(client.created_at)}`}
+                                    ? `עודכן ${formatDate(client.last_updated_at)} · ${client.last_change_summary}`
+                                    : `נוסף ${formatDate(client.created_at)}`}
                                 </div>
                               </div>
                             </div>
@@ -498,7 +500,11 @@ export default function App() {
                               {client[FILE_LINK_2_PATH] && (
                                 <button
                                   className="icon-btn folder-btn--set"
-                                  onClick={() => window.electronAPI?.openFolder(client[FILE_LINK_2_PATH])}
+                                  onClick={async () => {
+                                    if (!window.electronAPI?.isElectron) return;
+                                    const err = await openClientFolder(client[FILE_LINK_2_PATH], (u) => handleUpdateClient(client.id, u));
+                                    if (err) alert(err);
+                                  }}
                                   title={`פתח תיקייה: ${client[FILE_LINK_2_PATH]}`}
                                 >
                                   <Icon name="folder" size={16} />

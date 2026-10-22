@@ -95,9 +95,39 @@ ipcMain.handle('pick-folder', async (event) => {
   return r.canceled ? null : r.filePaths[0];
 });
 
+// A saved folder whose path no longer exists was usually moved one level down
+// on the server (e.g. W:\work\... → W:\WORK1\work\...). Climb to the deepest
+// part of the path that still exists and look for the rest under each of its
+// subfolders.
+function findMovedFolder(p) {
+  const rest = [];
+  let base = p;
+  while (!fs.existsSync(base)) {
+    const parent = path.dirname(base);
+    if (parent === base) return null; // reached the root (server or drive unreachable)
+    rest.unshift(path.basename(base));
+    base = parent;
+  }
+  let subdirs;
+  try {
+    subdirs = fs.readdirSync(base, { withFileTypes: true }).filter(d => d.isDirectory());
+  } catch {
+    return null;
+  }
+  for (const d of subdirs) {
+    const candidate = path.join(base, d.name, ...rest);
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
+// Returns { path } — the folder actually opened (differs from p when it was
+// found at a new location, so the caller can save it) — or { error }.
 ipcMain.handle('open-folder', async (_, p) => {
-  const err = await shell.openPath(p);
-  return err || null; // empty string = success, non-empty = error message
+  const target = fs.existsSync(p) ? p : findMovedFolder(p);
+  if (!target) return { error: 'not_found' };
+  const err = await shell.openPath(target);
+  return err ? { error: err } : { path: target };
 });
 
 // Opens a received attachment in its default program (Acrobat, Word, ...),

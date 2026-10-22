@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import Icon from './Icon';
+import { openClientFolder } from '../utils/openClientFolder';
 import {
   FILE_LINK_1_PATH, FILE_LINK_1_NAME,
   FILE_LINK_2_PATH, FILE_LINK_2_NAME,
@@ -264,8 +265,7 @@ export default function QuickFileLinks({ client, onUpdateClient }) {
 
   async function openFolder(path) {
     setFolderError(null);
-    const err = await window.electronAPI.openFolder(path);
-    if (err) setFolderError('התיקייה לא נמצאה — ייתכן שהועברה או נמחקה');
+    setFolderError(await openClientFolder(path, onUpdateClient));
   }
 
   // Slot 2 (מחיצה) is usually a folder, but older clients may hold a web link or an Office file.

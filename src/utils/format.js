@@ -3,6 +3,10 @@ export const formatDateTime = (iso) => new Date(iso).toLocaleString('he-IL', {
   day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
 });
 
+export const formatDate = (iso) => new Date(iso).toLocaleDateString('he-IL', {
+  day: '2-digit', month: '2-digit', year: 'numeric',
+});
+
 // "dana@office.co.il" → "dana". No email = done outside the app
 // (Supabase dashboard, script).
 // "2026-10-12" (a date input's value) → start of that local day, shifted by
