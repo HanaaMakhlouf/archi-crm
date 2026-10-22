@@ -576,12 +576,6 @@ h6 {
   color: var(--color-text-faint);
 }
 
-.th-filter-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .th-sort-btn {
   display: inline-flex;
   align-items: center;
@@ -601,62 +595,6 @@ h6 {
 
 .th-sort-btn.active .th-sort-arrow {
   color: var(--color-primary);
-}
-
-.filter-icon-btn {
-  position: relative;
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: transparent;
-  color: var(--color-text-faint);
-  cursor: pointer;
-  transition: all 150ms ease;
-  flex-shrink: 0;
-}
-
-.filter-icon-btn:hover {
-  background: var(--color-border);
-  color: var(--color-text);
-}
-
-.filter-icon-btn.is-active {
-  color: var(--color-primary);
-  background: var(--color-primary-light);
-}
-
-.filter-icon-dot {
-  position: absolute;
-  top: 1px;
-  left: 1px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  border: 1.5px solid var(--color-surface-2);
-}
-
-.filter-popover {
-  position: fixed;
-  z-index: 1000;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  padding: 16px;
-}
-
-.filter-popover .form-group {
-  margin-bottom: 14px;
-}
-
-.filter-popover select,
-.filter-popover input {
-  width: 100%;
 }
 
 /* ══════════════════════════════════════════════════════════════════

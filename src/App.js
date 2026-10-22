@@ -7,7 +7,6 @@ import Sidebar from './components/Sidebar';
 import ClientDetail from './components/ClientDetail';
 import ClientForm from './components/ClientForm';
 import Inbox from './components/Inbox';
-import ColumnFilterButton from './components/ColumnFilterButton';
 import SettingsView from './components/SettingsView';
 import ActivityView from './components/ActivityView';
 import PriorityDot from './components/PriorityDot';
@@ -100,7 +99,6 @@ export default function App() {
 
   // ── FILTERS / SEARCH / SORT ──
   const [search, setSearch] = useState('');
-  const [filterType, setFilterType] = useState('');
   const [sort, setSort] = useState(DEFAULT_SORT);     // one column sorts at a time
 
   // ── FORM STATE ──
@@ -303,8 +301,8 @@ export default function App() {
   };
 
   const filtered = useMemo(() => filterAndSortClients(clients, {
-    search, type: filterType,
-  }, sort), [clients, search, filterType, sort]);
+    search,
+  }, sort), [clients, search, sort]);
 
   const permanentCount = useMemo(() => clients.filter(c => c.label === LABEL_PERMANENT).length, [clients]);
   const newCount = useMemo(() => clients.filter(c => c.label === LABEL_NEW).length, [clients]);
@@ -411,21 +409,8 @@ export default function App() {
                   <thead>
                     <tr>
                       <th><SortHeader column="name" label="לקוח" sort={sort} onChange={setSort} /></th>
-                      <th>עדיפות</th>
-                      <th>
-                        <div className="th-filter-row">
-                          <span>סוג תיק</span>
-                          <ColumnFilterButton active={!!filterType}>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                              <label>סוג לקוח</label>
-                              <select value={filterType} onChange={e => setFilterType(e.target.value)}>
-                                <option value="">כל הסוגים</option>
-                                {CLIENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                              </select>
-                            </div>
-                          </ColumnFilterButton>
-                        </div>
-                      </th>
+                      <th><SortHeader column="priority" label="עדיפות" sort={sort} onChange={setSort} firstDir="desc" /></th>
+                      <th>סוג תיק</th>
                       <th><SortHeader column="city" label="עיר" sort={sort} onChange={setSort} /></th>
                       <th>גוש / חלקה</th>
                       <th>מס' בקשה</th>
