@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import StatusTable from './licensing/StatusTable';
+import AddRow from './AddRow';
 import { useDeferredSave } from '../utils/useDeferredSave';
 import {
   FIELD_PLANNING_DATA,
@@ -158,43 +159,6 @@ function RequiredToggle({ value, onChange }) {
     <div className="required-toggle" role="radiogroup" aria-label="האם נדרש">
       <button type="button" role="radio" aria-checked={value} className={value ? 'is-on' : ''} onClick={() => onChange(true)}>נדרש</button>
       <button type="button" role="radio" aria-checked={!value} className={!value ? 'is-off' : ''} onClick={() => onChange(false)}>לא נדרש</button>
-    </div>
-  );
-}
-
-// "+ הוסף" → inline name field. Rejects names already in the table (the name keys its reminder).
-function AddRow({ existing, placeholder, onAdd }) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const trimmed = name.trim();
-  const duplicate = existing.includes(trimmed);
-
-  const close = () => { setOpen(false); setName(''); };
-  const submit = () => {
-    if (!trimmed || duplicate) return;
-    onAdd(trimmed);
-    close();
-  };
-
-  if (!open) {
-    return <button type="button" className="add-row-btn" onClick={() => setOpen(true)}>+ הוסף</button>;
-  }
-  return (
-    <div className="add-row-form">
-      <input
-        type="text"
-        autoFocus
-        value={name}
-        placeholder={placeholder}
-        onChange={e => setName(e.target.value)}
-        onKeyDown={e => {
-          if (e.key === 'Enter') { e.preventDefault(); submit(); }
-          if (e.key === 'Escape') close();
-        }}
-      />
-      <button type="button" className="btn btn-primary btn-sm" disabled={!trimmed || duplicate} onClick={submit}>הוספה</button>
-      <button type="button" className="btn btn-ghost btn-sm" onClick={close}>ביטול</button>
-      {duplicate && <span className="add-row-error">כבר קיימת שורה בשם הזה</span>}
     </div>
   );
 }

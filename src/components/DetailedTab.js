@@ -3,14 +3,14 @@ import PersonForm, { makeEmptyPerson } from './licensing/PersonForm';
 import { InfoCard, PersonReadOnly } from './licensing/InfoPhase';
 import StatusTable from './licensing/StatusTable';
 import GrayOut from './GrayOut';
-import HelkaList from './HelkaList';
+import { useLandEditor, LandForm, LandView, EditToggle } from './LandFields';
 import { useDeferredSave } from '../utils/useDeferredSave';
+import { useOnLock } from '../utils/useOnLock';
 import {
   FIELD_DETAILED_DATA,
   DETAILED_HACHANA_BE_TIPUL, DETAILED_HACHANA_KEN, DETAILED_HACHANA_LO,
   DETAILED_SHUBATS, DETAILED_LO_SHUBATS,
   DETAILED_LO_NISHLACH, DETAILED_NISHLACH, DETAILED_HITKABEL,
-  NUMERIC_LAND_FIELDS,
 } from '../constants';
 
 // ── Column / option definitions ──
@@ -67,6 +67,8 @@ const ISHUR_COLS    = makeTableCols(HAFKADA_ISHUR_OPTIONS,  HAFKADA_ISHUR_COLORS
 
 // ── Initial state builder ──
 
+const stepEntry = (e, fallbackStatus) => ({ status: e?.status || fallbackStatus, note: e?.note || '' });
+
 const buildInitialDetailed = (client, src = {}) => {
   const existing = src || {};
   return {
@@ -76,27 +78,24 @@ const buildInitialDetailed = (client, src = {}) => {
         : [makeEmptyPerson({ name: client.name || '', phone: client.phone || '', email: client.email || '' })],
       description: existing.info?.description || '',
     },
-    hachana:  { status: existing.hachana?.status  || DETAILED_HACHANA_BE_TIPUL, note: existing.hachana?.note  || '' },
-    hafkada:  { status: existing.hafkada?.status  || DETAILED_LO_SHUBATS,       note: existing.hafkada?.note  || '' },
-    pirsum_a: { status: existing.pirsum_a?.status || DETAILED_LO_NISHLACH,      note: existing.pirsum_a?.note || '' },
-    ishur:    { status: existing.ishur?.status    || DETAILED_LO_SHUBATS,       note: existing.ishur?.note    || '' },
-    pirsum_b: { status: existing.pirsum_b?.status || DETAILED_LO_NISHLACH,      note: existing.pirsum_b?.note || '' },
+    hachana:  stepEntry(existing.hachana,  DETAILED_HACHANA_BE_TIPUL),
+    hafkada:  stepEntry(existing.hafkada,  DETAILED_LO_SHUBATS),
+    pirsum_a: stepEntry(existing.pirsum_a, DETAILED_LO_NISHLACH),
+    ishur:    stepEntry(existing.ishur,    DETAILED_LO_SHUBATS),
+    pirsum_b: stepEntry(existing.pirsum_b, DETAILED_LO_NISHLACH),
   };
 };
 
 // ── Component ──
 
-const LAND_FIELDS = [
-  { key: 'city',    label: 'עיר' },
-  { key: 'gush',    label: 'גוש' },
-  { key: 'helka',   label: 'חלקה' },
-  { key: 'migrash', label: 'מגרש' },
-];
+// Each step unlocks the next, so a step that greys out again clears the
+// reminders of every step after it.
+const STEP_SECTIONS = [SK_HAFKADA, SK_PIRSUM_A, SK_ISHUR, SK_PIRSUM_B];
 
 export default function DetailedTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {
   const [dd, setDd] = useState(() => buildInitialDetailed(client, client[FIELD_DETAILED_DATA]));
   const [editMode, setEditMode] = useState(false);
-  const [landDraft, setLandDraft] = useState(null);
+  const { land, updateLand, flushLand } = useLandEditor(client, onUpdate);
   const ddRef = useRef(dd);
   ddRef.current = dd;
 
@@ -115,34 +114,6 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
 
   const updateInfo = (patch) => updateField('info', patch);
 
-  const land = landDraft || {
-    city: client.city || '', gush: client.gush ?? '',
-    helka: Array.isArray(client.helka) && client.helka.length ? client.helka.map(String) : [''],
-    migrash: client.migrash ?? '',
-  };
-
-  const { schedule: saveLand, flush: flushLand } = useDeferredSave((next) => {
-    const payload = { ...next };
-    NUMERIC_LAND_FIELDS.forEach(k => {
-      payload[k] = payload[k] === '' ? payload[k] : Number(payload[k]);
-    });
-    payload.migrash = String(payload.migrash ?? '').trim() || null;
-    const helkaNums = (payload.helka || [])
-      .map(h => String(h ?? '').trim())
-      .filter(Boolean)
-      .map(Number)
-      .filter(n => Number.isInteger(n) && n > 0);
-    payload.helka = helkaNums.length ? helkaNums : null;
-    onUpdate(payload);
-    setLandDraft(null);
-  });
-
-  const updateLand = (key, value) => {
-    const next = { ...land, [key]: value };
-    setLandDraft(next);
-    saveLand(next);
-  };
-
   const tableRow = (key, label) => [{ id: key, label, status: dd[key].status, note: dd[key].note }];
   const onTableChange = (key) => (next) => updateField(key, { status: next[0].status, note: next[0].note });
 
@@ -151,44 +122,12 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
   const pirsumADone = dd.pirsum_a.status === DETAILED_HITKABEL;
   const ishurDone   = dd.ishur.status    === DETAILED_SHUBATS;
 
-  // GrayOut resets: clear reminders whenever a table becomes grayed.
-  const prevHachanaDone = useRef(hachanaDone);
-  useEffect(() => {
-    if (!hachanaDone && prevHachanaDone.current) {
-      onClearReminders?.(SK_HAFKADA);
-      onClearReminders?.(SK_PIRSUM_A);
-      onClearReminders?.(SK_ISHUR);
-      onClearReminders?.(SK_PIRSUM_B);
-    }
-    prevHachanaDone.current = hachanaDone;
-  }, [hachanaDone, onClearReminders]);
-
-  const prevHafkadaDone = useRef(hafkadaDone);
-  useEffect(() => {
-    if (!hafkadaDone && prevHafkadaDone.current) {
-      onClearReminders?.(SK_PIRSUM_A);
-      onClearReminders?.(SK_ISHUR);
-      onClearReminders?.(SK_PIRSUM_B);
-    }
-    prevHafkadaDone.current = hafkadaDone;
-  }, [hafkadaDone, onClearReminders]);
-
-  const prevPirsumADone = useRef(pirsumADone);
-  useEffect(() => {
-    if (!pirsumADone && prevPirsumADone.current) {
-      onClearReminders?.(SK_ISHUR);
-      onClearReminders?.(SK_PIRSUM_B);
-    }
-    prevPirsumADone.current = pirsumADone;
-  }, [pirsumADone, onClearReminders]);
-
-  const prevIshurDone = useRef(ishurDone);
-  useEffect(() => {
-    if (!ishurDone && prevIshurDone.current) {
-      onClearReminders?.(SK_PIRSUM_B);
-    }
-    prevIshurDone.current = ishurDone;
-  }, [ishurDone, onClearReminders]);
+  // GrayOut resets: clear the later steps' reminders whenever a step greys out.
+  const clearStepsFrom = (i) => STEP_SECTIONS.slice(i).forEach(sk => onClearReminders?.(sk));
+  useOnLock(hachanaDone, () => clearStepsFrom(0));
+  useOnLock(hafkadaDone, () => clearStepsFrom(1));
+  useOnLock(pirsumADone, () => clearStepsFrom(2));
+  useOnLock(ishurDone,   () => clearStepsFrom(3));
 
   const sectionReminders = useMemo(() => (sk) => reminders.filter(r => r.section_key === sk), [reminders]);
 
@@ -196,14 +135,7 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
     <div dir="rtl" className="licensing-tab" onBlur={() => { flushDd(); flushLand(); }}>
 
       {/* ── Section 1: Info ── */}
-      <div className="info-group-header">
-        <button
-          className={`btn btn-sm ${editMode ? 'btn-primary' : 'btn-ghost'}`}
-          onClick={() => setEditMode(m => !m)}
-        >
-          {editMode ? '✓ שמור' : '✏️ עריכת פרטים'}
-        </button>
-      </div>
+      <EditToggle editMode={editMode} onToggle={() => setEditMode(m => !m)} />
 
       {editMode ? (
         <>
@@ -214,22 +146,7 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
           />
           <div className="detail-section">
             <h3 className="detail-section-title">פרטי קרקע</h3>
-            <div className="land-grid">
-              {LAND_FIELDS.map(f => (
-                <div key={f.key} className="form-group">
-                  <label>{f.label}</label>
-                  {f.key === 'helka' ? (
-                    <HelkaList values={land.helka} onChange={(vals) => updateLand('helka', vals)} />
-                  ) : (
-                    <input
-                      type="text"
-                      value={land[f.key] ?? ''}
-                      onChange={(e) => updateLand(f.key, e.target.value)}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
+            <LandForm land={land} onChange={updateLand} />
           </div>
           <div className="detail-section">
             <h3 className="detail-section-title">מהות הבקשה</h3>
@@ -249,16 +166,7 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
               <PersonReadOnly people={dd.info.requesters} />
             </InfoCard>
             <InfoCard title="פרטי קרקע">
-              {LAND_FIELDS.map(f => (
-                <div key={f.key} className="detail-row">
-                  <span className="detail-label">{f.label}</span>
-                  <span>
-                    {f.key === 'helka'
-                      ? (land.helka.filter(Boolean).join(', ') || <span className="muted">—</span>)
-                      : (land[f.key] || <span className="muted">—</span>)}
-                  </span>
-                </div>
-              ))}
+              <LandView land={land} />
             </InfoCard>
           </div>
           <InfoCard title="מהות הבקשה" wide>

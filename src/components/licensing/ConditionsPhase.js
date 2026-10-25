@@ -1,9 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
 import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
+import AddRow, { LICENSING_ADD_ROW_PROPS, newStatusRow } from '../AddRow';
+import { useOnLock } from '../../utils/useOnLock';
 import {
   DOC_STATUS_PRESENT, DOC_STATUS_MISSING, DOC_STATUS_NOT_REQUIRED,
-  CONDITION_ROW_STATUS_SENT, CONDITION_ROW_STATUS_OPTIONS,
+  CONDITION_ROW_STATUS_SENT, CONDITION_ROW_STATUS_OPTIONS, CONDITION_ROW_SELECT_OPTIONS, conditionRowOptions,
+  CONDITION_DONE_STATUSES, isConditionRowDone,
+  COND_MISSING_DOCS, COND_SENT_COMMITTEE, COND_TO_APPRAISER, COND_SENT_CORP, COND_CHARGE_RECEIVED,
   PERMIT_STATUS_OPTIONS, PERMIT_STATUS_SIGNED,
   PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_FEE_GIVEN, PERMIT_STATUS_PRINTED,
 } from '../../constants';
@@ -11,15 +14,39 @@ import {
 const SK_CONDITIONS = 'licensing.conditions.rows';
 const SK_PERMIT     = 'licensing.conditions.permit';
 
+const CONDITION_STATUS_COLORS = {
+  [DOC_STATUS_MISSING]:        'red',
+  [COND_MISSING_DOCS]:         'red',
+  [CONDITION_ROW_STATUS_SENT]: 'orange',
+  [COND_SENT_COMMITTEE]:       'orange',
+  [COND_TO_APPRAISER]:         'orange',
+  [COND_SENT_CORP]:            'orange',
+  [COND_CHARGE_RECEIVED]:      'orange',
+  [DOC_STATUS_PRESENT]:        'green',
+  [DOC_STATUS_NOT_REQUIRED]:   'gray',
+};
+
+// Every condition status's label, to keep showing a saved value that isn't
+// in its row's current list.
+const ALL_STATUS_LABELS = Object.fromEntries(
+  [CONDITION_ROW_STATUS_OPTIONS, ...Object.values(CONDITION_ROW_SELECT_OPTIONS)].flat().map(o => [o.value, o.label]),
+);
+
+// השבחה / התייחסות תאגיד / 145 ד תאגיד have their own dropdowns; the rest share one.
+const conditionRowSelect = (row) => {
+  const options = conditionRowOptions(row.label);
+  const keepCurrent = row.status && !options.some(o => o.value === row.status);
+  return {
+    options: keepCurrent ? [...options, { value: row.status, label: ALL_STATUS_LABELS[row.status] || row.status }] : options,
+    statusColors: CONDITION_STATUS_COLORS,
+    doneValues: CONDITION_DONE_STATUSES,
+  };
+};
+
 const CONDITION_COLUMNS = [
   { key: 'label',    type: 'text',   header: 'תנאי' },
   { key: 'status',   type: 'select', header: 'סטטוס', options: CONDITION_ROW_STATUS_OPTIONS,
-    statusColors: {
-      [DOC_STATUS_PRESENT]:         'green',
-      [DOC_STATUS_MISSING]:         'red',
-      [CONDITION_ROW_STATUS_SENT]:  'orange',
-      [DOC_STATUS_NOT_REQUIRED]:    'gray',
-    } },
+    statusColors: CONDITION_STATUS_COLORS, rowSelect: conditionRowSelect },
   { key: 'note',     type: 'input',  header: 'הערה', placeholder: 'הערה' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
@@ -39,34 +66,12 @@ const PERMIT_COLUMNS = [
 
 export default function ConditionsPhase({ conditions, onChange, reminders = [], onReminderChange, onClearReminders }) {
   const patch = (key, value) => onChange({ [key]: value });
-  const [newLabel, setNewLabel] = useState('');
-  const [addingRow, setAddingRow] = useState(false);
 
-  const allConditionsDone = conditions.rows.every(r =>
-    r.status === DOC_STATUS_PRESENT || r.status === DOC_STATUS_NOT_REQUIRED
-  );
+  const allConditionsDone = conditions.rows.every(isConditionRowDone);
   const permitSigned = conditions.permit_status === PERMIT_STATUS_SIGNED;
 
-  const confirmAddRow = () => {
-    const label = newLabel.trim();
-    if (label) {
-      patch('rows', [
-        ...conditions.rows,
-        { id: crypto.randomUUID(), label, status: DOC_STATUS_MISSING, note: '' },
-      ]);
-    }
-    setNewLabel('');
-    setAddingRow(false);
-  };
-
   // GrayOut reset: when permit section becomes grayed, clear its reminders.
-  const prevAllConditionsDone = useRef(allConditionsDone);
-  useEffect(() => {
-    if (!allConditionsDone && prevAllConditionsDone.current) {
-      onClearReminders?.(SK_PERMIT);
-    }
-    prevAllConditionsDone.current = allConditionsDone;
-  }, [allConditionsDone, onClearReminders]);
+  useOnLock(allConditionsDone, () => onClearReminders?.(SK_PERMIT));
 
   const sectionReminders = (sk) => reminders.filter(r => r.section_key === sk);
 
@@ -86,29 +91,15 @@ export default function ConditionsPhase({ conditions, onChange, reminders = [], 
         columns={CONDITION_COLUMNS}
         onChange={(next) => patch('rows', next)}
         reminders={sectionReminders(SK_CONDITIONS)}
-        onReminderChange={(rl, days) => onReminderChange?.(SK_CONDITIONS)(rl, days)}
-        footer={
-          addingRow ? (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <input
-                autoFocus
-                type="text"
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') confirmAddRow();
-                  if (e.key === 'Escape') { setNewLabel(''); setAddingRow(false); }
-                }}
-                placeholder="שם התנאי"
-                style={{ flex: 1, maxWidth: 220 }}
-              />
-              <button className="btn btn-primary btn-sm" onClick={confirmAddRow}>הוסף</button>
-              <button className="btn btn-ghost btn-sm" onClick={() => { setNewLabel(''); setAddingRow(false); }}>ביטול</button>
-            </div>
-          ) : (
-            <button className="btn btn-primary btn-sm" onClick={() => setAddingRow(true)}>+ הוסף שורה</button>
-          )
-        }
+        onReminderChange={onReminderChange?.(SK_CONDITIONS)}
+        footer={(
+          <AddRow
+            {...LICENSING_ADD_ROW_PROPS}
+            existing={conditions.rows.map(r => r.label)}
+            placeholder="שם התנאי"
+            onAdd={(label) => patch('rows', [...conditions.rows, newStatusRow(label, conditionRowOptions(label)[0].value)])}
+          />
+        )}
       />
 
       {/* Section 2 — Permit (התר) */}
@@ -120,7 +111,7 @@ export default function ConditionsPhase({ conditions, onChange, reminders = [], 
           columns={PERMIT_COLUMNS}
           onChange={(next) => onChange({ permit_status: next[0].status, permit_note: next[0].note })}
           reminders={sectionReminders(SK_PERMIT)}
-          onReminderChange={(rl, days) => onReminderChange?.(SK_PERMIT)(rl, days)}
+          onReminderChange={onReminderChange?.(SK_PERMIT)}
         />
       </GrayOut>
 

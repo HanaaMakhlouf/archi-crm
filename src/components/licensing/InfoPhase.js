@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
-import { useDeferredSave } from '../../utils/useDeferredSave';
+import { useState } from 'react';
+import { useOnLock } from '../../utils/useOnLock';
 import { makeEmptyPerson } from './PersonForm';
 import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
-import HelkaList from '../HelkaList';
+import { useLandEditor, LandForm, LandView, EditToggle } from '../LandFields';
 import {
   LICENSING_DOCUMENTS,
   DOC_STATUS_MISSING, DOC_STATUS_PRESENT,
@@ -11,7 +11,6 @@ import {
   DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS,
   CONDITIONS_STATUS_OPTIONS, CONDITIONS_STATUS_RECEIVED,
   CONDITIONS_STATUS_NOT_SENT,
-  NUMERIC_LAND_FIELDS,
 } from '../../constants';
 
 const SK_DOCS = 'licensing.info.documents';
@@ -159,104 +158,26 @@ function PersonCardEdit({ people, onChange, onFillFromClient, copyFrom }) {
   );
 }
 
-const LAND_FIELDS = [
-  { key: 'city', label: 'עיר' },
-  { key: 'gush', label: 'גוש' },
-  { key: 'helka', label: 'חלקה' },
-  { key: 'migrash', label: 'מגרש' },
-];
-
 export default function InfoPhase({ client, onUpdateClient, info, onChange, reminders = [], onReminderChange, onClearReminders, onNext }) {
   const [editMode, setEditMode] = useState(false);
-  const [landDraft, setLandDraft] = useState(null);
+  const { land, updateLand, flushLand } = useLandEditor(client, onUpdateClient);
 
   const patch = (key, value) => onChange({ [key]: value });
-
-  const land = landDraft || {
-    city: client.city || '', gush: client.gush ?? '',
-    helka: Array.isArray(client.helka) && client.helka.length ? client.helka.map(String) : [''],
-    migrash: client.migrash ?? '',
-  };
-
-  const { schedule: saveLand, flush: flushLand } = useDeferredSave((next) => {
-    const payload = { ...next };
-    NUMERIC_LAND_FIELDS.forEach(k => {
-      payload[k] = payload[k] === '' ? payload[k] : Number(payload[k]);
-    });
-    payload.migrash = String(payload.migrash ?? '').trim() || null;
-    const helkaNums = (payload.helka || [])
-      .map(h => String(h ?? '').trim())
-      .filter(Boolean)
-      .map(Number)
-      .filter(n => Number.isInteger(n) && n > 0);
-    payload.helka = helkaNums.length ? helkaNums : null;
-    onUpdateClient?.(payload);
-    setLandDraft(null);
-  });
-
-  const updateLand = (key, value) => {
-    const next = { ...land, [key]: value };
-    setLandDraft(next);
-    saveLand(next);
-  };
 
   const allDocumentsDone = info.documents.every(d => d.status !== DOC_STATUS_MISSING);
   const infoNoteSent = info.info_note_status === INFO_NOTE_SENT;
 
-  const prevAllDocsDone = useRef(allDocumentsDone);
-  useEffect(() => {
-    if (!allDocumentsDone && prevAllDocsDone.current) {
-      onClearReminders?.(SK_INFO_NOTE);
-    }
-    prevAllDocsDone.current = allDocumentsDone;
-  }, [allDocumentsDone, onClearReminders]);
+  useOnLock(allDocumentsDone, () => onClearReminders?.(SK_INFO_NOTE));
 
   const sectionReminders = (sk) => reminders.filter(r => r.section_key === sk);
 
   return (
     <div className="licensing-info" onBlur={flushLand}>
-
-      {/* ── Edit toggle ── */}
-      <div className="info-group-header">
-        <button
-          className={`btn btn-sm ${editMode ? 'btn-primary' : 'btn-ghost'}`}
-          onClick={() => setEditMode(m => !m)}
-        >
-          {editMode ? '✓ שמור' : '✏️ עריכת פרטים'}
-        </button>
-      </div>
+      <EditToggle editMode={editMode} onToggle={() => setEditMode(m => !m)} />
 
       {/* ── Cards stacked vertically, each full width ── */}
       <InfoCard title="פרטי קרקע">
-        {editMode ? (
-          <div className="land-grid">
-            {LAND_FIELDS.map(f => (
-              <div key={f.key} className="form-group">
-                <label>{f.label}</label>
-                {f.key === 'helka' ? (
-                  <HelkaList values={land.helka} onChange={vals => updateLand('helka', vals)} />
-                ) : (
-                  <input
-                    type="text"
-                    value={land[f.key] ?? ''}
-                    onChange={e => updateLand(f.key, e.target.value)}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          LAND_FIELDS.map(f => (
-            <div key={f.key} className="detail-row">
-              <span className="detail-label">{f.label}</span>
-              <span>
-                {f.key === 'helka'
-                  ? (land.helka.filter(Boolean).join(', ') || <span className="muted">—</span>)
-                  : (land[f.key] || <span className="muted">—</span>)}
-              </span>
-            </div>
-          ))
-        )}
+        {editMode ? <LandForm land={land} onChange={updateLand} /> : <LandView land={land} />}
       </InfoCard>
 
       <InfoCard title="פרטי מבקש">
@@ -305,7 +226,7 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
         onChange={(next) => patch('documents', next.map(({ label, ...rest }) => rest))}
         rowClassName={(r) => r.status === DOC_STATUS_MISSING ? 'doc-missing' : 'doc-present'}
         reminders={sectionReminders(SK_DOCS)}
-        onReminderChange={(rl, days) => onReminderChange?.(SK_DOCS)(rl, days)}
+        onReminderChange={onReminderChange?.(SK_DOCS)}
       />
 
       {/* ── Info note ── */}
@@ -326,7 +247,7 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
           })}
           rowClassName={() => infoNoteSent ? 'doc-present' : 'doc-missing'}
           reminders={sectionReminders(SK_INFO_NOTE)}
-          onReminderChange={(rl, days) => onReminderChange?.(SK_INFO_NOTE)(rl, days)}
+          onReminderChange={onReminderChange?.(SK_INFO_NOTE)}
         />
       </GrayOut>
 
@@ -347,7 +268,7 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
           })}
           rowClassName={() => info.conditions_passed === CONDITIONS_STATUS_RECEIVED ? 'doc-present' : 'doc-missing'}
           reminders={sectionReminders(SK_CONDITIONS)}
-          onReminderChange={(rl, days) => onReminderChange?.(SK_CONDITIONS)(rl, days)}
+          onReminderChange={onReminderChange?.(SK_CONDITIONS)}
           footer={info.conditions_passed === CONDITIONS_STATUS_RECEIVED
             ? <button className="btn btn-primary btn-sm" onClick={onNext}>עבור לשלב הבא ←</button>
             : null}

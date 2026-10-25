@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
 import StatusTable from './StatusTable';
+import AddRow, { LICENSING_ADD_ROW_PROPS, newStatusRow } from '../AddRow';
+import { useOnLock } from '../../utils/useOnLock';
 import GrayOut from '../GrayOut';
 import {
   SUBMISSION_OPTIONS, SUBMISSION_NOT_STARTED, SUBMISSION_IN_PROGRESS, SUBMISSION_NEEDS_FIX, SUBMISSION_DONE,
@@ -88,34 +89,12 @@ const MEETING_COLUMNS = [
 
 export default function RequestPhase({ request, conditionsPassed, onChange, reminders = [], onReminderChange, onClearReminders, onNext }) {
   const patch = (key, value) => onChange({ [key]: value });
-  const [newLabel, setNewLabel] = useState('');
-  const [addingRow, setAddingRow] = useState(false);
 
   const allActionsDone = request.actions.every(isActionDone);
 
-  const confirmAddAction = () => {
-    const label = newLabel.trim();
-    if (label) {
-      onChange({
-        actions: [
-          ...request.actions,
-          { id: crypto.randomUUID(), label, status: ACTION_STATUS_NOT_SENT, note: '' },
-        ],
-      });
-    }
-    setNewLabel('');
-    setAddingRow(false);
-  };
-
   // Note: conditionsPassed clearing is handled in LicensingTab (always mounted).
   // GrayOut reset: when meeting section becomes additionally grayed (actions not done).
-  const prevAllActionsDone = useRef(allActionsDone);
-  useEffect(() => {
-    if (!allActionsDone && prevAllActionsDone.current) {
-      onClearReminders?.(SK_MEETING);
-    }
-    prevAllActionsDone.current = allActionsDone;
-  }, [allActionsDone, onClearReminders]);
+  useOnLock(allActionsDone, () => onClearReminders?.(SK_MEETING));
 
   const sectionReminders = (sk) => reminders.filter(r => r.section_key === sk);
 
@@ -142,7 +121,7 @@ export default function RequestPhase({ request, conditionsPassed, onChange, remi
         columns={SUBMISSION_COLUMNS}
         onChange={(next) => patch('submission', { status: next[0].status, note: next[0].note })}
         reminders={sectionReminders(SK_SUBMISSION)}
-        onReminderChange={(rl, days) => onReminderChange?.(SK_SUBMISSION)(rl, days)}
+        onReminderChange={onReminderChange?.(SK_SUBMISSION)}
       />
 
       {/* Section 2 — Actions */}
@@ -153,29 +132,15 @@ export default function RequestPhase({ request, conditionsPassed, onChange, remi
           columns={ACTION_COLUMNS}
           onChange={(next) => patch('actions', next)}
           reminders={sectionReminders(SK_ACTIONS)}
-          onReminderChange={(rl, days) => onReminderChange?.(SK_ACTIONS)(rl, days)}
-          footer={
-            addingRow ? (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <input
-                  autoFocus
-                  type="text"
-                  value={newLabel}
-                  onChange={(e) => setNewLabel(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') confirmAddAction();
-                    if (e.key === 'Escape') { setNewLabel(''); setAddingRow(false); }
-                  }}
-                  placeholder="שם השורה"
-                  style={{ flex: 1, maxWidth: 220 }}
-                />
-                <button className="btn btn-primary btn-sm" onClick={confirmAddAction}>הוסף</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => { setNewLabel(''); setAddingRow(false); }}>ביטול</button>
-              </div>
-            ) : (
-              <button className="btn btn-primary btn-sm" onClick={() => setAddingRow(true)}>+ הוסף שורה</button>
-            )
-          }
+          onReminderChange={onReminderChange?.(SK_ACTIONS)}
+          footer={(
+            <AddRow
+              {...LICENSING_ADD_ROW_PROPS}
+              existing={request.actions.map(a => a.label)}
+              placeholder="שם השורה"
+              onAdd={(label) => patch('actions', [...request.actions, newStatusRow(label, ACTION_STATUS_NOT_SENT)])}
+            />
+          )}
         />
       </GrayOut>
 
@@ -195,7 +160,7 @@ export default function RequestPhase({ request, conditionsPassed, onChange, remi
             meeting: { status: next[0].status || null, note: next[0].note },
           })}
           reminders={sectionReminders(SK_MEETING)}
-          onReminderChange={(rl, days) => onReminderChange?.(SK_MEETING)(rl, days)}
+          onReminderChange={onReminderChange?.(SK_MEETING)}
           footer={request.meeting.status === MEETING_APPROVED
             ? <button className="btn btn-primary btn-sm" onClick={onNext}>עבור לשלב הבא ←</button>
             : null}

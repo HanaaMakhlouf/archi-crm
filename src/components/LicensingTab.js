@@ -5,8 +5,10 @@ import RequestPhase from './licensing/RequestPhase';
 import ConditionsPhase from './licensing/ConditionsPhase';
 import ConfirmationPhase from './licensing/ConfirmationPhase';
 import GrayOut from './GrayOut';
+import { newStatusRow } from './AddRow';
 import { makeEmptyPerson } from './licensing/PersonForm';
 import { useDeferredSave } from '../utils/useDeferredSave';
+import { useOnLock } from '../utils/useOnLock';
 import {
   FIELD_LICENSING_DATA,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
@@ -19,7 +21,9 @@ import {
   ACTION_STATUS_NOT_SENT,
   DEFAULT_REQUEST_ACTIONS,
   PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_SIGNED,
-  DEFAULT_CONDITION_ROWS,
+  DEFAULT_CONDITION_ROWS, RENAMED_CONDITION_ROWS, conditionRowOptions,
+  CONDITION_HASHBACHA, CONDITION_CORP, CONDITION_CORP_145D,
+  isConditionRowDone, CONDITION_ROW_STATUS_SENT, COND_MISSING_DOCS, COND_SENT_COMMITTEE,
   DEFAULT_CONFIRMATION_ROWS,
   MEETING_APPROVED,
   CONDITIONS_STATUS_NOT_SENT,
@@ -69,12 +73,7 @@ const buildInitialRequest = (src = {}) => {
     },
     actions: existing.actions?.length
       ? existing.actions
-      : DEFAULT_REQUEST_ACTIONS.map(label => ({
-        id: crypto.randomUUID(),
-        label,
-        status: ACTION_STATUS_NOT_SENT,
-        note: '',
-      })),
+      : DEFAULT_REQUEST_ACTIONS.map(label => newStatusRow(label, ACTION_STATUS_NOT_SENT)),
     meeting: {
       status: existing.meeting?.status ?? null,
       note: existing.meeting?.note || '',
@@ -82,10 +81,33 @@ const buildInitialRequest = (src = {}) => {
   };
 };
 
+const newConditionRow = (label) => newStatusRow(label, conditionRowOptions(label)[0].value);
+
+// Statuses saved under the old פטור 140 dropdown, in השבחה's terms.
+const HASHBACHA_STATUS_FROM_OLD = { [DOC_STATUS_MISSING]: COND_MISSING_DOCS, [CONDITION_ROW_STATUS_SENT]: COND_SENT_COMMITTEE };
+
+// Brings an existing client's rows up to date: renamed rows get their new name
+// (and השבחה its new statuses), and 145 ד תאגיד is added after התייחסות תאגיד —
+// only while the conditions are still open, so clients already past this step
+// don't get their התר locked again.
+const migrateConditionRows = (rows) => {
+  let next = rows.map(r => {
+    const label = RENAMED_CONDITION_ROWS[r.label];
+    if (!label) return r;
+    const status = label === CONDITION_HASHBACHA ? (HASHBACHA_STATUS_FROM_OLD[r.status] || r.status) : r.status;
+    return { ...r, label, status };
+  });
+  if (!next.some(r => r.label === CONDITION_CORP_145D) && !next.every(isConditionRowDone)) {
+    const at = next.findIndex(r => r.label === CONDITION_CORP);
+    next = [...next.slice(0, at + 1), newConditionRow(CONDITION_CORP_145D), ...next.slice(at + 1)];
+  }
+  return next;
+};
+
 const buildInitialConditions = (src = {}) => ({
   rows: src.rows?.length
-    ? src.rows
-    : DEFAULT_CONDITION_ROWS.map(label => ({ id: crypto.randomUUID(), label, status: DOC_STATUS_MISSING, note: '' })),
+    ? migrateConditionRows(src.rows)
+    : DEFAULT_CONDITION_ROWS.map(newConditionRow),
   permit_status: src.permit_status || PERMIT_STATUS_FEE_NOT_GIVEN,
   permit_note: src.permit_note || '',
   needs_start_approval: src.needs_start_approval ?? null,
@@ -94,7 +116,7 @@ const buildInitialConditions = (src = {}) => ({
 const buildInitialConfirmation = (src = {}) => ({
   rows: src.rows?.length
     ? src.rows
-    : DEFAULT_CONFIRMATION_ROWS.map(label => ({ id: crypto.randomUUID(), label, status: DOC_STATUS_MISSING, note: '' })),
+    : DEFAULT_CONFIRMATION_ROWS.map(label => newStatusRow(label, DOC_STATUS_MISSING)),
 });
 
 const buildInitialLd = (client) => {
@@ -155,32 +177,13 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
   // GrayOut reset: conditionsPassed controls פעולות + ישיבה tables in RequestPhase.
   // This MUST live in LicensingTab (always mounted) — RequestPhase unmounts when not on the application phase.
   const conditionsPassed = ld.info.conditions_passed === CONDITIONS_STATUS_RECEIVED;
-  const prevConditionsPassed = useRef(conditionsPassed);
-  useEffect(() => {
-    if (!conditionsPassed && prevConditionsPassed.current) {
-      onClearReminders?.('licensing.application.actions');
-      onClearReminders?.('licensing.application.meeting');
-    }
-    prevConditionsPassed.current = conditionsPassed;
-  }, [conditionsPassed, onClearReminders]);
-
-  // GrayOut reset: when ConditionsPhase becomes grayed, clear its reminders.
-  const prevMeetingApproved = useRef(meetingApproved);
-  useEffect(() => {
-    if (!meetingApproved && prevMeetingApproved.current) {
-      onClearReminders?.('licensing.conditions*');
-    }
-    prevMeetingApproved.current = meetingApproved;
-  }, [meetingApproved, onClearReminders]);
-
-  // GrayOut reset: when ConfirmationPhase becomes grayed, clear its reminders.
-  const prevNeedsStartApproval = useRef(needsStartApproval);
-  useEffect(() => {
-    if (!needsStartApproval && prevNeedsStartApproval.current) {
-      onClearReminders?.('licensing.confirmation*');
-    }
-    prevNeedsStartApproval.current = needsStartApproval;
-  }, [needsStartApproval, onClearReminders]);
+  useOnLock(conditionsPassed, () => {
+    onClearReminders?.('licensing.application.actions');
+    onClearReminders?.('licensing.application.meeting');
+  });
+  // GrayOut resets: ConditionsPhase / ConfirmationPhase greyed → clear their reminders.
+  useOnLock(meetingApproved, () => onClearReminders?.('licensing.conditions*'));
+  useOnLock(needsStartApproval, () => onClearReminders?.('licensing.confirmation*'));
 
   // Reminder helpers — memoised to avoid re-filtering on every render
   const licReminders = useMemo(() => reminders.filter(r => r.section_key.startsWith('licensing.')), [reminders]);

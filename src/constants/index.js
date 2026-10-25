@@ -220,10 +220,59 @@ export const PERMIT_STATUS_OPTIONS = [
   { value: PERMIT_STATUS_SIGNED, label: 'נחתם' },
 ];
 
+export const CONDITION_HASHBACHA = 'השבחה';
+export const CONDITION_CORP = 'התייחסות תאגיד';
+export const CONDITION_CORP_145D = '145 ד תאגיד';
+
 export const DEFAULT_CONDITION_ROWS = [
-  'פטור 140', 'תאגיד', 'עירייה', 'הג״א', 'בטון',
+  CONDITION_HASHBACHA, CONDITION_CORP, CONDITION_CORP_145D, 'עירייה', 'הג״א', 'בטון',
   'פסולת', 'סטטי/תצהיר', 'בטיחות', 'נגישות', 'תחבורה', 'איכות הסביבה',
 ];
+
+// Old row names → current ones (existing clients are renamed when loaded).
+// Reminders are keyed by row name — see the matching SQL migration.
+export const RENAMED_CONDITION_ROWS = {
+  'פטור 140': CONDITION_HASHBACHA,
+  'תאגיד': CONDITION_CORP,
+};
+
+// Row-specific condition statuses (the other rows use CONDITION_ROW_STATUS_OPTIONS).
+export const COND_MISSING_DOCS = 'missing_docs';
+export const COND_SENT_COMMITTEE = 'sent_committee';
+export const COND_TO_APPRAISER = 'to_appraiser';
+export const COND_SENT_CORP = 'sent_corp';
+export const COND_CHARGE_RECEIVED = 'charge_received';
+
+export const HASHBACHA_STATUS_OPTIONS = [
+  { value: COND_MISSING_DOCS, label: 'חסר מסמכים' },
+  { value: COND_SENT_COMMITTEE, label: 'נשלח לועדה' },
+  { value: COND_TO_APPRAISER, label: 'הועבר לשמאי' },
+  { value: DOC_STATUS_PRESENT, label: 'יש' },
+  { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
+export const CORP_STATUS_OPTIONS = [
+  { value: DOC_STATUS_MISSING, label: 'חסר' },
+  { value: CONDITION_ROW_STATUS_SENT, label: 'נשלח' },
+  { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+  { value: DOC_STATUS_PRESENT, label: 'יש' },
+];
+export const CORP_145D_STATUS_OPTIONS = [
+  { value: DOC_STATUS_MISSING, label: 'חסר' },
+  { value: COND_SENT_CORP, label: 'נשלח לתאגיד' },
+  { value: COND_MISSING_DOCS, label: 'חסר מסמכים' },
+  { value: COND_CHARGE_RECEIVED, label: 'התקבל חיוב' },
+  { value: DOC_STATUS_PRESENT, label: 'יש' },
+];
+export const CONDITION_ROW_SELECT_OPTIONS = {
+  [CONDITION_HASHBACHA]: HASHBACHA_STATUS_OPTIONS,
+  [CONDITION_CORP]: CORP_STATUS_OPTIONS,
+  [CONDITION_CORP_145D]: CORP_145D_STATUS_OPTIONS,
+};
+export const conditionRowOptions = (label) => CONDITION_ROW_SELECT_OPTIONS[label] || CONDITION_ROW_STATUS_OPTIONS;
+
+// A condition counts as done (and unlocks התר once all are) at יש or לא נדרש.
+export const CONDITION_DONE_STATUSES = [DOC_STATUS_PRESENT, DOC_STATUS_NOT_REQUIRED];
+export const isConditionRowDone = (row) => CONDITION_DONE_STATUSES.includes(row.status);
 
 // ── CONFIRMATION PHASE (Phase 4) ──
 export const DEFAULT_CONFIRMATION_ROWS = ['התארגנות'];

@@ -18,6 +18,7 @@ import { describeClientChange } from './utils/changeSummary';
 import { formatDate } from './utils/format';
 import { DEFAULT_SORT, filterAndSortClients } from './utils/clientList';
 import { openClientFolder } from './utils/openClientFolder';
+import { helkaToStrings } from './utils/land';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
 import {
@@ -158,7 +159,7 @@ export default function App() {
         label: client.label || LABEL_NEW,
         name: client.name, phone: client.phone, city: client.city, email: client.email || '',
         gush: client.gush?.toString() || '',
-        helka: Array.isArray(client.helka) && client.helka.length ? client.helka.map(String) : [''],
+        helka: helkaToStrings(client.helka),
         migrash: client.migrash?.toString() || '', notes: client.notes || '',
         client_type: client.client_type || [],
         type_attributes: client.type_attributes || {},
