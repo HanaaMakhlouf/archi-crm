@@ -13,7 +13,7 @@ const FIELD_LABELS = {
   status: 'סטטוס', client_type: 'סוג לקוח', name: 'שם', phone: 'טלפון',
   city: 'עיר', email: 'אימייל', gush: 'גוש', helka: 'חלקה', migrash: 'מגרש',
   planning_data: 'תכנון', licensing_data: 'רישוי', detailed_data: 'תיק מפורט',
-  type_attributes: 'פרטי סוג',
+  type_attributes: 'פרטי סוג', archived_at: 'מצב תיק',
   // planning_data sections
   offer: 'הצעה', visualization: 'הדמיה', disciplines: 'תחומים',
   construction: 'קונסטרוקציה', water: 'מים', electricity: 'חשמל',
@@ -100,6 +100,7 @@ function collectChangedLeaves(oldVal, newVal, path = [], out = []) {
 const isRowList = (v) => Array.isArray(v) && v.some(isPlainObject);
 
 function leafValueText(leafKey, value) {
+  if (leafKey === 'archived_at') return value ? 'סגור (בארכיון)' : 'פעיל';
   if (isRowList(value)) return `${value.length} שורות`;
   return FREE_TEXT_KEYS.has(leafKey) ? truncate(valueToText(value), 40) : valueToText(value);
 }

@@ -9,6 +9,7 @@ import ClientForm from './components/ClientForm';
 import Inbox from './components/Inbox';
 import SettingsView from './components/SettingsView';
 import ActivityView from './components/ActivityView';
+import ArchiveView from './components/ArchiveView';
 import PriorityDot from './components/PriorityDot';
 import Icon, { getInitials } from './components/Icon';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
@@ -22,7 +23,8 @@ import { useMessages } from './notifications/useMessages';
 import {
   LABEL_NEW, LABEL_PERMANENT, LABEL_INACTIVE, LABEL_OPTIONS,
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
-  VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, TAB_ACTIVITY,
+  VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, VIEW_ARCHIVE, TAB_ACTIVITY,
+  FIELD_ARCHIVED_AT,
   TABLE_CLIENTS, TABLE_ROW_REMINDERS,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
@@ -198,6 +200,7 @@ export default function App() {
     } else {
       fetchClients();
     }
+    return error;
   };
 
   // Set or clear a reminder for a specific row.
@@ -286,9 +289,26 @@ export default function App() {
     return { ...prev, client_type: newTypes, type_attributes: newAttrs };
   });
 
+  // Closed files (archived_at set) live under ארכיון: out of the list, the
+  // stats and the reminders until reactivated.
+  const openClients = useMemo(() => clients.filter(c => !c[FIELD_ARCHIVED_AT]), [clients]);
+  const archivedClients = useMemo(() => clients.filter(c => c[FIELD_ARCHIVED_AT]), [clients]);
+
+  // Only managers (and admins) close and reopen files.
+  const setArchived = async (client, archivedAt) => {
+    if (!isManager) return;
+    const error = await handleUpdateClient(client.id, { [FIELD_ARCHIVED_AT]: archivedAt });
+    if (error) alert('שגיאה בשמירת מצב התיק. ייתכן שעדכון מסד הנתונים לארכיון עדיין לא הורץ.');
+  };
+  const handleArchive = (client) => {
+    if (!window.confirm(`לסגור את התיק של "${client.name}"?\nהתיק יעבור לארכיון עם כל הנתונים, ואפשר להפעיל אותו מחדש בכל עת.`)) return;
+    setArchived(client, new Date().toISOString());
+  };
+  const handleReactivate = (client) => setArchived(client, null);
+
   // Automatic notifications are for managers only; everyone gets the
   // messages managers forward to them.
-  const { notifications: allNotifications, snoozeNotification } = useNotifications(clients, reminders);
+  const { notifications: allNotifications, snoozeNotification } = useNotifications(openClients, reminders);
   const notifications = isManager ? allNotifications : [];
   const { messages, unreadCount, imageUrls, markRead } = useMessages({ onOpen: () => setView(VIEW_INBOX) });
   const notificationCount = notifications.length + unreadCount;
@@ -300,16 +320,16 @@ export default function App() {
     return '';
   };
 
-  const filtered = useMemo(() => filterAndSortClients(clients, {
+  const filtered = useMemo(() => filterAndSortClients(openClients, {
     search,
-  }, sort), [clients, search, sort]);
+  }, sort), [openClients, search, sort]);
 
-  const permanentCount = useMemo(() => clients.filter(c => c.label === LABEL_PERMANENT).length, [clients]);
-  const newCount = useMemo(() => clients.filter(c => c.label === LABEL_NEW).length, [clients]);
-  const urgentCount = useMemo(() => clients.filter(c => c.priority === PRIORITY_RED).length, [clients]);
+  const permanentCount = useMemo(() => openClients.filter(c => c.label === LABEL_PERMANENT).length, [openClients]);
+  const newCount = useMemo(() => openClients.filter(c => c.label === LABEL_NEW).length, [openClients]);
+  const urgentCount = useMemo(() => openClients.filter(c => c.priority === PRIORITY_RED).length, [openClients]);
 
   const STATS = [
-    { label: 'סה״כ לקוחות', value: clients.length, icon: 'users', tone: '' },
+    { label: 'סה״כ לקוחות', value: openClients.length, icon: 'users', tone: '' },
     { label: 'לקוחות פעילים', value: permanentCount, icon: 'userCheck', tone: 'success' },
     { label: 'לקוחות חדשים', value: newCount, icon: 'sparkle', tone: 'accent' },
     { label: 'בעדיפות דחופה', value: urgentCount, icon: 'flag', tone: 'danger' },
@@ -322,6 +342,7 @@ export default function App() {
         view={view}
         setView={setView}
         notificationCount={notificationCount}
+        archiveCount={archivedClients.length}
       />
 
       <main className="main-content">
@@ -393,9 +414,9 @@ export default function App() {
               ) : filtered.length === 0 ? (
                 <div className="empty-state">
                   <Icon name="users" size={48} strokeWidth={1.5} />
-                  <h3>{clients.length === 0 ? 'אין לקוחות עדיין' : 'לא נמצאו לקוחות'}</h3>
-                  <p>{clients.length === 0 ? 'הוסיפו את הלקוח הראשון כדי להתחיל' : 'נסו לשנות את החיפוש או הסינון'}</p>
-                  {!isViewer && clients.length === 0 && (
+                  <h3>{openClients.length === 0 ? 'אין לקוחות עדיין' : 'לא נמצאו לקוחות'}</h3>
+                  <p>{openClients.length === 0 ? 'הוסיפו את הלקוח הראשון כדי להתחיל' : 'נסו לשנות את החיפוש או הסינון'}</p>
+                  {!isViewer && openClients.length === 0 && (
                     <button className="btn btn-primary" onClick={() => openForm()}>
                       <Icon name="plus" size={16} strokeWidth={2.4} />
                       הוספת לקוח
@@ -522,8 +543,10 @@ export default function App() {
           <ClientDetail
             key={selectedClient.id}
             client={selectedClient}
-            onBack={() => { setView(VIEW_CLIENTS); setSelectedClient(null); }}
+            onBack={() => { setView(selectedClient[FIELD_ARCHIVED_AT] ? VIEW_ARCHIVE : VIEW_CLIENTS); setSelectedClient(null); }}
             onEdit={() => openForm(selectedClient)}
+            onArchive={() => handleArchive(selectedClient)}
+            onReactivate={() => handleReactivate(selectedClient)}
             getLabelClass={getLabelClass}
             onUpdateClient={handleUpdateClient}
             reminders={reminders.filter(r => r.client_id === selectedClient.id)}
@@ -572,6 +595,18 @@ export default function App() {
                 localStorage.setItem(`licensing_phase_${client.id}`, hint.phase);
               }
               setInitialTab(hint?.tab || null);
+              setSelectedClient(client);
+              setView(VIEW_DETAIL);
+            }}
+          />
+        )}
+        {view === VIEW_ARCHIVE && (
+          <ArchiveView
+            clients={archivedClients}
+            canEdit={isManager}
+            onReactivate={handleReactivate}
+            onOpenClient={(client) => {
+              setInitialTab(null);
               setSelectedClient(client);
               setView(VIEW_DETAIL);
             }}

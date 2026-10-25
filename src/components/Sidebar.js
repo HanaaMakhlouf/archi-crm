@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  VIEW_CLIENTS, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, ROLE_MANAGER, ROLE_LABELS, BRAND_NAME, BRAND_TAGLINE,
+  VIEW_CLIENTS, VIEW_ARCHIVE, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, ROLE_MANAGER, ROLE_LABELS, BRAND_NAME, BRAND_TAGLINE,
 } from '../constants';
 import { useTheme } from '../utils/useTheme';
 import { useOfficeBrand } from '../utils/officeBrand';
 import Icon from './Icon';
 
-export default function Sidebar({ view, setView, notificationCount }) {
+export default function Sidebar({ view, setView, notificationCount, archiveCount = 0 }) {
   const { user, logout, isAdmin, userRole, officeId, setOfficeId } = useAuth();
   const { theme, toggle } = useTheme();
   const officeBrand = useOfficeBrand(officeId);
@@ -66,6 +66,15 @@ export default function Sidebar({ view, setView, notificationCount }) {
             >
               <Icon name="users" />
               לקוחות
+            </button>
+
+            <button
+              className={`nav-item${view === VIEW_ARCHIVE ? ' active' : ''}`}
+              onClick={() => navigate(VIEW_ARCHIVE)}
+            >
+              <Icon name="archive" />
+              ארכיון
+              {archiveCount > 0 && <span className="nav-count">{archiveCount}</span>}
             </button>
 
             <button

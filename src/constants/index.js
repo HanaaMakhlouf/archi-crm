@@ -235,6 +235,12 @@ export const VIEW_FORM = 'form';
 export const VIEW_INBOX = 'inbox';
 export const VIEW_SETTINGS = 'settings';
 export const VIEW_ACTIVITY = 'activity';
+export const VIEW_ARCHIVE = 'archive';
+
+// A closed client file keeps all its data; clients.archived_at holds when it
+// was closed (null = open). Closed files leave the clients list, stats and
+// reminders, and live under ארכיון until reactivated.
+export const FIELD_ARCHIVED_AT = 'archived_at';
 export const TAB_GENERAL = 'general';
 export const TAB_ACTIVITY = 'activity';
 

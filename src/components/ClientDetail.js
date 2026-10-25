@@ -10,8 +10,9 @@ import Icon, { getInitials } from './Icon';
 import {
   LABEL_NEW, LABEL_INACTIVE,
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
-  TAB_GENERAL, TAB_ACTIVITY, ROLE_MANAGER,
+  TAB_GENERAL, TAB_ACTIVITY, ROLE_MANAGER, FIELD_ARCHIVED_AT,
 } from '../constants';
+import { formatDate } from '../utils/format';
 
 export default function ClientDetail({
   client,
@@ -23,6 +24,8 @@ export default function ClientDetail({
   onReminderChange,
   onClearReminders,
   initialTab,
+  onArchive,
+  onReactivate,
 }) {
   const tabStorageKey = `client_tab_${client.id}`;
   const [activeTab, setActiveTab] = useState(() => {
@@ -38,7 +41,10 @@ export default function ClientDetail({
     try { sessionStorage.setItem(tabStorageKey, activeTab); } catch { /* storage unavailable */ }
   }, [tabStorageKey, activeTab]);
   const { userRole, isAdmin, isViewer } = useAuth();
-  const canSeeFiles = isAdmin || userRole === ROLE_MANAGER;
+  const isManager = isAdmin || userRole === ROLE_MANAGER;
+  const canSeeFiles = isManager;
+  const archivedAt = client[FIELD_ARCHIVED_AT];
+  const readOnly = isViewer || !!archivedAt; // a closed file is kept as-is until reactivated
 
   return (
     <>
@@ -66,14 +72,20 @@ export default function ClientDetail({
             <FolderChip
               client={client}
               onUpdateClient={(updates) => onUpdateClient(client.id, updates)}
-              canEdit={!isViewer}
+              canEdit={!readOnly}
             />
           )}
           <button className="btn btn-ghost" onClick={onBack}>
             <Icon name="arrowRight" size={16} />
             חזרה
           </button>
-          {!isViewer && (
+          {!readOnly && isManager && (
+            <button className="btn btn-ghost" onClick={onArchive} title="הוצאת התיק מרשימת הלקוחות לארכיון">
+              <Icon name="archive" size={16} />
+              סגירת תיק
+            </button>
+          )}
+          {!readOnly && (
             <button className="btn btn-primary" onClick={onEdit}>
               <Icon name="edit" size={16} />
               עריכת פרטים
@@ -81,6 +93,25 @@ export default function ClientDetail({
           )}
         </div>
       </div>
+
+      {archivedAt && (
+        <div className="archived-banner">
+          <Icon name="archive" size={20} />
+          <div className="archived-banner-text">
+            <strong>התיק סגור ונמצא בארכיון</strong>
+            <span>
+              נסגר בתאריך <bdi dir="ltr">{formatDate(archivedAt)}</bdi>. כל הנתונים נשמרו;
+              {isManager ? ' לעריכה יש להפעיל את התיק מחדש.' : ' רק מנהל יכול להפעיל את התיק מחדש.'}
+            </span>
+          </div>
+          {isManager && (
+            <button className="btn btn-primary btn-sm" onClick={onReactivate}>
+              <Icon name="restore" size={14} />
+              הפעלה מחדש
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ── TABS ── */}
       <div className="tabs">
@@ -119,7 +150,7 @@ export default function ClientDetail({
       {/* fieldset disabled: native way to block every input/select/button below for viewers,
           without threading a readOnly prop through every tab/phase component.
           display:contents keeps it out of the detail-grid layout. */}
-      <fieldset disabled={isViewer} style={{ display: 'contents', border: 0, margin: 0, padding: 0 }}>
+      <fieldset disabled={readOnly} style={{ display: 'contents', border: 0, margin: 0, padding: 0 }}>
       {activeTab === TAB_GENERAL && (
         <div className="detail-grid">
 
