@@ -223,9 +223,10 @@ export const PERMIT_STATUS_OPTIONS = [
 export const CONDITION_HASHBACHA = 'השבחה';
 export const CONDITION_CORP = 'התייחסות תאגיד';
 export const CONDITION_CORP_145D = '145 ד תאגיד';
+export const CONDITION_HAGA = 'הג״א';
 
 export const DEFAULT_CONDITION_ROWS = [
-  CONDITION_HASHBACHA, CONDITION_CORP, CONDITION_CORP_145D, 'עירייה', 'הג״א', 'בטון',
+  CONDITION_HASHBACHA, CONDITION_CORP, CONDITION_CORP_145D, 'עירייה', CONDITION_HAGA, 'בטון',
   'פסולת', 'סטטי/תצהיר', 'בטיחות', 'נגישות', 'תחבורה', 'איכות הסביבה',
 ];
 
@@ -242,6 +243,7 @@ export const COND_SENT_COMMITTEE = 'sent_committee';
 export const COND_TO_APPRAISER = 'to_appraiser';
 export const COND_SENT_CORP = 'sent_corp';
 export const COND_CHARGE_RECEIVED = 'charge_received';
+export const COND_RETURNED_FOR_FIXES = 'returned_for_fixes';
 
 export const HASHBACHA_STATUS_OPTIONS = [
   { value: COND_MISSING_DOCS, label: 'חסר מסמכים' },
@@ -263,10 +265,19 @@ export const CORP_145D_STATUS_OPTIONS = [
   { value: COND_CHARGE_RECEIVED, label: 'התקבל חיוב' },
   { value: DOC_STATUS_PRESENT, label: 'יש' },
 ];
+export const HAGA_STATUS_OPTIONS = [
+  { value: DOC_STATUS_MISSING, label: 'חסר' },
+  { value: CONDITION_ROW_STATUS_SENT, label: 'נשלח' },
+  { value: COND_RETURNED_FOR_FIXES, label: 'חזר לתיקונים' },
+  { value: DOC_STATUS_PRESENT, label: 'יש' },
+  { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
 export const CONDITION_ROW_SELECT_OPTIONS = {
   [CONDITION_HASHBACHA]: HASHBACHA_STATUS_OPTIONS,
   [CONDITION_CORP]: CORP_STATUS_OPTIONS,
   [CONDITION_CORP_145D]: CORP_145D_STATUS_OPTIONS,
+  [CONDITION_HAGA]: HAGA_STATUS_OPTIONS,
+  'הג"א': HAGA_STATUS_OPTIONS, // same row typed with a plain quote
 };
 export const conditionRowOptions = (label) => CONDITION_ROW_SELECT_OPTIONS[label] || CONDITION_ROW_STATUS_OPTIONS;
 
