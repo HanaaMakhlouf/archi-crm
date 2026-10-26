@@ -42,7 +42,6 @@ export default function ClientDetail({
   }, [tabStorageKey, activeTab]);
   const { userRole, isAdmin, isViewer } = useAuth();
   const isManager = isAdmin || userRole === ROLE_MANAGER;
-  const canSeeFiles = isManager;
   const archivedAt = client[FIELD_ARCHIVED_AT];
   const readOnly = isViewer || !!archivedAt; // a closed file is kept as-is until reactivated
 
@@ -68,13 +67,11 @@ export default function ClientDetail({
         </div>
 
         <div className="page-actions">
-          {canSeeFiles && (
-            <FolderChip
-              client={client}
-              onUpdateClient={(updates) => onUpdateClient(client.id, updates)}
-              canEdit={!readOnly}
-            />
-          )}
+          <FolderChip
+            client={client}
+            onUpdateClient={(updates) => onUpdateClient(client.id, updates)}
+            canEdit={!readOnly}
+          />
           <button className="btn btn-ghost" onClick={onBack}>
             <Icon name="arrowRight" size={16} />
             חזרה
@@ -194,12 +191,10 @@ export default function ClientDetail({
           </div>
         </div>
 
-        {canSeeFiles && (
-          <QuickFileLinks
-            client={client}
-            onUpdateClient={(updates) => onUpdateClient(client.id, updates)}
-          />
-        )}
+        <QuickFileLinks
+          client={client}
+          onUpdateClient={(updates) => onUpdateClient(client.id, updates)}
+        />
 
         </div>
       )}
