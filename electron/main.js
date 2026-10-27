@@ -79,8 +79,55 @@ app.on('second-instance', () => {
   mainWindow.focus();
 });
 
+// ── Updates ──
+// New versions are published as GitHub releases (npm run electron:publish).
+// The installed app checks on start and every few hours, downloads a newer
+// version in the background, and tells the page, which offers "עדכון עכשיו".
+// Only the packaged app updates; the dev app just reports its version.
+const UPDATE_CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000;
+let updateState = { status: 'idle', version: null, percent: null };
+
+function setUpdateState(next) {
+  updateState = { ...updateState, ...next };
+  mainWindow?.webContents.send('update-state', updateState);
+}
+
+function setupAutoUpdates() {
+  if (isDev) return;
+  const { autoUpdater } = require('electron-updater');
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true; // closing the app also installs a downloaded update
+
+  autoUpdater.on('checking-for-update', () => {
+    if (updateState.status !== 'ready') setUpdateState({ status: 'checking' });
+  });
+  autoUpdater.on('update-available', (info) => setUpdateState({ status: 'downloading', version: info.version, percent: 0 }));
+  autoUpdater.on('update-not-available', () => {
+    if (updateState.status !== 'ready') setUpdateState({ status: 'latest' });
+  });
+  autoUpdater.on('download-progress', (p) => setUpdateState({ status: 'downloading', percent: Math.round(p.percent) }));
+  autoUpdater.on('update-downloaded', (info) => setUpdateState({ status: 'ready', version: info.version, percent: 100 }));
+  autoUpdater.on('error', (err) => {
+    console.error('Update error:', err?.message || err);
+    // No network, GitHub down, etc. — say so only if nothing is waiting to install.
+    if (updateState.status !== 'ready') setUpdateState({ status: 'error' });
+  });
+
+  const check = () => autoUpdater.checkForUpdates().catch(() => {});
+  check();
+  setInterval(check, UPDATE_CHECK_INTERVAL_MS);
+
+  ipcMain.handle('check-for-updates', check);
+  ipcMain.handle('install-update', () => {
+    if (updateState.status === 'ready') autoUpdater.quitAndInstall(true, true); // silent, then reopen
+  });
+}
+
+ipcMain.handle('get-app-info', () => ({ version: app.getVersion(), canUpdate: !isDev, update: updateState }));
+
 app.whenReady().then(() => {
   createWindow();
+  setupAutoUpdates();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

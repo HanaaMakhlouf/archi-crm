@@ -8,6 +8,19 @@ import { useTheme } from '../utils/useTheme';
 import { useOfficeBrand } from '../utils/officeBrand';
 import Icon from './Icon';
 import ChangePasswordDialog from './ChangePasswordDialog';
+import { useAppUpdate } from '../utils/useAppUpdate';
+
+// The small status next to the version; "בדיקת עדכונים" checks right away.
+function UpdateStatus({ update, onCheck }) {
+  if (update.status === 'checking') return <span>בודק עדכונים...</span>;
+  if (update.status === 'downloading') return <span>מוריד גרסה {update.version} · {update.percent ?? 0}%</span>;
+  if (update.status === 'ready') return null;
+  return (
+    <button type="button" className="app-version-check" onClick={onCheck}>
+      {update.status === 'latest' ? 'מעודכן ✓ · בדיקה' : update.status === 'error' ? 'הבדיקה נכשלה · נסו שוב' : 'בדיקת עדכונים'}
+    </button>
+  );
+}
 
 export default function Sidebar({ view, setView, notificationCount, archiveCount = 0 }) {
   const { user, logout, isAdmin, userRole, officeId, setOfficeId } = useAuth();
@@ -16,6 +29,7 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
   const [mobileOpen, setMobileOpen] = useState(false);
   const [offices, setOffices] = useState([]);
   const [changingPassword, setChangingPassword] = useState(false);
+  const appUpdate = useAppUpdate();
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -157,6 +171,23 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
               </button>
             </div>
           </div>
+
+          {appUpdate.update.status === 'ready' && (
+            <div className="update-card">
+              <div className="update-card-text">
+                <strong>גרסה חדשה מוכנה</strong>
+                <span>גרסה {appUpdate.update.version} · האפליקציה תיסגר ותיפתח מחדש</span>
+              </div>
+              <button className="btn btn-primary btn-sm" onClick={appUpdate.install}>עדכון עכשיו</button>
+            </div>
+          )}
+
+          {appUpdate.version && (
+            <div className="app-version">
+              <span>גרסה {appUpdate.version}</span>
+              {appUpdate.canUpdate && <UpdateStatus update={appUpdate.update} onCheck={appUpdate.check} />}
+            </div>
+          )}
         </div>
 
       </aside>

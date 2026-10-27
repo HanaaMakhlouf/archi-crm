@@ -5,16 +5,7 @@
   "main": "electron/main.js",
   "homepage": "./",
   "dependencies": {
-    "@supabase/supabase-js": "^2.103.0",
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^13.5.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4",
-    "yaml": "^2.8.3"
+    "electron-updater": "^6.8.11"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -62,8 +53,7 @@
     "files": [
       "build/**/*",
       "electron/**/*",
-      "buildResources/icon.png",
-      "!**/node_modules/**/*"
+      "buildResources/icon.png"
     ],
     "artifactName": "${productName}-Setup-${version}.${ext}",
     "publish": [
@@ -71,7 +61,7 @@
         "provider": "github",
         "owner": "HanaaMakhlouf",
         "repo": "archi-crm",
-        "releaseType": "draft"
+        "releaseType": "release"
       }
     ],
     "win": {
@@ -100,11 +90,21 @@
     }
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.103.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^13.5.0",
     "concurrently": "^9.2.1",
     "cross-env": "^7.0.3",
     "electron": "^33.4.11",
     "electron-builder": "^26.8.1",
-    "wait-on": "^9.0.10"
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-scripts": "5.0.1",
+    "wait-on": "^9.0.10",
+    "web-vitals": "^2.1.4",
+    "yaml": "^2.8.3"
   },
   "description": "משרד פלוס – office and client management",
   "author": "Hanaa Makhlouf"
