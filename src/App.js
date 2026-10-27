@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useDeferredValue } from 'react';
 import './App.css';
 import './styles/Mobile.css';
 import { supabase } from './supabaseClient';
@@ -321,9 +321,11 @@ export default function App() {
     return '';
   };
 
+  // The box updates on every key; the table follows a beat later, so typing never waits on it.
+  const deferredSearch = useDeferredValue(search);
   const filtered = useMemo(() => filterAndSortClients(openClients, {
-    search,
-  }, sort), [openClients, search, sort]);
+    search: deferredSearch,
+  }, sort), [openClients, deferredSearch, sort]);
 
   const permanentCount = useMemo(() => openClients.filter(c => c.label === LABEL_PERMANENT).length, [openClients]);
   const newCount = useMemo(() => openClients.filter(c => c.label === LABEL_NEW).length, [openClients]);
@@ -388,15 +390,16 @@ export default function App() {
                   רשימת לקוחות
                   <span className="list-toolbar-count">{filtered.length} תוצאות</span>
                 </div>
-                <div className="search-bar">
+                {/* A label, so a click anywhere in the box (icon, padding) focuses the input. */}
+                <label className="search-bar">
                   <Icon name="search" size={16} />
                   <input
                     type="text"
-                    placeholder="חיפוש לפי שם או עיר..."
+                    placeholder="חיפוש לפי שם, עיר, גוש או מס' בקשה..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                   />
-                </div>
+                </label>
               </div>
 
               {/* ── LOADING SKELETON ── */}
@@ -412,12 +415,12 @@ export default function App() {
                 </div>
 
                 /* ── EMPTY STATE ── */
-              ) : filtered.length === 0 ? (
+              ) : openClients.length === 0 ? (
                 <div className="empty-state">
                   <Icon name="users" size={48} strokeWidth={1.5} />
-                  <h3>{openClients.length === 0 ? 'אין לקוחות עדיין' : 'לא נמצאו לקוחות'}</h3>
-                  <p>{openClients.length === 0 ? 'הוסיפו את הלקוח הראשון כדי להתחיל' : 'נסו לשנות את החיפוש או הסינון'}</p>
-                  {!isViewer && openClients.length === 0 && (
+                  <h3>אין לקוחות עדיין</h3>
+                  <p>הוסיפו את הלקוח הראשון כדי להתחיל</p>
+                  {!isViewer && (
                     <button className="btn btn-primary" onClick={() => openForm()}>
                       <Icon name="plus" size={16} strokeWidth={2.4} />
                       הוספת לקוח
@@ -443,6 +446,12 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
+                    {/* No matches: keep the table (and its column widths) in place. */}
+                    {filtered.length === 0 && (
+                      <tr className="clients-table-empty">
+                        <td colSpan={8}>לא נמצאו לקוחות התואמים ל״{deferredSearch.trim()}״</td>
+                      </tr>
+                    )}
                     {filtered.map(client => {
                       const types = client.client_type || [];
                       const helkaText = client.helka && client.helka.length ? client.helka.join(', ') : '';

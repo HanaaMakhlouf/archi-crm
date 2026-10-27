@@ -194,6 +194,16 @@ ipcMain.handle('open-file-copy', async (_, name, data) => {
   return (await shell.openPath(target)) || null; // '' = opened
 });
 
+// After a native alert()/confirm() closes, Electron on Windows can leave the
+// page's inputs ignoring clicks and typing until the window loses and regains
+// focus. The renderer calls this right after each such dialog to do just that.
+ipcMain.handle('refocus-page', () => {
+  if (!mainWindow) return;
+  mainWindow.blur();
+  mainWindow.focus();
+  mainWindow.webContents.focus();
+});
+
 // Clicking a desktop notification brings the app to the front.
 ipcMain.handle('focus-window', () => {
   if (!mainWindow) return;

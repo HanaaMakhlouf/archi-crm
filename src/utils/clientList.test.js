@@ -1,4 +1,4 @@
-import { filterAndSortClients, DEFAULT_SORT } from './clientList';
+import { filterAndSortClients, matchesSearch, DEFAULT_SORT } from './clientList';
 import {
   LABEL_INACTIVE, LABEL_PERMANENT, PRIORITY_GREEN, PRIORITY_ORANGE, PRIORITY_RED,
 } from '../constants';
@@ -43,5 +43,34 @@ describe('filterAndSortClients', () => {
 
   it('combines filters with search', () => {
     expect(run({ search: 'חיפה', label: LABEL_PERMANENT })).toEqual([1]);
+  });
+});
+
+describe('matchesSearch', () => {
+  const client = {
+    name: 'אבו חכים', city: 'כפר קרע', gush: 12034, helka: [5, 17], migrash: '6א',
+    licensing_data: { application: { request_number: '20250312' } },
+  };
+
+  it('ignores case, extra spaces and quote marks', () => {
+    expect(matchesSearch(client, '  אבו   חכים ')).toBe(true);
+    expect(matchesSearch({ name: 'ת״א בע"מ' }, 'תא')).toBe(true);
+    expect(matchesSearch({ name: 'Abo Saleh' }, 'abo s')).toBe(true);
+  });
+
+  it('needs every word, from any field', () => {
+    expect(matchesSearch(client, 'חכים כפר קרע')).toBe(true);
+    expect(matchesSearch(client, 'חכים עכו')).toBe(false);
+  });
+
+  it('finds gush, חלקה and request number', () => {
+    expect(matchesSearch(client, '12034')).toBe(true);
+    expect(matchesSearch(client, '17')).toBe(true);
+    expect(matchesSearch(client, '20250312')).toBe(true);
+  });
+
+  it('matches everything when empty, and survives missing fields', () => {
+    expect(matchesSearch(client, '   ')).toBe(true);
+    expect(matchesSearch({ name: null }, 'x')).toBe(false);
   });
 });

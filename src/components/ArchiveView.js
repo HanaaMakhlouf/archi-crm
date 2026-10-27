@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import Icon, { getInitials } from './Icon';
 import { formatDate } from '../utils/format';
+import { matchesSearch } from '../utils/clientList';
 import { FIELD_ARCHIVED_AT } from '../constants';
 
 // ארכיון: closed client files, most recently closed first. Opening one shows
@@ -9,9 +10,8 @@ export default function ArchiveView({ clients, canEdit, onOpenClient, onReactiva
   const [search, setSearch] = useState('');
 
   const rows = useMemo(() => {
-    const q = search.trim().toLowerCase();
     return clients
-      .filter(c => !q || c.name.toLowerCase().includes(q) || (c.city || '').toLowerCase().includes(q))
+      .filter(c => matchesSearch(c, search))
       .sort((a, b) => new Date(b[FIELD_ARCHIVED_AT]) - new Date(a[FIELD_ARCHIVED_AT]));
   }, [clients, search]);
 
@@ -31,15 +31,15 @@ export default function ArchiveView({ clients, canEdit, onOpenClient, onReactiva
             תיקים סגורים
             <span className="list-toolbar-count">{rows.length} תוצאות</span>
           </div>
-          <div className="search-bar">
+          <label className="search-bar">
             <Icon name="search" size={16} />
             <input
               type="text"
-              placeholder="חיפוש לפי שם או עיר..."
+              placeholder="חיפוש לפי שם, עיר, גוש או מס' בקשה..."
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
-          </div>
+          </label>
         </div>
 
         {rows.length === 0 ? (
