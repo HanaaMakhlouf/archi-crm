@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 const WEEKDAYS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
@@ -8,18 +8,44 @@ const MONTH_NAMES = [
 ];
 
 const POPOVER_WIDTH = 220;
+const GAP = 6;     // between the button and the popover
+const MARGIN = 8;  // kept clear of the window edges
 
 // Button that opens a calendar-grid popover; onSelect gets 'YYYY-MM-DD' for the picked day.
 // Popover renders in a portal at fixed position so it floats over the page,
 // detached from any hover/transform effects on ancestor cards (avoids hover flicker).
+// It opens below the button, or above it when there's no room below (e.g. the
+// last row of a table near the bottom of the window), and follows the button
+// when the page scrolls.
 export default function DatePickerButton({ onSelect, label = 'בחר תאריך' }) {
   const [open, setOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => new Date());
-  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [pos, setPos] = useState(null);
   const buttonRef = useRef(null);
   const popoverRef = useRef(null);
 
   const close = useCallback(() => setOpen(false), []);
+
+  const place = useCallback(() => {
+    if (!buttonRef.current || !popoverRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    // The button scrolled out of view: nothing left to anchor to.
+    if (rect.bottom < 0 || rect.top > window.innerHeight) { setOpen(false); return; }
+    const height = popoverRef.current.offsetHeight;
+    const fitsBelow = rect.bottom + GAP + height <= window.innerHeight - MARGIN;
+    const top = fitsBelow ? rect.bottom + GAP : rect.top - GAP - height;
+    setPos({
+      top: Math.max(MARGIN, Math.min(top, window.innerHeight - height - MARGIN)),
+      left: Math.max(MARGIN, Math.min(rect.right - POPOVER_WIDTH, window.innerWidth - POPOVER_WIDTH - MARGIN)),
+    });
+  }, []);
+
+  // Measure once rendered (hidden), then place, before the browser paints.
+  // Re-placed on month change too: a month can take 5 or 6 rows.
+  useLayoutEffect(() => {
+    if (open) place();
+    else setPos(null);
+  }, [open, place, viewDate]);
 
   useEffect(() => {
     if (!open) return;
@@ -30,24 +56,17 @@ export default function DatePickerButton({ onSelect, label = 'בחר תאריך'
       ) close();
     };
     document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('scroll', close, true);
-    window.addEventListener('resize', close);
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('scroll', close, true);
-      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
     };
-  }, [open, close]);
+  }, [open, close, place]);
 
   const toggleOpen = () => {
-    if (!open) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setPos({
-        top: rect.bottom + 6,
-        left: Math.max(8, Math.min(rect.right - POPOVER_WIDTH, window.innerWidth - POPOVER_WIDTH - 8)),
-      });
-      setViewDate(new Date());
-    }
+    if (!open) setViewDate(new Date());
     setOpen((o) => !o);
   };
 
@@ -79,7 +98,7 @@ export default function DatePickerButton({ onSelect, label = 'בחר תאריך'
         <div
           className="date-picker-popover"
           ref={popoverRef}
-          style={{ top: pos.top, left: pos.left, width: POPOVER_WIDTH }}
+          style={{ top: pos?.top ?? 0, left: pos?.left ?? 0, width: POPOVER_WIDTH, visibility: pos ? 'visible' : 'hidden' }}
         >
           <div className="date-picker-header">
             <button type="button" className="date-picker-nav" onClick={() => setViewDate(new Date(year, month - 1, 1))}>‹</button>
