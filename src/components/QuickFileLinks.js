@@ -27,8 +27,8 @@ export function isAbsoluteFolderPath(raw) {
   if (raw.startsWith('folder:')) return false;
   // Has a file extension → it's a file, not a folder
   if (/\.(docx?|xlsx?|pptx?)$/i.test(raw)) return false;
-  // Looks like an absolute path (Windows C:\ or Unix /)
-  return /^([a-zA-Z]:[\\/]|\/)/.test(raw);
+  // Looks like an absolute path (Windows C:\, network \\Server\share, or Unix /)
+  return /^([a-zA-Z]:[\\/]|\\\\[^\\]|\/)/.test(raw);
 }
 
 export function getPathBasename(p) {

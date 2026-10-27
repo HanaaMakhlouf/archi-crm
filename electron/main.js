@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, shell, nativeTheme } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { execFile } = require('child_process');
 
 const isDev = !app.isPackaged;
 const DEV_URL = 'http://localhost:3000';
@@ -89,45 +90,93 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-ipcMain.handle('pick-folder', async (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  const r = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
-  return r.canceled ? null : r.filePaths[0];
-});
+// ── Client folders on the office server ──
+// Every PC maps the server share to a drive letter, but not the same way:
+// on one PC W: is \\Server\d\WORK (folders at W:\WORK1\work\...), on another
+// it's \\Server\d\WORK\WORK1 (the same folders at W:\work\...). A drive path
+// saved on one PC is therefore wrong on the next, so folders are saved as
+// their UNC path (\\Server\d\WORK\WORK1\work\...), which is the same everywhere.
 
-// A saved folder whose path no longer exists was usually moved one level down
-// on the server (e.g. W:\work\... → W:\WORK1\work\...). Climb to the deepest
-// part of the path that still exists and look for the rest under each of its
-// subfolders.
-function findMovedFolder(p) {
-  const rest = [];
-  let base = p;
-  while (!fs.existsSync(base)) {
-    const parent = path.dirname(base);
-    if (parent === base) return null; // reached the root (server or drive unreachable)
-    rest.unshift(path.basename(base));
-    base = parent;
-  }
-  let subdirs;
-  try {
-    subdirs = fs.readdirSync(base, { withFileTypes: true }).filter(d => d.isDirectory());
-  } catch {
-    return null;
-  }
-  for (const d of subdirs) {
-    const candidate = path.join(base, d.name, ...rest);
-    if (fs.existsSync(candidate)) return candidate;
+// Drive letter → UNC root of this PC's mapped network drives, e.g. { W: '\\Server\d\WORK' }.
+function readDriveMappings() {
+  if (process.platform !== 'win32') return Promise.resolve({});
+  return new Promise((resolve) => {
+    execFile('net', ['use'], { windowsHide: true, timeout: 5000 }, (err, stdout) => {
+      const map = {};
+      if (!err) {
+        for (const m of String(stdout).matchAll(/^\S*\s+([A-Z]:)\s+(\\\\.+?)(?:\s{2,}|\s*$)/gim)) {
+          map[m[1].toUpperCase()] = m[2].trim();
+        }
+      }
+      resolve(map);
+    });
+  });
+}
+
+let driveMappings = null;
+async function getDriveMappings() {
+  if (!driveMappings) driveMappings = await readDriveMappings();
+  return driveMappings;
+}
+
+function toUnc(p, mappings) {
+  const m = /^([a-zA-Z]:)(?:[\\/]|$)(.*)$/.exec(p || '');
+  const root = m && mappings[m[1].toUpperCase()];
+  return root ? path.win32.join(root, m[2]) : p;
+}
+
+const isDir = (p) => { try { return fs.statSync(p).isDirectory(); } catch { return false; } };
+const subdirsOf = (p) => {
+  try { return fs.readdirSync(p, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => path.join(p, d.name)); }
+  catch { return []; }
+};
+
+// Looks for a saved folder that isn't at its saved path: its share may sit one
+// level higher or lower on this PC (see above), it may use a drive letter this
+// PC doesn't have, or it may have moved one level down on the server.
+function findFolder(p, mappings) {
+  const { root } = path.win32.parse(p);
+  const segs = p.slice(root.length).split(/[\\/]/).filter(Boolean);
+  const roots = [...new Set([root, ...Object.keys(mappings).map(d => d + '\\'), ...Object.values(mappings)])].filter(isDir);
+
+  for (const base of roots) {
+    // Drop up to 2 leading folders (the share is mapped deeper here), keeping
+    // at least 2 so a bare client name can't match some other folder.
+    for (let drop = 0; drop <= 2 && segs.length - drop >= 2; drop++) {
+      const rest = segs.slice(drop);
+      const direct = path.join(base, ...rest);
+      if (isDir(direct)) return direct;
+      // …or one folder deeper (the share is mapped higher here, or the folders moved down).
+      for (const sub of subdirsOf(base)) {
+        const candidate = path.join(sub, ...rest);
+        if (isDir(candidate)) return candidate;
+      }
+    }
   }
   return null;
 }
 
-// Returns { path } — the folder actually opened (differs from p when it was
-// found at a new location, so the caller can save it) — or { error }.
+ipcMain.handle('pick-folder', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const r = await dialog.showOpenDialog(win, { properties: ['openDirectory'] });
+  if (r.canceled) return null;
+  return toUnc(r.filePaths[0], await getDriveMappings());
+});
+
+// Returns { path } — the folder opened, as a UNC path whenever it's on the
+// server; when it differs from p the caller saves it so every PC finds it — or { error }.
 ipcMain.handle('open-folder', async (_, p) => {
-  const target = fs.existsSync(p) ? p : findMovedFolder(p);
+  let mappings = await getDriveMappings();
+  let target = isDir(p) ? p : findFolder(p, mappings);
+  if (!target) {
+    // A drive may have been mapped since the app started.
+    driveMappings = null;
+    mappings = await getDriveMappings();
+    target = findFolder(p, mappings);
+  }
   if (!target) return { error: 'not_found' };
   const err = await shell.openPath(target);
-  return err ? { error: err } : { path: target };
+  return err ? { error: err } : { path: toUnc(target, mappings) };
 });
 
 // Opens a received attachment in its default program (Acrobat, Word, ...),
