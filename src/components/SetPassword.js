@@ -4,7 +4,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { authMsg } from '../utils/authMessages';
 import '../styles/Login.css';
 
-export default function SetPassword({ onDone }) {
+// mode: 'invite' (first password for a new worker) | 'recovery' (forgot password).
+export default function SetPassword({ mode = 'invite', onDone }) {
+  const recovery = mode === 'recovery';
   const { user } = useAuth();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -37,7 +39,7 @@ export default function SetPassword({ onDone }) {
     if (err) { setError(err.message); setLoading(false); return; }
 
     window.history.replaceState(null, '', window.location.pathname);
-    authMsg.success = 'הסיסמה נשמרה! כעת ניתן להתחבר.';
+    authMsg.success = recovery ? 'הסיסמה עודכנה! כעת ניתן להתחבר עם הסיסמה החדשה.' : 'הסיסמה נשמרה! כעת ניתן להתחבר.';
     onDone(); // clear inviteFlow before signOut so re-login doesn't loop back here
     await supabase.auth.signOut();
     // signOut → onAuthStateChange → resolveSession(null) → user=null → Router shows Login
@@ -52,7 +54,7 @@ export default function SetPassword({ onDone }) {
     <div className="login-container">
       <div className="login-box">
         <h1>מערכת לקוחות</h1>
-        <p className="login-subtitle">הגדרת סיסמה לחשבונך</p>
+        <p className="login-subtitle">{recovery ? 'בחירת סיסמה חדשה לחשבונך' : 'הגדרת סיסמה לחשבונך'}</p>
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
@@ -106,7 +108,7 @@ export default function SetPassword({ onDone }) {
             className="btn btn-primary btn-large"
             disabled={loading || !password || !confirm}
           >
-            {loading ? 'שומר...' : 'הגדר סיסמה והתחבר'}
+            {loading ? 'שומר...' : recovery ? 'שמירת הסיסמה החדשה' : 'הגדר סיסמה והתחבר'}
           </button>
         </form>
       </div>

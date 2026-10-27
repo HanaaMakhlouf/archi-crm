@@ -421,3 +421,59 @@
   .login-visual { display: none; }
   .login-panel { flex: 1; min-width: 0; padding: 28px 24px; }
 }
+
+/* ── Forgot password ── */
+.login-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.login-link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.login-link:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.login-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.login-label-row .login-link {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #8b9390;
+}
+
+.login-label-row .login-link:hover:not(:disabled) {
+  color: var(--color-primary);
+}
+
+.login-back {
+  display: block;
+  margin: 22px auto 0;
+}
+
+.login-lead {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7471;
+  line-height: 1.6;
+}
+
+.login-page .form-group input.login-code {
+  direction: ltr;
+  text-align: center;
+  font-size: 22px;
+  letter-spacing: 0.4em;
+}

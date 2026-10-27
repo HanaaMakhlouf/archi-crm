@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { authMsg } from '../utils/authMessages';
 import Icon from './Icon';
+import ForgotPassword from './ForgotPassword';
 import { BRAND_NAME, BRAND_TAGLINE } from '../constants';
 import { getRememberedBrand } from '../utils/officeBrand';
 import heroImg from '../assets/login-hero.jpg';
@@ -10,7 +11,7 @@ import '../styles/Login.css';
 // Survives component remount (which happens when signOut clears the user)
 let pendingError = '';
 
-export default function Login() {
+export default function Login({ onRecoveryStart }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -24,6 +25,7 @@ export default function Login() {
   });
   const [success] = useState(() => { const s = authMsg.success; authMsg.success = ''; return s; });
   const [officeBrand] = useState(getRememberedBrand);
+  const [forgot, setForgot] = useState(false);
 
   useEffect(() => {
     const prev = document.documentElement.getAttribute('data-theme');
@@ -102,6 +104,9 @@ export default function Login() {
         </div>
 
         <div className="login-form-wrap">
+          {forgot ? (
+            <ForgotPassword initialEmail={email} onBack={() => setForgot(false)} onVerifying={onRecoveryStart} />
+          ) : (<>
           <div className="login-heading">
             <h1>ברוכים הבאים</h1>
           </div>
@@ -123,7 +128,12 @@ export default function Login() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">סיסמה</label>
+              <div className="login-label-row">
+                <label htmlFor="password">סיסמה</label>
+                <button type="button" className="login-link" onClick={() => setForgot(true)} disabled={loading}>
+                  שכחתי סיסמה?
+                </button>
+              </div>
               <div className="login-password">
                 <input
                   id="password"
@@ -169,6 +179,7 @@ export default function Login() {
           </form>
 
           <p className="login-note">אין לכם חשבון? <strong>פנו למנהל המשרד</strong></p>
+          </>)}
         </div>
 
         <div className="login-footer">© {new Date().getFullYear()} {BRAND_NAME}</div>

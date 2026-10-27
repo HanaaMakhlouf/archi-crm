@@ -7,6 +7,7 @@ import {
 import { useTheme } from '../utils/useTheme';
 import { useOfficeBrand } from '../utils/officeBrand';
 import Icon from './Icon';
+import ChangePasswordDialog from './ChangePasswordDialog';
 
 export default function Sidebar({ view, setView, notificationCount, archiveCount = 0 }) {
   const { user, logout, isAdmin, userRole, officeId, setOfficeId } = useAuth();
@@ -14,6 +15,7 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
   const officeBrand = useOfficeBrand(officeId);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [offices, setOffices] = useState([]);
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -140,6 +142,13 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
                 <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={15} />
               </button>
               <button
+                className="btn-icon-sm"
+                onClick={() => setChangingPassword(true)}
+                title="שינוי סיסמה"
+              >
+                <Icon name="key" size={15} />
+              </button>
+              <button
                 className="btn-icon-sm danger"
                 onClick={handleLogout}
                 title="התנתקות"
@@ -151,6 +160,8 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
         </div>
 
       </aside>
+
+      {changingPassword && <ChangePasswordDialog onClose={() => setChangingPassword(false)} />}
     </>
   );
 }

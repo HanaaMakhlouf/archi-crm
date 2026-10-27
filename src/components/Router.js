@@ -7,36 +7,51 @@ import ErrorBoundary from './ErrorBoundary';
 import { supabase, isSupabaseConfigured } from '../supabaseClient';
 import { authMsg } from '../utils/authMessages';
 
-function isInviteHash() {
-  return window.location.hash.includes('type=invite');
+const LINK_TYPES = ['invite', 'recovery'];
+
+function getHashLinkType() {
+  return LINK_TYPES.find(t => window.location.hash.includes(`type=${t}`)) || null;
 }
 
-// Invite emails link straight to our own domain:
-//   {{ .SiteURL }}/?token_hash=...&type=invite
+// Invite and reset-password emails link straight to our own domain:
+//   {{ .SiteURL }}/?token_hash=...&type=invite   (or type=recovery)
 // (instead of Supabase's domain, which hurts deliverability). The app
 // exchanges the token for a session itself, then shows SetPassword.
-function getInviteTokenHash() {
+function getEmailLink() {
   const params = new URLSearchParams(window.location.search);
-  return params.get('type') === 'invite' ? params.get('token_hash') : null;
+  const type = params.get('type');
+  const tokenHash = params.get('token_hash');
+  return LINK_TYPES.includes(type) && tokenHash ? { type, tokenHash } : null;
 }
 
 export default function Router() {
   const { user, loading } = useAuth();
-  const [inviteFlow, setInviteFlow] = useState(() => isInviteHash() || !!getInviteTokenHash());
-  const [verifying, setVerifying] = useState(() => !!getInviteTokenHash());
+  // 'invite' | 'recovery' | null — which SetPassword screen to show once signed in.
+  const [passwordFlow, setPasswordFlow] = useState(() => getHashLinkType() || getEmailLink()?.type || null);
+  const [verifying, setVerifying] = useState(() => !!getEmailLink());
 
   useEffect(() => {
-    const tokenHash = getInviteTokenHash();
-    if (!tokenHash) return;
-    supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'invite' }).then(({ error }) => {
+    const link = getEmailLink();
+    if (!link) return;
+    supabase.auth.verifyOtp({ token_hash: link.tokenHash, type: link.type }).then(({ error }) => {
       // Drop the token from the address bar either way — it's single-use.
       window.history.replaceState(null, '', window.location.pathname);
       if (error) {
-        authMsg.error = 'הקישור אינו תקף או שפג תוקפו. בקשו ממנהל המשרד לשלוח הזמנה חדשה.';
-        setInviteFlow(false);
+        authMsg.error = link.type === 'invite'
+          ? 'הקישור אינו תקף או שפג תוקפו. בקשו ממנהל המשרד לשלוח הזמנה חדשה.'
+          : 'הקישור אינו תקף או שפג תוקפו. ניתן לבקש קוד חדש דרך "שכחתי סיסמה".';
+        setPasswordFlow(null);
       }
       setVerifying(false);
     });
+  }, []);
+
+  // Supabase's own reset link (#access_token=...&type=recovery) signs in and fires this.
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setPasswordFlow('recovery');
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   if (!isSupabaseConfigured) {
@@ -58,11 +73,11 @@ export default function Router() {
     );
   }
 
-  if (inviteFlow && user) {
-    return <SetPassword onDone={() => setInviteFlow(false)} />;
+  if (passwordFlow && user) {
+    return <SetPassword mode={passwordFlow} onDone={() => setPasswordFlow(null)} />;
   }
 
-  if (!user) return <Login />;
+  if (!user) return <Login onRecoveryStart={(on) => setPasswordFlow(on ? 'recovery' : null)} />;
 
   return (
     <ErrorBoundary>

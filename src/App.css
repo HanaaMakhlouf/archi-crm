@@ -3410,3 +3410,46 @@ textarea {
   padding-top: 12px;
 }
 
+
+/* ── Change password dialog ── */
+.password-dialog {
+  max-width: 400px;
+  text-align: right;
+}
+
+.password-dialog-title {
+  margin: 0 0 18px;
+  font-size: 18px;
+}
+
+.password-dialog .form-group {
+  margin-bottom: 14px;
+}
+
+.password-dialog .form-group input[type="password"],
+.password-dialog .form-group input[type="text"] {
+  direction: ltr;
+  text-align: right;
+}
+
+.password-dialog-show {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.password-dialog-error {
+  color: var(--color-error);
+  font-size: 13.5px;
+  margin-bottom: 14px;
+}
+
+.password-dialog-done {
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+}
