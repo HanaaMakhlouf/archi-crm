@@ -981,8 +981,30 @@ h6 {
   text-align: right;
 }
 
+/* סוג תיק: tags wrap onto their own lines with even spacing, never mid-word. */
+.type-tags-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-width: 190px;
+}
+
 .clients-table .type-tag {
-  margin-left: 4px;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+/* עדכון אחרון: the date, with what changed underneath (one line, full text on hover). */
+.clients-table td.cell-updated {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.clients-table td.cell-updated .client-sub-faint {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .clients-table td.cell-request {

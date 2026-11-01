@@ -440,6 +440,9 @@ export default function App() {
                       <th>גוש / חלקה</th>
                       <th>מס' בקשה</th>
                       <th>
+                        <SortHeader column="updated" label="עדכון אחרון" sort={sort} onChange={setSort} firstDir="desc" />
+                      </th>
+                      <th>
                         <SortHeader column="created" label="תאריך יצירה" sort={sort} onChange={setSort} firstDir="desc" />
                       </th>
                       <th></th>
@@ -449,7 +452,7 @@ export default function App() {
                     {/* No matches: keep the table (and its column widths) in place. */}
                     {filtered.length === 0 && (
                       <tr className="clients-table-empty">
-                        <td colSpan={8}>לא נמצאו לקוחות התואמים ל״{deferredSearch.trim()}״</td>
+                        <td colSpan={9}>לא נמצאו לקוחות התואמים ל״{deferredSearch.trim()}״</td>
                       </tr>
                     )}
                     {filtered.map(client => {
@@ -483,11 +486,6 @@ export default function App() {
                                     <span className="client-sub-key">תכנון · </span>{getCurrentPlanningStageLabel(client)}
                                   </div>
                                 )}
-                                <div className="client-sub-faint">
-                                  {client.last_change_summary
-                                    ? `עודכן ${formatDate(client.last_updated_at)} · ${client.last_change_summary}`
-                                    : `נוסף ${formatDate(client.created_at)}`}
-                                </div>
                               </div>
                             </div>
                           </td>
@@ -500,7 +498,7 @@ export default function App() {
                           </td>
                           <td>
                             {types.length > 0
-                              ? types.map(t => <span key={t} className="type-tag">{t}</span>)
+                              ? <div className="type-tags-cell">{types.map(t => <span key={t} className="type-tag">{t}</span>)}</div>
                               : <span className="muted">—</span>}
                           </td>
                           <td className="cell-secondary">{client.city || '—'}</td>
@@ -508,6 +506,16 @@ export default function App() {
                             {client.gush || helkaText ? `${client.gush || '—'} / ${helkaText || '—'}` : '—'}
                           </td>
                           <td className="cell-request">{client.licensing_data?.application?.request_number || '—'}</td>
+                          <td className="cell-updated">
+                            {client.last_updated_at ? (
+                              <>
+                                <bdi dir="ltr">{formatDate(client.last_updated_at)}</bdi>
+                                {client.last_change_summary && (
+                                  <div className="client-sub-faint" title={client.last_change_summary}>{client.last_change_summary}</div>
+                                )}
+                              </>
+                            ) : <span className="muted">—</span>}
+                          </td>
                           <td className="cell-secondary">
                             <bdi dir="ltr">{new Date(client.created_at).toLocaleDateString('he-IL')}</bdi>
                           </td>

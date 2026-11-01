@@ -46,6 +46,19 @@ describe('filterAndSortClients', () => {
   });
 });
 
+describe('sort by last update', () => {
+  it('uses the last edit, or the creation date for clients never edited', () => {
+    const list = [
+      { id: 1, name: 'א', created_at: at('2026-10-01'), last_updated_at: at('2026-10-20') },
+      { id: 2, name: 'ב', created_at: at('2026-10-10') },
+      { id: 3, name: 'ג', created_at: at('2026-10-02'), last_updated_at: at('2026-10-05') },
+    ];
+    const sorted = (dir) => ids(filterAndSortClients([...list], {}, { key: 'updated', dir }));
+    expect(sorted('desc')).toEqual([1, 2, 3]);
+    expect(sorted('asc')).toEqual([3, 2, 1]);
+  });
+});
+
 describe('matchesSearch', () => {
   const client = {
     name: 'אבו חכים', city: 'כפר קרע', gush: 12034, helka: [5, 17], migrash: '6א',

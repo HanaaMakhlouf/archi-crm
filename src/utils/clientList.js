@@ -6,6 +6,8 @@ export const DEFAULT_SORT = { key: 'created', dir: 'desc' };
 const cityOf = (c) => (c.city || '').trim();
 // 0 = נמוכה … 3 = דחופה; -1 = no priority set.
 const priorityRank = (c) => PRIORITY_OPTIONS.findIndex(o => o.value === c.priority);
+// עדכון אחרון: a client never edited since it was added counts from its creation.
+const lastTouched = (c) => new Date(c.last_updated_at || c.created_at);
 
 // Lowercase, without direction marks (pasted from folder names), quotes and
 // geresh/gershayim (ת"א / ת״א), and with runs of spaces collapsed.
@@ -32,7 +34,7 @@ export function matchesSearch(client, search) {
 
 // Filters and sorts the clients table.
 // filters: { search, label, type } ('' = off)
-// sort:    { key: 'name' | 'city' | 'priority' | 'created', dir: 'asc' | 'desc' }
+// sort:    { key: 'name' | 'city' | 'priority' | 'updated' | 'created', dir: 'asc' | 'desc' }
 // Inactive clients always go last; clients without a city (or priority) go
 // last when sorting by it, in either direction.
 export function filterAndSortClients(clients, filters, sort = DEFAULT_SORT) {
@@ -62,6 +64,7 @@ export function filterAndSortClients(clients, filters, sort = DEFAULT_SORT) {
       if ((aRank < 0) !== (bRank < 0)) return aRank < 0 ? 1 : -1;
       return dir * (aRank - bRank);
     }
+    if (sort.key === 'updated') return dir * (lastTouched(a) - lastTouched(b));
     return dir * (new Date(a.created_at) - new Date(b.created_at));
   });
 }
