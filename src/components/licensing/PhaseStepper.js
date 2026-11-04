@@ -1,9 +1,9 @@
 import { LICENSING_PHASES } from '../../constants';
 
-export default function PhaseStepper({ activePhase, unlockedPhases, completedPhases = [], onPhaseClick }) {
+export default function PhaseStepper({ phases = LICENSING_PHASES, activePhase, unlockedPhases, completedPhases = [], onPhaseClick }) {
   return (
     <div className="phase-stepper">
-      {LICENSING_PHASES.map((phase, i) => {
+      {phases.map((phase, i) => {
         const isActive = phase.key === activePhase;
         const isUnlocked = unlockedPhases.includes(phase.key);
         const isDone = completedPhases.includes(phase.key);

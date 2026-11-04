@@ -154,7 +154,8 @@ const computeCurrentPhase = (ld) => {
   const conditionsComplete = ld.conditions.permit_status === PERMIT_STATUS_SIGNED && ld.conditions.needs_start_approval !== null;
   if (!conditionsPassed) return LICENSING_PHASE_INFO;
   if (!meetingApproved) return LICENSING_PHASE_APPLICATION;
-  if (!conditionsComplete) return LICENSING_PHASE_CONDITIONS;
+  // אישור התחלת עבודה only exists once תנאים answered "yes" to needing it.
+  if (!conditionsComplete || ld.conditions.needs_start_approval !== 'yes') return LICENSING_PHASE_CONDITIONS;
   return LICENSING_PHASE_CONFIRMATION;
 };
 
@@ -235,6 +236,10 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
   const licReminders = useMemo(() => reminders.filter(r => r.section_key.startsWith('licensing.')), [reminders]);
   const makeReminderChange = useCallback((sectionKey) => (rowLabel, days) => onReminderChange?.(sectionKey, rowLabel, days), [onReminderChange]);
 
+  // אישור התחלת עבודה is a step only when תנאים says it's needed.
+  const phases = needsStartApproval ? LICENSING_PHASES : LICENSING_PHASES.filter(p => p.key !== LICENSING_PHASE_CONFIRMATION);
+  const shownPhase = activePhase === LICENSING_PHASE_CONFIRMATION && !needsStartApproval ? LICENSING_PHASE_CONDITIONS : activePhase;
+
   const unlockedPhases = [
     LICENSING_PHASE_INFO,
     LICENSING_PHASE_APPLICATION,
@@ -251,12 +256,13 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
   return (
     <div dir="rtl" className="licensing-tab" onBlur={flush}>
       <PhaseStepper
-        activePhase={activePhase}
+        phases={phases}
+        activePhase={shownPhase}
         unlockedPhases={unlockedPhases}
         completedPhases={completedPhases}
         onPhaseClick={handlePhaseClick}
       />
-      {activePhase === LICENSING_PHASE_INFO && (
+      {shownPhase === LICENSING_PHASE_INFO && (
         <InfoPhase
           client={client}
           onUpdateClient={onUpdate}
@@ -268,7 +274,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           onNext={() => setActivePhase(LICENSING_PHASE_APPLICATION)}
         />
       )}
-      {activePhase === LICENSING_PHASE_APPLICATION && (
+      {shownPhase === LICENSING_PHASE_APPLICATION && (
         <RequestPhase
           request={ld.application}
           conditionsPassed={conditionsPassed}
@@ -280,7 +286,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           onNext={() => setActivePhase(LICENSING_PHASE_CONDITIONS)}
         />
       )}
-      {activePhase === LICENSING_PHASE_CONDITIONS && (
+      {shownPhase === LICENSING_PHASE_CONDITIONS && (
         <GrayOut disabled={!meetingApproved} reason="ממתין לאישור ישיבה">
           <ConditionsPhase
             conditions={ld.conditions}
@@ -292,15 +298,13 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           />
         </GrayOut>
       )}
-      {activePhase === LICENSING_PHASE_CONFIRMATION && (
-        <GrayOut disabled={!needsStartApproval} reason="עבור לשלב 'תנאים' וסמן אם נדרש אישור תחילת עבודה">
-          <ConfirmationPhase
-            confirmation={ld.confirmation}
-            onChange={(p) => updateSection('confirmation', p)}
-            reminders={licReminders}
-            onReminderChange={makeReminderChange}
-          />
-        </GrayOut>
+      {shownPhase === LICENSING_PHASE_CONFIRMATION && (
+        <ConfirmationPhase
+          confirmation={ld.confirmation}
+          onChange={(p) => updateSection('confirmation', p)}
+          reminders={licReminders}
+          onReminderChange={makeReminderChange}
+        />
       )}
     </div>
   );
