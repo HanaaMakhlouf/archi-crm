@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import PhaseStepper from './licensing/PhaseStepper';
+import LicensingDetails from './licensing/LicensingDetails';
 import InfoPhase from './licensing/InfoPhase';
 import RequestPhase from './licensing/RequestPhase';
 import ConditionsPhase from './licensing/ConditionsPhase';
@@ -277,10 +278,15 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
         completedPhases={completedPhases}
         onPhaseClick={handlePhaseClick}
       />
+      <LicensingDetails
+        key={client.id}
+        client={client}
+        onUpdateClient={onUpdate}
+        info={ld.info}
+        onChange={(p) => updateSection('info', p)}
+      />
       {shownPhase === LICENSING_PHASE_INFO && (
         <InfoPhase
-          client={client}
-          onUpdateClient={onUpdate}
           info={ld.info}
           onChange={(p) => updateSection('info', p)}
           reminders={licReminders}
