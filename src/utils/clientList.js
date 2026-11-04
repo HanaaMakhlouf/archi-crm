@@ -1,4 +1,4 @@
-import { LABEL_INACTIVE, PRIORITY_OPTIONS } from '../constants';
+import { PRIORITY_OPTIONS } from '../constants';
 
 // Clients list: newest first unless a column says otherwise.
 export const DEFAULT_SORT = { key: 'created', dir: 'desc' };
@@ -33,24 +33,18 @@ export function matchesSearch(client, search) {
 }
 
 // Filters and sorts the clients table.
-// filters: { search, label, type } ('' = off)
+// filters: { search, type } ('' = off)
 // sort:    { key: 'name' | 'city' | 'priority' | 'updated' | 'created', dir: 'asc' | 'desc' }
-// Inactive clients always go last; clients without a city (or priority) go
-// last when sorting by it, in either direction.
+// Clients without a city (or priority) go last when sorting by it, in either direction.
 export function filterAndSortClients(clients, filters, sort = DEFAULT_SORT) {
-  const { search = '', label, type } = filters;
+  const { search = '', type } = filters;
 
   const result = clients.filter(c =>
     matchesSearch(c, search)
-    && (!label || c.label === label)
     && (!type || (c.client_type && c.client_type.includes(type))));
 
   const dir = sort.dir === 'asc' ? 1 : -1;
   return result.sort((a, b) => {
-    const aInactive = a.label === LABEL_INACTIVE;
-    const bInactive = b.label === LABEL_INACTIVE;
-    if (aInactive !== bInactive) return aInactive ? 1 : -1;
-
     if (sort.key === 'name') return dir * a.name.localeCompare(b.name, 'he');
     if (sort.key === 'city') {
       const aCity = cityOf(a);

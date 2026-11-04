@@ -1,4 +1,4 @@
-import { ONE_DAY_MS, NOTIFICATION_DELAY_UNIT, LABEL_INACTIVE, NOTIF_TYPE_ROW_REMINDER } from '../constants';
+import { ONE_DAY_MS, NOTIFICATION_DELAY_UNIT, NOTIF_TYPE_ROW_REMINDER } from '../constants';
 import { NOTIFICATION_RULES } from './rules';
 import { isReminderDue } from './reminderUtils';
 
@@ -31,7 +31,6 @@ export function computeNotifications(clients, snoozedMap) {
 
   for (const rule of NOTIFICATION_RULES) {
     for (const client of clients) {
-      if (client.label === LABEL_INACTIVE) continue;
       if (!rule.check(client)) continue;
       if (elapsedUnits(client) < rule.delayDays) continue;
 
@@ -63,7 +62,7 @@ export function computeReminderNotifications(clients, reminders) {
   return reminders
     .filter(r => {
       const client = clientMap[r.client_id];
-      if (!client || client.label === LABEL_INACTIVE) return false;
+      if (!client) return false;
       return isReminderDue(r);
     })
     .map(r => ({

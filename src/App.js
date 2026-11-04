@@ -22,7 +22,6 @@ import { helkaToStrings } from './utils/land';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
 import {
-  LABEL_NEW, LABEL_PERMANENT, LABEL_INACTIVE, LABEL_OPTIONS,
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
   VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, VIEW_ARCHIVE, TAB_ACTIVITY,
   FIELD_ARCHIVED_AT,
@@ -61,7 +60,7 @@ function SortHeader({ column, label, sort, onChange, firstDir = 'asc' }) {
 }
 
 const EMPTY_FORM = {
-  label: LABEL_NEW, name: '', phone: '', city: '', email: '',
+  name: '', phone: '', city: '', email: '',
   gush: '', helka: [''], migrash: '', notes: '', client_type: [], type_attributes: {},
   planning_data: {},
 };
@@ -156,7 +155,6 @@ export default function App() {
   const openForm = (client = null) => {
     if (client) {
       setForm({
-        label: client.label || LABEL_NEW,
         name: client.name, phone: client.phone, city: client.city, email: client.email || '',
         gush: client.gush?.toString() || '',
         helka: helkaToStrings(client.helka),
@@ -314,27 +312,16 @@ export default function App() {
   const { messages, unreadCount, imageUrls, markRead } = useMessages({ onOpen: () => setView(VIEW_INBOX) });
   const notificationCount = notifications.length + unreadCount;
 
-  const getLabelClass = (label) => {
-    if (label === LABEL_NEW) return 'label-new';
-    if (label === LABEL_PERMANENT) return 'label-permanent';
-    if (label === LABEL_INACTIVE) return 'label-inactive';
-    return '';
-  };
-
   // The box updates on every key; the table follows a beat later, so typing never waits on it.
   const deferredSearch = useDeferredValue(search);
   const filtered = useMemo(() => filterAndSortClients(openClients, {
     search: deferredSearch,
   }, sort), [openClients, deferredSearch, sort]);
 
-  const permanentCount = useMemo(() => openClients.filter(c => c.label === LABEL_PERMANENT).length, [openClients]);
-  const newCount = useMemo(() => openClients.filter(c => c.label === LABEL_NEW).length, [openClients]);
   const urgentCount = useMemo(() => openClients.filter(c => c.priority === PRIORITY_RED).length, [openClients]);
 
   const STATS = [
     { label: 'סה״כ לקוחות', value: openClients.length, icon: 'users', tone: '' },
-    { label: 'לקוחות פעילים', value: permanentCount, icon: 'userCheck', tone: 'success' },
-    { label: 'לקוחות חדשים', value: newCount, icon: 'sparkle', tone: 'accent' },
     { label: 'בעדיפות דחופה', value: urgentCount, icon: 'flag', tone: 'danger' },
   ];
 
@@ -468,14 +455,7 @@ export default function App() {
                             <div className="client-cell">
                               <div className="client-avatar">{getInitials(client.name)}</div>
                               <div>
-                                <div className="client-name">
-                                  {client.name}
-                                  {client.label !== LABEL_PERMANENT && (
-                                    <span className={`label-badge ${getLabelClass(client.label)}`}>
-                                      {client.label}
-                                    </span>
-                                  )}
-                                </div>
+                                <div className="client-name">{client.name}</div>
                                 {types.includes(TYPE_LICENSING) && (
                                   <div className="client-sub">
                                     <span className="client-sub-key">רישוי · </span>{getCurrentLicensingPhaseLabel(client)}
@@ -563,7 +543,6 @@ export default function App() {
             onEdit={() => openForm(selectedClient)}
             onArchive={() => handleArchive(selectedClient)}
             onReactivate={() => handleReactivate(selectedClient)}
-            getLabelClass={getLabelClass}
             onUpdateClient={handleUpdateClient}
             reminders={reminders.filter(r => r.client_id === selectedClient.id)}
             onReminderChange={handleReminderChange}
@@ -582,7 +561,6 @@ export default function App() {
             onCancel={() => { setView(VIEW_CLIENTS); setEditingId(null); }}
             toggleType={toggleType}
             clientTypes={CLIENT_TYPES}
-            labelOptions={LABEL_OPTIONS}
             fetchClients={fetchClients}
             clients={clients}
             onOpenClient={(client) => {

@@ -19,7 +19,6 @@ export default function ClientForm({
   onCancel,
   toggleType,
   clientTypes,
-  labelOptions,
   fetchClients,
   clients = [],
   onOpenClient,
@@ -83,7 +82,7 @@ export default function ClientForm({
 
     setSaving(true);
     const payload = {
-      label: form.label, name: form.name.trim(), phone: form.phone.trim(), city: form.city.trim(), email: form.email.trim() || null,
+      name: form.name.trim(), phone: form.phone.trim(), city: form.city.trim(), email: form.email.trim() || null,
       gush: gushNum, helka,
       migrash,
       notes: form.notes || null,
@@ -152,20 +151,6 @@ export default function ClientForm({
         <div className="form-section-title">פרטים כלליים</div>
 
         <div className="form-row">
-          <div className="form-group">
-            <label>סטטוס לקוח *</label>
-            <select
-              value={form.label}
-              onChange={e =>
-                setForm({ ...form, label: e.target.value })
-              }
-            >
-              {labelOptions.map(l => (
-                <option key={l} value={l}>{l}</option>
-              ))}
-            </select>
-          </div>
-
           <div className="form-group">
             <label>שם לקוח *</label>
             {editingId ? (

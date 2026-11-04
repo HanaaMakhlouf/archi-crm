@@ -8,7 +8,6 @@ import ActivityTab from './ActivityTab';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from './Icon';
 import {
-  LABEL_NEW, LABEL_INACTIVE,
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
   TAB_GENERAL, TAB_ACTIVITY, ROLE_MANAGER, FIELD_ARCHIVED_AT,
 } from '../constants';
@@ -18,7 +17,6 @@ export default function ClientDetail({
   client,
   onBack,
   onEdit,
-  getLabelClass,
   onUpdateClient,
   reminders = [],
   onReminderChange,
@@ -53,12 +51,7 @@ export default function ClientDetail({
             <div className="page-eyebrow">
               <button type="button" className="detail-crumb" onClick={onBack}>לקוחות</button> / פרופיל לקוח
             </div>
-            <h1 className="detail-hero-name">
-              {client.name}
-              {(client.label === LABEL_NEW || client.label === LABEL_INACTIVE) && (
-                <span className={`label-badge ${getLabelClass(client.label)}`}>{client.label}</span>
-              )}
-            </h1>
+            <h1 className="detail-hero-name">{client.name}</h1>
             <div className="detail-meta">
               {client.city && <span className="detail-meta-item"><Icon name="mapPin" size={15} />{client.city}</span>}
               {client.phone && <span className="detail-meta-item" dir="ltr"><Icon name="phone" size={15} />{client.phone}</span>}
@@ -161,7 +154,6 @@ export default function ClientDetail({
           <div className="detail-row"><span className="detail-label">שם לקוח</span><span>{client.name}</span></div>
           <div className="detail-row"><span className="detail-label">טלפון</span><span>{client.phone}</span></div>
           <div className="detail-row"><span className="detail-label">אימייל</span><span>{client.email || <span className="muted">לא הוגדר</span>}</span></div>
-          <div className="detail-row"><span className="detail-label">סטטוס</span><span>{client.label}</span></div>
         </div>
 
         <div className="detail-section">

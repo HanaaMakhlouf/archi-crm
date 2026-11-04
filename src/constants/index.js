@@ -1,8 +1,4 @@
 // ── CLIENT LABELS ──
-export const LABEL_NEW = 'לקוח חדש';
-export const LABEL_PERMANENT = 'לקוח פעיל';
-export const LABEL_INACTIVE = 'לא פעיל';
-export const LABEL_OPTIONS = [LABEL_NEW, LABEL_PERMANENT, LABEL_INACTIVE];
 
 // ── CLIENT TYPES ──
 export const TYPE_PLANNING = 'תכנון';
@@ -331,7 +327,6 @@ export const ACTIVITY_META = {
 export const ACTIVITY_PAGE_SIZE = 50;
 
 // ── NOTIFICATION TYPES ──
-export const NOTIF_TYPE_NEW_CLIENT_STALE = 'new_client_stale';
 export const NOTIF_TYPE_ROW_REMINDER = 'row_reminder';
 
 // ── NOTIFICATION MESSAGES ── (manager → employee; see supabase/migrations/*_notification_messages.sql)
