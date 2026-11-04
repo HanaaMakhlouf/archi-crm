@@ -180,8 +180,10 @@ export const DEFAULT_REQUEST_ACTIONS = [
   'תקנה',
   'פרסום עזבון',
   'שיוך מבנים',
-  'תצהירים',
 ];
+
+// Rows no longer used — dropped from existing clients when loaded.
+export const REMOVED_REQUEST_ACTIONS = ['תצהירים'];
 
 // נספח תחבורה (added by the public-use question) reuses the generic codes.
 export const ACTION_LABEL_TRANSPORT = 'נספח תחבורה';
@@ -366,7 +368,7 @@ export const CONDITION_ROW_SELECT_OPTIONS = {
 };
 export const conditionRowOptions = (label) => CONDITION_ROW_SELECT_OPTIONS[label] || CONDITION_ROW_STATUS_OPTIONS;
 
-// A condition counts as done (and unlocks התר once all are) at מוכן or לא נדרש.
+// A condition counts as done (and unlocks היתר once all are) at מוכן or לא נדרש.
 export const CONDITION_DONE_STATUSES = [DOC_STATUS_PRESENT, DOC_STATUS_NOT_REQUIRED];
 export const isConditionRowDone = (row) => CONDITION_DONE_STATUSES.includes(row.status);
 

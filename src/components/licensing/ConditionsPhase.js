@@ -85,7 +85,7 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
 
   const permitRow = [{
     id: 'permit',
-    label: 'התר',
+    label: 'היתר',
     status: conditions.permit_status,
     note: conditions.permit_note,
   }];
@@ -110,10 +110,10 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
         )}
       />
 
-      {/* Section 2 — Permit (התר) */}
+      {/* Section 2 — Permit (היתר) */}
       <GrayOut disabled={!allConditionsDone} reason="ממתין לסיום כל התנאים">
         <StatusTable
-          title="התר"
+          title="היתר"
           showHeader={false}
           rows={permitRow}
           columns={PERMIT_COLUMNS}
