@@ -172,6 +172,21 @@ export const SUPERVISION_STATUS_OPTIONS = [
   { value: SUPERVISION_STATUS_DELIVERED, label: 'נמסר' },
 ];
 
+// שיוך מבנים: "not delivered" / "not required" reuse the generic codes.
+export const ACTION_LABEL_BUILDING_ASSIGN = 'שיוך מבנים';
+export const BUILDING_ASSIGN_STATUS_SIGNED = 'signed';
+export const BUILDING_ASSIGN_STATUS_OPTIONS = [
+  { value: ACTION_STATUS_NOT_SENT, label: 'לא נמסר ללקוח' },
+  { value: SUPERVISION_STATUS_DELIVERED, label: 'נמסר' },
+  { value: BUILDING_ASSIGN_STATUS_SIGNED, label: 'נחתם' },
+  { value: ACTION_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
+// Statuses saved under the old generic dropdown, in the new list's terms.
+export const BUILDING_ASSIGN_STATUS_FROM_OLD = {
+  [ACTION_STATUS_SENT]: SUPERVISION_STATUS_DELIVERED,
+  [ACTION_STATUS_PRESENT]: BUILDING_ASSIGN_STATUS_SIGNED,
+};
+
 export const DEFAULT_REQUEST_ACTIONS = [
   ACTION_LABEL_OWNERSHIP,
   ACTION_LABEL_DEPOSIT,
@@ -179,7 +194,7 @@ export const DEFAULT_REQUEST_ACTIONS = [
   ACTION_LABEL_SUPERVISION,
   'תקנה',
   'פרסום עזבון',
-  'שיוך מבנים',
+  ACTION_LABEL_BUILDING_ASSIGN,
 ];
 
 // Rows no longer used — dropped from existing clients when loaded.

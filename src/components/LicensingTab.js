@@ -31,6 +31,7 @@ import {
   CONDITIONS_STATUS_RECEIVED,
   QUESTION_ROWS, ANSWER_YES, Q_PUBLIC_USE, Q_RELIEFS, actionRowDefaultStatus,
   ACTION_LABEL_DEPOSIT, ACTION_LABEL_ONLINE_PERMIT, ACTION_LABEL_SUPERVISION, REMOVED_REQUEST_ACTIONS,
+  ACTION_LABEL_BUILDING_ASSIGN, BUILDING_ASSIGN_STATUS_FROM_OLD,
 } from '../constants';
 
 const migrateConditionsPassed = (val) => {
@@ -66,11 +67,16 @@ const buildInitialInfo = (client, src = {}) => {
   };
 };
 
-// Brings an existing client's פעולות up to date: drops rows no longer used and
-// adds בקשה לרישוי זמין + פיקוח after פקדון (3rd and 4th).
+// Brings an existing client's פעולות up to date: drops rows no longer used,
+// moves שיוך מבנים to its own statuses and adds בקשה לרישוי זמין + פיקוח
+// after פקדון (3rd and 4th).
 const NEW_ACTION_ROWS = [ACTION_LABEL_ONLINE_PERMIT, ACTION_LABEL_SUPERVISION];
 const migrateActionRows = (saved) => {
-  const actions = saved.filter(a => !REMOVED_REQUEST_ACTIONS.includes(a.label));
+  const actions = saved
+    .filter(a => !REMOVED_REQUEST_ACTIONS.includes(a.label))
+    .map(a => (a.label === ACTION_LABEL_BUILDING_ASSIGN && BUILDING_ASSIGN_STATUS_FROM_OLD[a.status]
+      ? { ...a, status: BUILDING_ASSIGN_STATUS_FROM_OLD[a.status] }
+      : a));
   const missing = NEW_ACTION_ROWS.filter(label => !actions.some(a => a.label === label));
   if (!missing.length) return actions;
   const at = actions.findIndex(a => a.label === ACTION_LABEL_DEPOSIT) + 1 || Math.min(2, actions.length);
