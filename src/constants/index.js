@@ -74,12 +74,12 @@ export const LICENSING_DOCUMENTS = [
 ];
 
 export const DOC_STATUS_MISSING = 'missing';      // חסר
-export const DOC_STATUS_PRESENT = 'present';      // יש
+export const DOC_STATUS_PRESENT = 'present';      // מוכן
 export const DOC_STATUS_NOT_REQUIRED = 'not_required'; // לא נדרש
 
 export const DOC_STATUS_OPTIONS = [
   { value: DOC_STATUS_MISSING, label: 'חסר' },
-  { value: DOC_STATUS_PRESENT, label: 'יש' },
+  { value: DOC_STATUS_PRESENT, label: 'מוכן' },
   { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
 ];
 
@@ -88,7 +88,7 @@ export const CONDITION_ROW_STATUS_SENT = 'sent';
 export const CONDITION_ROW_STATUS_OPTIONS = [
   { value: DOC_STATUS_MISSING, label: 'חסר' },
   { value: CONDITION_ROW_STATUS_SENT, label: 'נשלח' },
-  { value: DOC_STATUS_PRESENT, label: 'יש' },
+  { value: DOC_STATUS_PRESENT, label: 'מוכן' },
   { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
 ];
 
@@ -123,7 +123,7 @@ export const ACTION_STATUS_NOT_REQUIRED = 'not_required';
 export const ACTION_STATUS_OPTIONS = [
   { value: ACTION_STATUS_NOT_SENT, label: 'לא נשלח' },
   { value: ACTION_STATUS_SENT, label: 'נשלח' },
-  { value: ACTION_STATUS_PRESENT, label: 'יש' },
+  { value: ACTION_STATUS_PRESENT, label: 'מוכן' },
   { value: ACTION_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
 ];
 
@@ -149,7 +149,7 @@ export const ACTION_LABEL_OWNERSHIP = 'בעלות';
 export const OWNERSHIP_STATUS_OPTIONS = [
   { value: ACTION_STATUS_NOT_SENT, label: 'חסר' },
   { value: ACTION_STATUS_SENT, label: 'בטיפול לקוח' },
-  { value: ACTION_STATUS_PRESENT, label: 'יש' },
+  { value: ACTION_STATUS_PRESENT, label: 'מוכן' },
 ];
 
 export const DEFAULT_REQUEST_ACTIONS = [
@@ -160,6 +160,32 @@ export const DEFAULT_REQUEST_ACTIONS = [
   'שיוך מבנים',
   'תצהירים',
 ];
+
+// נספח תחבורה (added by the public-use question) reuses the generic codes.
+export const ACTION_LABEL_TRANSPORT = 'נספח תחבורה';
+export const TRANSPORT_STATUS_OPTIONS = [
+  { value: ACTION_STATUS_NOT_SENT, label: 'לא נשלח' },
+  { value: ACTION_STATUS_SENT, label: 'נשלח' },
+  { value: ACTION_STATUS_PRESENT, label: 'מוכן' },
+  { value: ACTION_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
+
+// The three rows added by the הקלות / שימוש חורג question share one dropdown.
+export const RELIEF_STATUS_MISSING_TEXT = 'missing_text';
+export const RELIEF_STATUS_CONTACT = 'in_contact';
+export const RELIEF_STATUS_SENT = ACTION_STATUS_SENT;
+export const RELIEF_STATUS_RECEIVED = 'received';
+export const RELIEF_STATUS_OPTIONS = [
+  { value: RELIEF_STATUS_MISSING_TEXT, label: 'חסר נוסח' },
+  { value: RELIEF_STATUS_CONTACT, label: 'התקשרות' },
+  { value: RELIEF_STATUS_SENT, label: 'נשלח' },
+  { value: RELIEF_STATUS_RECEIVED, label: 'התקבל' },
+];
+export const RELIEF_ACTIONS = ['פרסום הקלה', 'הודעה לגובלים', 'צילום בשטח'];
+
+// First status for a new פעולות row.
+export const actionRowDefaultStatus = (label) =>
+  (RELIEF_ACTIONS.includes(label) ? RELIEF_STATUS_MISSING_TEXT : ACTION_STATUS_NOT_SENT);
 
 // Meeting (ישיבה)
 export const MEETING_IN_COMMUNICATION = 'in_communication';
@@ -220,10 +246,12 @@ export const CONDITION_HASHBACHA = 'השבחה';
 export const CONDITION_CORP = 'התייחסות תאגיד';
 export const CONDITION_CORP_145D = '145 ד תאגיד';
 export const CONDITION_HAGA = 'הג״א';
+export const CONDITION_TRANSPORT = 'התייחסות לנספח תחבורה';
+export const CONDITION_CONTROL_INSTITUTE = 'מכון בקרה';
 
 export const DEFAULT_CONDITION_ROWS = [
   CONDITION_HASHBACHA, CONDITION_CORP, CONDITION_CORP_145D, 'עירייה', CONDITION_HAGA, 'בטון',
-  'פסולת', 'סטטי/תצהיר', 'בטיחות', 'נגישות', 'תחבורה', 'איכות הסביבה',
+  'פסולת', 'סטטי/תצהיר',
 ];
 
 // Old row names → current ones (existing clients are renamed when loaded).
@@ -231,7 +259,45 @@ export const DEFAULT_CONDITION_ROWS = [
 export const RENAMED_CONDITION_ROWS = {
   'פטור 140': CONDITION_HASHBACHA,
   'תאגיד': CONDITION_CORP,
+  'תחבורה': CONDITION_TRANSPORT,
 };
+
+// מכון בקרה: "received" reuses the מוכן (present) code so it counts as done like the others.
+export const INSTITUTE_STATUS_NOT_CHOSEN = 'not_chosen';
+export const INSTITUTE_STATUS_CHOSEN = 'chosen';
+export const INSTITUTE_STATUS_HANDLING = 'institute_handling';
+export const INSTITUTE_STATUS_RECEIVED = DOC_STATUS_PRESENT;
+export const INSTITUTE_STATUS_OPTIONS = [
+  { value: INSTITUTE_STATUS_NOT_CHOSEN, label: 'לא נבחר' },
+  { value: INSTITUTE_STATUS_CHOSEN, label: 'נבחר' },
+  { value: INSTITUTE_STATUS_HANDLING, label: 'בטיפול המכון' },
+  { value: INSTITUTE_STATUS_RECEIVED, label: 'התקבל' },
+];
+
+// ── Request questions (בקשה): a "yes" brings extra פעולות / תנאים rows.
+// A "no" (or no answer) hides them; their statuses are kept in case it flips back.
+export const Q_PUBLIC_USE = 'public_use';
+export const Q_RELIEFS = 'reliefs';
+export const ANSWER_YES = 'yes';
+export const ANSWER_NO = 'no';
+export const YES_NO_OPTIONS = [
+  { value: ANSWER_YES, label: 'כן' },
+  { value: ANSWER_NO, label: 'לא' },
+];
+export const REQUEST_QUESTIONS = [
+  { key: Q_PUBLIC_USE, text: 'האם הבקשה כוללת שימוש ציבורי (מסחר, משרדים, מבנה ציבור או מבנה מעל 5 יח״ד)?' },
+  { key: Q_RELIEFS, text: 'האם הבקשה כוללת הקלות או שימוש חורג?' },
+];
+export const QUESTION_ROWS = {
+  [Q_PUBLIC_USE]: {
+    actions: [ACTION_LABEL_TRANSPORT],
+    conditions: ['בטיחות', 'נגישות', CONDITION_TRANSPORT, 'איכות הסביבה', CONDITION_CONTROL_INSTITUTE],
+  },
+  [Q_RELIEFS]: { actions: RELIEF_ACTIONS, conditions: [] },
+};
+// kind: 'actions' | 'conditions'; answers: the request (holds the answers).
+export const isQuestionRowShown = (label, kind, answers) =>
+  Object.entries(QUESTION_ROWS).every(([q, rows]) => !rows[kind].includes(label) || answers?.[q] === ANSWER_YES);
 
 // Row-specific condition statuses (the other rows use CONDITION_ROW_STATUS_OPTIONS).
 export const COND_MISSING_DOCS = 'missing_docs';
@@ -245,27 +311,27 @@ export const HASHBACHA_STATUS_OPTIONS = [
   { value: COND_MISSING_DOCS, label: 'חסר מסמכים' },
   { value: COND_SENT_COMMITTEE, label: 'נשלח לועדה' },
   { value: COND_TO_APPRAISER, label: 'הועבר לשמאי' },
-  { value: DOC_STATUS_PRESENT, label: 'יש' },
+  { value: DOC_STATUS_PRESENT, label: 'מוכן' },
   { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
 ];
 export const CORP_STATUS_OPTIONS = [
   { value: DOC_STATUS_MISSING, label: 'חסר' },
   { value: CONDITION_ROW_STATUS_SENT, label: 'נשלח' },
   { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
-  { value: DOC_STATUS_PRESENT, label: 'יש' },
+  { value: DOC_STATUS_PRESENT, label: 'מוכן' },
 ];
 export const CORP_145D_STATUS_OPTIONS = [
   { value: DOC_STATUS_MISSING, label: 'חסר' },
   { value: COND_SENT_CORP, label: 'נשלח לתאגיד' },
   { value: COND_MISSING_DOCS, label: 'חסר מסמכים' },
   { value: COND_CHARGE_RECEIVED, label: 'התקבל חיוב' },
-  { value: DOC_STATUS_PRESENT, label: 'יש' },
+  { value: DOC_STATUS_PRESENT, label: 'מוכן' },
 ];
 export const HAGA_STATUS_OPTIONS = [
   { value: DOC_STATUS_MISSING, label: 'חסר' },
   { value: CONDITION_ROW_STATUS_SENT, label: 'נשלח' },
   { value: COND_RETURNED_FOR_FIXES, label: 'חזר לתיקונים' },
-  { value: DOC_STATUS_PRESENT, label: 'יש' },
+  { value: DOC_STATUS_PRESENT, label: 'מוכן' },
   { value: DOC_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
 ];
 export const CONDITION_ROW_SELECT_OPTIONS = {
@@ -274,10 +340,11 @@ export const CONDITION_ROW_SELECT_OPTIONS = {
   [CONDITION_CORP_145D]: CORP_145D_STATUS_OPTIONS,
   [CONDITION_HAGA]: HAGA_STATUS_OPTIONS,
   'הג"א': HAGA_STATUS_OPTIONS, // same row typed with a plain quote
+  [CONDITION_CONTROL_INSTITUTE]: INSTITUTE_STATUS_OPTIONS,
 };
 export const conditionRowOptions = (label) => CONDITION_ROW_SELECT_OPTIONS[label] || CONDITION_ROW_STATUS_OPTIONS;
 
-// A condition counts as done (and unlocks התר once all are) at יש or לא נדרש.
+// A condition counts as done (and unlocks התר once all are) at מוכן or לא נדרש.
 export const CONDITION_DONE_STATUSES = [DOC_STATUS_PRESENT, DOC_STATUS_NOT_REQUIRED];
 export const isConditionRowDone = (row) => CONDITION_DONE_STATUSES.includes(row.status);
 

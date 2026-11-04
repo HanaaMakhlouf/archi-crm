@@ -2,6 +2,7 @@ import {
   DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS, SUBMISSION_OPTIONS, DEPOSIT_STATUS_OPTIONS, ACTION_STATUS_OPTIONS,
   MEETING_OPTIONS, CONDITIONS_STATUS_OPTIONS, PERMIT_STATUS_OPTIONS, PRIORITY_OPTIONS,
   HASHBACHA_STATUS_OPTIONS, CORP_STATUS_OPTIONS, CORP_145D_STATUS_OPTIONS, HAGA_STATUS_OPTIONS,
+  RELIEF_STATUS_OPTIONS, INSTITUTE_STATUS_OPTIONS, YES_NO_OPTIONS,
 } from '../constants';
 import { OFFER_OPTIONS, DISCIPLINE_OPTIONS, WORK_PLANS_OPTIONS } from '../components/PlanningTab';
 import { HACHANA_OPTIONS, HAFKADA_ISHUR_OPTIONS, PIRSOOM_OPTIONS } from '../components/DetailedTab';
@@ -15,6 +16,7 @@ const FIELD_LABELS = {
   city: 'עיר', email: 'אימייל', gush: 'גוש', helka: 'חלקה', migrash: 'מגרש',
   planning_data: 'תכנון', licensing_data: 'רישוי', detailed_data: 'תיק מפורט',
   type_attributes: 'פרטי סוג', archived_at: 'מצב תיק',
+  public_use: 'שימוש ציבורי', reliefs: 'הקלות / שימוש חורג',
   // planning_data sections
   offer: 'הצעה', visualization: 'הדמיה', disciplines: 'תחומים',
   construction: 'קונסטרוקציה', water: 'מים', electricity: 'חשמל',
@@ -43,7 +45,9 @@ const FREE_TEXT_KEYS = new Set([
 // Merged value→label lookup across every status/option list in the app, so a
 // raw code like 'ready' or 'sent' shows its Hebrew label instead of the code.
 const STATUS_LABELS = {};
+// Lists sharing a code with a generic one come first, so the generic label wins.
 [
+  RELIEF_STATUS_OPTIONS, INSTITUTE_STATUS_OPTIONS, YES_NO_OPTIONS,
   DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS, SUBMISSION_OPTIONS, DEPOSIT_STATUS_OPTIONS, ACTION_STATUS_OPTIONS,
   MEETING_OPTIONS, CONDITIONS_STATUS_OPTIONS, PERMIT_STATUS_OPTIONS, PRIORITY_OPTIONS,
   HASHBACHA_STATUS_OPTIONS, CORP_STATUS_OPTIONS, CORP_145D_STATUS_OPTIONS, HAGA_STATUS_OPTIONS,

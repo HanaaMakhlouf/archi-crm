@@ -7,6 +7,7 @@ import ConfirmationPhase from './licensing/ConfirmationPhase';
 import GrayOut from './GrayOut';
 import { newStatusRow } from './AddRow';
 import { makeEmptyPerson } from './licensing/PersonForm';
+import { addMissingRows } from './licensing/questionRows';
 import { useDeferredSave } from '../utils/useDeferredSave';
 import { useOnLock } from '../utils/useOnLock';
 import {
@@ -28,6 +29,7 @@ import {
   MEETING_APPROVED,
   CONDITIONS_STATUS_NOT_SENT,
   CONDITIONS_STATUS_RECEIVED,
+  QUESTION_ROWS, ANSWER_YES, Q_PUBLIC_USE, Q_RELIEFS, actionRowDefaultStatus,
 } from '../constants';
 
 const migrateConditionsPassed = (val) => {
@@ -78,6 +80,8 @@ const buildInitialRequest = (src = {}) => {
       status: existing.meeting?.status ?? null,
       note: existing.meeting?.note || '',
     },
+    [Q_PUBLIC_USE]: existing[Q_PUBLIC_USE] ?? null,
+    [Q_RELIEFS]: existing[Q_RELIEFS] ?? null,
   };
 };
 
@@ -168,6 +172,35 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
     persist(next);
   };
 
+  // A request question answered: "yes" adds its פעולות / תנאים rows (once);
+  // "no" hides them (statuses kept) and drops their reminders.
+  const answerQuestion = (question, value) => {
+    const cur = ldRef.current;
+    const rows = QUESTION_ROWS[question];
+    const yes = value === ANSWER_YES;
+    const next = {
+      ...cur,
+      application: {
+        ...cur.application,
+        [question]: value,
+        actions: yes
+          ? addMissingRows(cur.application.actions, rows.actions, label => newStatusRow(label, actionRowDefaultStatus(label)))
+          : cur.application.actions,
+      },
+      conditions: yes
+        ? { ...cur.conditions, rows: addMissingRows(cur.conditions.rows, rows.conditions, newConditionRow) }
+        : cur.conditions,
+    };
+    setLd(next);
+    persist(next);
+    if (!yes) {
+      const hidden = { 'licensing.application.actions': rows.actions, 'licensing.conditions.rows': rows.conditions };
+      reminders
+        .filter(r => hidden[r.section_key]?.includes(r.row_label))
+        .forEach(r => onReminderChange?.(r.section_key, r.row_label, null));
+    }
+  };
+
   const handlePhaseClick = (phase) => setActivePhase(phase);
 
   const meetingApproved = ld.application.meeting?.status === MEETING_APPROVED;
@@ -227,6 +260,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           request={ld.application}
           conditionsPassed={conditionsPassed}
           onChange={(p) => updateSection('application', p)}
+          onAnswer={answerQuestion}
           reminders={licReminders}
           onReminderChange={makeReminderChange}
           onClearReminders={onClearReminders}
@@ -237,6 +271,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
         <GrayOut disabled={!meetingApproved} reason="ממתין לאישור ישיבה">
           <ConditionsPhase
             conditions={ld.conditions}
+            answers={ld.application}
             onChange={(p) => updateSection('conditions', p)}
             reminders={licReminders}
             onReminderChange={makeReminderChange}

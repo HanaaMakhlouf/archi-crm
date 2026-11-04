@@ -2,6 +2,7 @@ import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
 import AddRow, { LICENSING_ADD_ROW_PROPS, newStatusRow } from '../AddRow';
 import { useOnLock } from '../../utils/useOnLock';
+import { shownRows, mergeShownRows } from './questionRows';
 import {
   DOC_STATUS_PRESENT, DOC_STATUS_MISSING, DOC_STATUS_NOT_REQUIRED,
   CONDITION_ROW_STATUS_SENT, CONDITION_ROW_STATUS_OPTIONS, CONDITION_ROW_SELECT_OPTIONS, conditionRowOptions,
@@ -9,6 +10,7 @@ import {
   COND_MISSING_DOCS, COND_SENT_COMMITTEE, COND_TO_APPRAISER, COND_SENT_CORP, COND_CHARGE_RECEIVED, COND_RETURNED_FOR_FIXES,
   PERMIT_STATUS_OPTIONS, PERMIT_STATUS_SIGNED,
   PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_FEE_GIVEN, PERMIT_STATUS_PRINTED,
+  INSTITUTE_STATUS_NOT_CHOSEN, INSTITUTE_STATUS_CHOSEN, INSTITUTE_STATUS_HANDLING,
 } from '../../constants';
 
 const SK_CONDITIONS = 'licensing.conditions.rows';
@@ -23,6 +25,9 @@ const CONDITION_STATUS_COLORS = {
   [COND_SENT_CORP]:            'orange',
   [COND_CHARGE_RECEIVED]:      'orange',
   [COND_RETURNED_FOR_FIXES]:   'red',
+  [INSTITUTE_STATUS_NOT_CHOSEN]: 'red',
+  [INSTITUTE_STATUS_CHOSEN]:     'orange',
+  [INSTITUTE_STATUS_HANDLING]:   'orange',
   [DOC_STATUS_PRESENT]:        'green',
   [DOC_STATUS_NOT_REQUIRED]:   'gray',
 };
@@ -65,10 +70,12 @@ const PERMIT_COLUMNS = [
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
-export default function ConditionsPhase({ conditions, onChange, reminders = [], onReminderChange, onClearReminders }) {
+// answers: the request (בקשה), whose questions decide which rows apply.
+export default function ConditionsPhase({ conditions, answers, onChange, reminders = [], onReminderChange, onClearReminders }) {
   const patch = (key, value) => onChange({ [key]: value });
 
-  const allConditionsDone = conditions.rows.every(isConditionRowDone);
+  const rows = shownRows(conditions.rows, 'conditions', answers);
+  const allConditionsDone = rows.every(isConditionRowDone);
   const permitSigned = conditions.permit_status === PERMIT_STATUS_SIGNED;
 
   // GrayOut reset: when permit section becomes grayed, clear its reminders.
@@ -88,9 +95,9 @@ export default function ConditionsPhase({ conditions, onChange, reminders = [], 
       {/* Section 1 — Conditions */}
       <StatusTable
         title="תנאים"
-        rows={conditions.rows}
+        rows={rows}
         columns={CONDITION_COLUMNS}
-        onChange={(next) => patch('rows', next)}
+        onChange={(next) => patch('rows', mergeShownRows(conditions.rows, next, 'conditions', answers))}
         reminders={sectionReminders(SK_CONDITIONS)}
         onReminderChange={onReminderChange?.(SK_CONDITIONS)}
         footer={(

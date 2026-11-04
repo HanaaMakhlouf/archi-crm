@@ -2345,6 +2345,39 @@ textarea {
   padding: 20px 24px;
 }
 
+/* Request questions: the כן / לא toggles start where the tables' הערה column
+   starts (.docs-table: first column 30%, then the status column — measured: +196px). */
+.request-questions {
+  display: grid;
+  grid-template-columns: calc(30% + 196px) 1fr;
+}
+
+.question-row {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: center;
+  padding: 12px 0;
+}
+
+.question-text {
+  padding-inline-end: 16px;
+}
+
+.question-row .required-toggle {
+  justify-self: start;
+}
+
+.question-row + .question-row {
+  border-top: 1px solid var(--color-border);
+}
+
+.question-text {
+  font-size: 15.5px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
 .licensing-tab .detail-section-title {
   font-size: 17px;
   font-weight: 700;
@@ -2478,7 +2511,8 @@ textarea {
   -webkit-appearance: none;
   border-color: transparent;
   border-radius: var(--radius-full);
-  padding-inline: 18px 36px;
+  padding-inline: 16px 34px;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -2920,8 +2954,9 @@ textarea {
   width: 30%;
 }
 
+/* Wide enough for the longest status (בטיפול המכון, לא נמסרה אגרה) */
 .docs-table td:nth-child(2) {
-  width: 140px;
+  width: 190px;
 }
 
 .docs-table select,
