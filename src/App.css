@@ -2386,108 +2386,109 @@ textarea {
   border-bottom: none;
 }
 
+/* Path bar: one row of arrow-shaped steps pointing the way the work goes
+   (left, in RTL). Done = soft green with ✓, current = solid green, later = grey. */
 .phase-stepper {
+  --arrow: 16px;
   display: flex;
-  align-items: center;
   gap: 4px;
-  background: var(--color-surface);
-  border: none;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: 16px 24px;
 }
 
 .phase-step {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-}
-
-.phase-step:last-child {
-  flex: 0 0 auto;
-}
-
-/* Line to the next step; turns green once this step is done */
-.phase-step:not(:last-child)::after {
-  content: '';
-  flex: 1;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--color-border);
-  margin: 0 12px;
-}
-
-.phase-done:not(:last-child)::after {
-  background: var(--color-success);
-}
-
-.phase-circle {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 calc(var(--arrow) + 12px);
+  margin-inline-start: calc(var(--arrow) * -1 + 4px);
+  background: var(--color-neutral-light);
+  color: var(--color-text-muted);
+  /* notch on the right, point on the left */
+  clip-path: polygon(100% 0, var(--arrow) 0, 0 50%, var(--arrow) 100%, 100% 100%, calc(100% - var(--arrow)) 50%);
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.phase-step:first-child {
+  margin-inline-start: 0;
+  border-start-start-radius: var(--radius);
+  border-end-start-radius: var(--radius);
+  clip-path: polygon(100% 0, var(--arrow) 0, 0 50%, var(--arrow) 100%, 100% 100%);
+}
+
+.phase-step:last-child {
+  border-start-end-radius: var(--radius);
+  border-end-end-radius: var(--radius);
+  clip-path: polygon(100% 0, 0 0, 0 100%, 100% 100%, calc(100% - var(--arrow)) 50%);
+}
+
+.phase-step:only-child {
+  clip-path: none;
+}
+
+.phase-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 700;
   background: var(--color-surface);
   color: var(--color-text-muted);
-  border: 1.5px solid var(--color-border-strong);
-  transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
 }
 
 .phase-label {
-  font-size: 15.5px;
-  font-weight: 500;
-  color: var(--color-text-muted);
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.phase-done {
+  background: var(--color-success-light);
+  color: var(--color-success);
 }
 
 .phase-done .phase-circle {
   background: var(--color-success);
-  border-color: var(--color-success);
   color: #fff;
 }
 
-.phase-done .phase-label {
-  color: var(--color-text);
+.phase-selected {
+  background: var(--color-primary);
+  color: #fff;
 }
 
-.phase-active .phase-circle {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+.phase-selected .phase-circle {
+  background: rgba(255, 255, 255, 0.22);
   color: #fff;
 }
 
 .phase-locked {
-  opacity: 0.5;
+  color: var(--color-text-faint);
 }
 
 .phase-locked .phase-circle {
-  font-size: 12.5px;
+  background: transparent;
+  font-size: 12px;
+  filter: grayscale(1);
+  opacity: 0.6;
 }
 
 .phase-clickable {
   cursor: pointer;
 }
 
-.phase-clickable:hover .phase-label {
-  color: var(--color-primary);
-}
-
-.phase-selected .phase-circle {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
-  box-shadow: 0 0 0 4px var(--color-primary-light);
-}
-
-.phase-selected .phase-label {
-  color: var(--color-text);
-  font-weight: 700;
+.phase-clickable:hover {
+  filter: brightness(0.96);
 }
 
 /* ── STATUS BADGE ── */

@@ -235,9 +235,7 @@
   .person-grid-head { display: none; }
   .person-grid .row-icon-btn { justify-self: end; }
 
-  /* ── Phase stepper: wrap, hide connectors ── */
-  .phase-stepper { flex-wrap: wrap; gap: 8px; }
-  .phase-step:not(:last-child)::after { display: none; }
+  /* ── Phase stepper: labels may wrap ── */
   .phase-label { white-space: normal; font-size: 11px; }
 
   /* ── Spacing reductions ── */
