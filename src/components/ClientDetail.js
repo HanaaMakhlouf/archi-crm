@@ -6,7 +6,7 @@ import QuickFileLinks from './QuickFileLinks';
 import FolderChip from './FolderChip';
 import ActivityTab from './ActivityTab';
 import { useAuth } from '../contexts/AuthContext';
-import Icon, { getInitials } from './Icon';
+import Icon from './Icon';
 import {
   LABEL_NEW, LABEL_INACTIVE,
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
@@ -47,49 +47,54 @@ export default function ClientDetail({
 
   return (
     <>
-      <div className="page-header">
-        <div className="detail-identity">
-          <div className="client-avatar client-avatar-lg">{getInitials(client.name)}</div>
-          <div style={{ minWidth: 0 }}>
-            <div className="page-eyebrow"><strong>לקוחות</strong> / פרופיל לקוח</div>
-            <h1 className="page-title">
+      <section className="detail-hero">
+        <div className="detail-hero-main">
+          <div className="detail-hero-text">
+            <div className="page-eyebrow">
+              <button type="button" className="detail-crumb" onClick={onBack}>לקוחות</button> / פרופיל לקוח
+            </div>
+            <h1 className="detail-hero-name">
               {client.name}
               {(client.label === LABEL_NEW || client.label === LABEL_INACTIVE) && (
                 <span className={`label-badge ${getLabelClass(client.label)}`}>{client.label}</span>
               )}
             </h1>
             <div className="detail-meta">
-              {client.city && <span className="detail-meta-item"><Icon name="mapPin" size={14} />{client.city}</span>}
-              {client.phone && <span className="detail-meta-item" dir="ltr"><Icon name="phone" size={14} />{client.phone}</span>}
+              {client.city && <span className="detail-meta-item"><Icon name="mapPin" size={15} />{client.city}</span>}
+              {client.phone && <span className="detail-meta-item" dir="ltr"><Icon name="phone" size={15} />{client.phone}</span>}
               {(client.client_type || []).map(t => <span key={t} className="type-tag">{t}</span>)}
             </div>
           </div>
         </div>
 
-        <div className="page-actions">
-          <FolderChip
-            client={client}
-            onUpdateClient={(updates) => onUpdateClient(client.id, updates)}
-            canEdit={!readOnly}
-          />
-          <button className="btn btn-ghost" onClick={onBack}>
-            <Icon name="arrowRight" size={16} />
-            חזרה
-          </button>
-          {!readOnly && isManager && (
-            <button className="btn btn-ghost" onClick={onArchive} title="הוצאת התיק מרשימת הלקוחות לארכיון">
-              <Icon name="archive" size={16} />
-              סגירת תיק
+        <div className="detail-hero-bar">
+          <div className="detail-hero-group">
+            <button className="btn btn-sm btn-ghost" onClick={onBack}>
+              <Icon name="arrowRight" size={15} />
+              חזרה
             </button>
-          )}
-          {!readOnly && (
-            <button className="btn btn-primary" onClick={onEdit}>
-              <Icon name="edit" size={16} />
-              עריכת פרטים
-            </button>
-          )}
+            <FolderChip
+              client={client}
+              onUpdateClient={(updates) => onUpdateClient(client.id, updates)}
+              canEdit={!readOnly}
+            />
+          </div>
+          <div className="detail-hero-group">
+            {!readOnly && (
+              <button className="btn btn-sm btn-primary" onClick={onEdit}>
+                <Icon name="edit" size={15} />
+                עריכת פרטים
+              </button>
+            )}
+            {!readOnly && isManager && (
+              <button className="btn btn-sm btn-ghost detail-close-btn" onClick={onArchive} title="הוצאת התיק מרשימת הלקוחות לארכיון">
+                <Icon name="archive" size={15} />
+                סגירת תיק
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </section>
 
       {archivedAt && (
         <div className="archived-banner">

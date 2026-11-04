@@ -4,7 +4,7 @@ import { openClientFolder } from '../utils/openClientFolder';
 import { FILE_LINK_2_PATH, FILE_LINK_2_NAME, FILE_LINK_LABEL_2 } from '../constants';
 import { isWebUrl, isFolderLink, getFolderName, isAbsoluteFolderPath, getPathBasename } from './QuickFileLinks';
 
-// The client's מחיצה folder as a chip in the profile header, so it's one click
+// The client's מחיצה folder as a button in the profile header's action bar, so it's one click
 // away from every tab. Linked → opens it; not linked → picks a folder
 // (editors only). Linking files/PDFs is still done in כללי → קבצים מהירים.
 export default function FolderChip({ client, onUpdateClient, canEdit }) {
@@ -19,12 +19,9 @@ export default function FolderChip({ client, onUpdateClient, canEdit }) {
       if (fullPath) onUpdateClient({ [FILE_LINK_2_PATH]: fullPath, [FILE_LINK_2_NAME]: getPathBasename(fullPath) });
     };
     return (
-      <button type="button" className="folder-chip folder-chip--empty" onClick={pick}>
-        <span className="folder-chip-icon"><Icon name="plus" size={15} /></span>
-        <span className="folder-chip-text">
-          <span className="folder-chip-label">{FILE_LINK_LABEL_2}</span>
-          <span className="folder-chip-name">קישור תיקייה</span>
-        </span>
+      <button type="button" className="btn btn-sm folder-chip folder-chip--empty" onClick={pick} title="בחירת תיקיית הלקוח">
+        <Icon name="plus" size={15} />
+        קישור {FILE_LINK_LABEL_2}
       </button>
     );
   }
@@ -42,17 +39,13 @@ export default function FolderChip({ client, onUpdateClient, canEdit }) {
   return (
     <button
       type="button"
-      className={`folder-chip${error ? ' folder-chip--error' : ''}`}
+      className={`btn btn-sm folder-chip${error ? ' folder-chip--error' : ''}`}
       onClick={open}
       disabled={!canOpen}
-      title={error || (canOpen ? `פתיחת התיקייה: ${path}` : 'ניתן לפתוח רק מהאפליקציה במחשב')}
+      title={error || (canOpen ? `פתיחת התיקייה: ${name}` : 'ניתן לפתוח רק מהאפליקציה במחשב')}
     >
-      <span className="folder-chip-icon"><Icon name="folder" size={16} /></span>
-      <span className="folder-chip-text">
-        <span className="folder-chip-label">{FILE_LINK_LABEL_2}</span>
-        <span className="folder-chip-name">{name}</span>
-      </span>
-      {canOpen && <span className="folder-chip-go" aria-hidden="true">←</span>}
+      <Icon name="folder" size={15} />
+      פתיחת {FILE_LINK_LABEL_2}
     </button>
   );
 }

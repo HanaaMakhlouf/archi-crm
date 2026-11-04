@@ -938,13 +938,6 @@ h6 {
   flex-shrink: 0;
 }
 
-.client-avatar-lg {
-  width: 60px;
-  height: 60px;
-  font-size: 22px;
-  border-radius: 16px;
-}
-
 .client-name {
   font-weight: 600;
   font-size: 14.5px;
@@ -1360,13 +1353,6 @@ textarea {
   font-size: 13px;
 }
 
-.detail-identity {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
-}
-
 .detail-meta {
   display: flex;
   align-items: center;
@@ -1385,6 +1371,120 @@ textarea {
 
 .detail-meta-item svg {
   color: var(--color-text-faint);
+}
+
+/* ── CLIENT PROFILE HEADER: identity on top, one action bar below ── */
+.detail-hero {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  margin-bottom: 22px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Accent strip on the card's start edge */
+.detail-hero::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 5px;
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+}
+
+.detail-hero-main {
+  padding: 24px 30px 22px;
+}
+
+.detail-hero-text {
+  min-width: 0;
+}
+
+.detail-hero-text .page-eyebrow {
+  margin-bottom: 6px;
+}
+
+.detail-crumb {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+
+.detail-crumb:hover {
+  text-decoration: underline;
+}
+
+.detail-hero-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  color: var(--color-text);
+}
+
+.detail-hero .detail-meta {
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* City / phone as info chips, next to the type tags */
+.detail-hero .detail-meta-item {
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.detail-hero .detail-meta .type-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.detail-hero-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 30px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+}
+
+.detail-hero-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-hero-bar .btn {
+  height: 36px;
+  padding: 0 14px;
+}
+
+.detail-close-btn:hover {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 45%, transparent);
+  background: var(--color-error-light);
 }
 
 .priority-menu-item:hover {
@@ -2296,16 +2396,22 @@ textarea {
   padding: 24px 28px;
 }
 
+.licensing-tab .detail-section-title {
+  font-size: 16.5px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
 .phase-stepper {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 4px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  padding: 18px 26px;
+  padding: 16px 24px;
 }
 
 .phase-step {
@@ -2313,86 +2419,92 @@ textarea {
   align-items: center;
   gap: 10px;
   flex: 1;
-  position: relative;
 }
 
+.phase-step:last-child {
+  flex: 0 0 auto;
+}
+
+/* Line to the next step; turns green once this step is done */
 .phase-step:not(:last-child)::after {
   content: '';
   flex: 1;
-  height: 1px;
-  background: var(--color-border-strong);
-  margin: 0 10px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-border);
+  margin: 0 12px;
+}
+
+.phase-done:not(:last-child)::after {
+  background: var(--color-success);
 }
 
 .phase-circle {
-  width: 33px;
-  height: 33px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 13px;
-  font-family: var(--font-mono);
-  background: var(--color-surface-2);
-  color: var(--color-text-muted);
-  border: 2px solid var(--color-border);
   flex-shrink: 0;
-  transition: all 150ms ease;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1.5px solid var(--color-border-strong);
+  transition: background 150ms ease, color 150ms ease, box-shadow 150ms ease;
 }
 
 .phase-label {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14.5px;
+  font-weight: 500;
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 
-.phase-active .phase-circle {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-}
-
-.phase-active .phase-label {
-  color: var(--color-primary);
-}
-
 .phase-done .phase-circle {
   background: var(--color-success);
-  color: white;
   border-color: var(--color-success);
+  color: #fff;
 }
 
 .phase-done .phase-label {
-  color: var(--color-success);
+  color: var(--color-text);
+}
+
+.phase-active .phase-circle {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
 }
 
 .phase-locked {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .phase-locked .phase-circle {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .phase-clickable {
   cursor: pointer;
 }
 
-.phase-clickable:hover .phase-circle {
-  border-color: var(--color-primary);
+.phase-clickable:hover .phase-label {
   color: var(--color-primary);
 }
 
 .phase-selected .phase-circle {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--color-primary-light);
 }
 
 .phase-selected .phase-label {
+  color: var(--color-text);
   font-weight: 700;
-  font-size: 14px;
 }
 
 /* ── STATUS BADGE ── */
@@ -2416,7 +2528,7 @@ textarea {
 .status-badge-wrap select {
   border: none;
   background: transparent;
-  font-weight: 700;
+  font-weight: 600;
   padding: 4px 8px;
   font-family: var(--font-body);
 }
@@ -2623,9 +2735,9 @@ textarea {
 }
 
 .status-table-footer {
-  margin-top: 14px;
+  margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px dashed var(--color-border);
+  border-top: 1px solid var(--color-border);
 }
 
 /* ── PLANNING PARTS: required toggle, added rows, locked rows ── */
@@ -2733,21 +2845,31 @@ textarea {
 
 .docs-table th,
 .docs-table td {
-  padding: 11px 14px;
+  padding: 12px 14px;
   text-align: right;
   border-bottom: 1px solid var(--color-border);
   vertical-align: middle;
 }
 
+.docs-table td {
+  font-size: 14.5px;
+  color: var(--color-text);
+}
+
+.docs-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .docs-table th {
-  font-size: 12.5px;
-  font-weight: 600;
+  padding-top: 6px;
+  padding-bottom: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--color-text-muted);
-  background: var(--color-surface-2);
 }
 
 .docs-table td:first-child {
-  font-weight: 600;
+  font-weight: 500;
   width: 30%;
 }
 
@@ -2758,12 +2880,27 @@ textarea {
 .docs-table select,
 .docs-table input[type="text"] {
   width: 100%;
-  padding: 8px 11px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 14px;
+  color: var(--color-text);
   background: var(--color-surface);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.docs-table input[type="text"]:hover,
+.docs-table select:hover {
+  border-color: var(--color-border-strong);
+}
+
+.docs-table input[type="text"]:focus,
+.docs-table select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .docs-table tr.doc-missing td:nth-child(2) select {
@@ -3178,27 +3315,17 @@ textarea {
   .file-tile-actions { opacity: 1; }
 }
 
-/* ── FOLDER CHIP (client header, every tab) ── */
+/* ── FOLDER BUTTON (client header action bar) ── */
 .folder-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 260px;
-  padding: 6px 12px 6px 10px;
-  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
-  border-radius: var(--radius-md);
   background: var(--color-primary-light);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
   color: var(--color-primary);
-  font: inherit;
-  text-align: right;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .folder-chip:hover:not(:disabled) {
-  transform: translateY(-1px);
+  background: var(--color-primary);
   border-color: var(--color-primary);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: #fff;
 }
 
 .folder-chip:focus-visible {
@@ -3208,71 +3335,19 @@ textarea {
 
 .folder-chip:disabled {
   cursor: default;
-  opacity: 0.75;
-}
-
-.folder-chip-icon {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius);
-  background: var(--color-primary);
-  color: #fff;
-}
-
-.folder-chip-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  line-height: 1.25;
-}
-
-.folder-chip-label {
-  font-size: 11px;
-  font-weight: 500;
-  opacity: 0.75;
-}
-
-.folder-chip-name {
-  font-size: 13px;
-  font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.folder-chip-go {
-  font-size: 14px;
-  opacity: 0;
-  transform: translateX(4px);
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
-
-.folder-chip:hover .folder-chip-go {
-  opacity: 1;
-  transform: translateX(0);
+  opacity: 0.6;
 }
 
 .folder-chip--empty {
-  background: transparent;
-  border-style: dashed;
-  border-color: var(--color-border);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border-strong);
   color: var(--color-text-muted);
 }
 
-.folder-chip--empty .folder-chip-icon {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-}
-
-.folder-chip--empty:hover {
-  color: var(--color-primary);
-}
-
 .folder-chip--error {
+  background: var(--color-error-light);
   border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 /* ── MOBILE MENU ── */
