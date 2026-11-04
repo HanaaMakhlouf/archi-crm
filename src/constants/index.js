@@ -152,9 +152,31 @@ export const OWNERSHIP_STATUS_OPTIONS = [
   { value: ACTION_STATUS_PRESENT, label: 'מוכן' },
 ];
 
+// בקשה לרישוי זמין: here נשלח is the finished state (green).
+export const ACTION_LABEL_ONLINE_PERMIT = 'בקשה לרישוי זמין';
+export const ONLINE_PERMIT_STATUS_DRAFT = 'draft';
+export const ONLINE_PERMIT_STATUS_RETURNED = 'returned_for_fixes';
+export const ONLINE_PERMIT_STATUS_OPTIONS = [
+  { value: ACTION_STATUS_NOT_SENT, label: 'לא נשלח' },
+  { value: ONLINE_PERMIT_STATUS_DRAFT, label: 'טיוטה' },
+  { value: ACTION_STATUS_SENT, label: 'נשלח' },
+  { value: ONLINE_PERMIT_STATUS_RETURNED, label: 'חזר לתיקון' },
+  { value: ACTION_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
+
+export const ACTION_LABEL_SUPERVISION = 'פיקוח';
+export const SUPERVISION_STATUS_DELIVERED = 'delivered';
+export const SUPERVISION_STATUS_OPTIONS = [
+  { value: ACTION_STATUS_NOT_SENT, label: 'לא נשלח' },
+  { value: ACTION_STATUS_SENT, label: 'נשלח' },
+  { value: SUPERVISION_STATUS_DELIVERED, label: 'נמסר' },
+];
+
 export const DEFAULT_REQUEST_ACTIONS = [
   ACTION_LABEL_OWNERSHIP,
   ACTION_LABEL_DEPOSIT,
+  ACTION_LABEL_ONLINE_PERMIT,
+  ACTION_LABEL_SUPERVISION,
   'תקנה',
   'פרסום עזבון',
   'שיוך מבנים',

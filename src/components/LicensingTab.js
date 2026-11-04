@@ -30,6 +30,7 @@ import {
   CONDITIONS_STATUS_NOT_SENT,
   CONDITIONS_STATUS_RECEIVED,
   QUESTION_ROWS, ANSWER_YES, Q_PUBLIC_USE, Q_RELIEFS, actionRowDefaultStatus,
+  ACTION_LABEL_DEPOSIT, ACTION_LABEL_ONLINE_PERMIT, ACTION_LABEL_SUPERVISION,
 } from '../constants';
 
 const migrateConditionsPassed = (val) => {
@@ -65,6 +66,16 @@ const buildInitialInfo = (client, src = {}) => {
   };
 };
 
+// Adds בקשה לרישוי זמין + פיקוח after פקדון (3rd and 4th) for an existing client.
+const NEW_ACTION_ROWS = [ACTION_LABEL_ONLINE_PERMIT, ACTION_LABEL_SUPERVISION];
+const migrateActionRows = (actions) => {
+  const missing = NEW_ACTION_ROWS.filter(label => !actions.some(a => a.label === label));
+  if (!missing.length) return actions;
+  const at = actions.findIndex(a => a.label === ACTION_LABEL_DEPOSIT) + 1 || Math.min(2, actions.length);
+  const rows = missing.map(label => newStatusRow(label, actionRowDefaultStatus(label)));
+  return [...actions.slice(0, at), ...rows, ...actions.slice(at)];
+};
+
 const buildInitialRequest = (src = {}) => {
   const existing = src || {};
   return {
@@ -74,7 +85,7 @@ const buildInitialRequest = (src = {}) => {
       note: existing.submission?.note || '',
     },
     actions: existing.actions?.length
-      ? existing.actions
+      ? migrateActionRows(existing.actions)
       : DEFAULT_REQUEST_ACTIONS.map(label => newStatusRow(label, ACTION_STATUS_NOT_SENT)),
     meeting: {
       status: existing.meeting?.status ?? null,
