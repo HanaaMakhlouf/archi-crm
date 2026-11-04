@@ -4,7 +4,7 @@ import DatePickerButton from './DatePickerButton';
 import SendMessageDialog from './SendMessageDialog';
 import Icon from './Icon';
 import { useAuth } from '../contexts/AuthContext';
-import { formatDateTime, formatFileSize, nameFromEmail } from '../utils/format';
+import { formatDate, formatDateTime, formatFileSize, nameFromEmail } from '../utils/format';
 import { attachmentUrl, downloadFile, downloadImage, openFile, printImage } from '../utils/fileActions';
 
 const ONE_MINUTE_MS = 60 * 1000;
@@ -215,7 +215,7 @@ export default function Inbox({
                   <div className="notification-content">
                     <h4>{notification.client?.name}</h4>
                     <p>{notification.message}</p>
-                    <small>נוצר ב: {new Date(notification.created_at).toLocaleDateString('he-IL')}</small>
+                    <small>נוצר ב: {formatDate(notification.created_at)}</small>
                   </div>
 
                   <div className="notification-actions">

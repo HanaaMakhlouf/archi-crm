@@ -228,8 +228,12 @@
   .notification-card    { flex-direction: column; align-items: flex-start; gap: 12px; }
   .notification-actions { flex-wrap: wrap; }
 
-  /* ── Info cards row: stack ── */
-  .info-cards-row { flex-direction: column; }
+  /* ── Info panel: title above its fields ── */
+  .info-row    { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .land-grid   { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .person-grid { grid-template-columns: minmax(0, 1fr); }
+  .person-grid-head { display: none; }
+  .person-grid .row-icon-btn { justify-self: end; }
 
   /* ── Phase stepper: wrap, hide connectors ── */
   .phase-stepper { flex-wrap: wrap; gap: 8px; }

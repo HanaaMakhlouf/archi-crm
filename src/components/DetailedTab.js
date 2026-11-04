@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import PersonForm, { makeEmptyPerson } from './licensing/PersonForm';
-import { InfoCard, PersonReadOnly } from './licensing/InfoPhase';
+import { makeEmptyPerson } from './licensing/PersonForm';
+import { InfoPanel, InfoRow, PeopleEditor } from './licensing/InfoPhase';
 import StatusTable from './licensing/StatusTable';
 import GrayOut from './GrayOut';
-import { useLandEditor, LandForm, LandView, EditToggle } from './LandFields';
+import { useLandEditor, LandForm } from './LandFields';
 import { useDeferredSave } from '../utils/useDeferredSave';
 import { useOnLock } from '../utils/useOnLock';
 import {
@@ -94,7 +94,6 @@ const STEP_SECTIONS = [SK_HAFKADA, SK_PIRSUM_A, SK_ISHUR, SK_PIRSUM_B];
 
 export default function DetailedTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {
   const [dd, setDd] = useState(() => buildInitialDetailed(client, client[FIELD_DETAILED_DATA]));
-  const [editMode, setEditMode] = useState(false);
   const { land, updateLand, flushLand } = useLandEditor(client, onUpdate);
   const ddRef = useRef(dd);
   ddRef.current = dd;
@@ -135,47 +134,29 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
     <div dir="rtl" className="licensing-tab" onBlur={() => { flushDd(); flushLand(); }}>
 
       {/* ── Section 1: Info ── */}
-      <EditToggle editMode={editMode} onToggle={() => setEditMode(m => !m)} />
+      <InfoPanel>
+        <InfoRow
+          title="פרטי מבקש"
+          actions={<button type="button" className="link-btn" onClick={() => updateInfo({ requesters: [...dd.info.requesters, makeEmptyPerson()] })}>+ הוספה</button>}
+        >
+          <PeopleEditor people={dd.info.requesters} onChange={(next) => updateInfo({ requesters: next })} />
+        </InfoRow>
 
-      {editMode ? (
-        <>
-          <PersonForm
-            title="פרטי מבקש"
-            people={dd.info.requesters}
-            onChange={(next) => updateInfo({ requesters: next })}
+        <InfoRow title="פרטי קרקע">
+          <LandForm land={land} onChange={updateLand} />
+        </InfoRow>
+      </InfoPanel>
+
+      <InfoPanel>
+        <InfoRow title="מהות הבקשה">
+          <textarea
+            value={dd.info.description}
+            onChange={(e) => updateInfo({ description: e.target.value })}
+            placeholder="תיאור מהות הפרויקט"
+            rows={2}
           />
-          <div className="detail-section">
-            <h3 className="detail-section-title">פרטי קרקע</h3>
-            <LandForm land={land} onChange={updateLand} />
-          </div>
-          <div className="detail-section">
-            <h3 className="detail-section-title">מהות הבקשה</h3>
-            <div className="form-group">
-              <textarea
-                value={dd.info.description}
-                onChange={(e) => updateInfo({ description: e.target.value })}
-                placeholder="תיאור מהות הפרויקט"
-              />
-            </div>
-          </div>
-        </>
-      ) : (
-        <div className="info-readonly-layout">
-          <div className="info-cards-row">
-            <InfoCard title="פרטי מבקש">
-              <PersonReadOnly people={dd.info.requesters} />
-            </InfoCard>
-            <InfoCard title="פרטי קרקע">
-              <LandView land={land} />
-            </InfoCard>
-          </div>
-          <InfoCard title="מהות הבקשה" wide>
-            <span className="info-description-text">
-              {dd.info.description || <span className="muted">לא הוגדר</span>}
-            </span>
-          </InfoCard>
-        </div>
-      )}
+        </InfoRow>
+      </InfoPanel>
 
       {/* ── Section 2: Progressive Tables ── */}
       <StatusTable

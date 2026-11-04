@@ -481,6 +481,9 @@ export default function App() {
                                     <span className="client-sub-key">רישוי · </span>{getCurrentLicensingPhaseLabel(client)}
                                   </div>
                                 )}
+                                {client.last_change_summary && (
+                                  <div className="client-sub-faint">{client.last_change_summary}</div>
+                                )}
                                 {types.includes(TYPE_PLANNING) && (
                                   <div className="client-sub">
                                     <span className="client-sub-key">תכנון · </span>{getCurrentPlanningStageLabel(client)}
@@ -507,17 +510,12 @@ export default function App() {
                           </td>
                           <td className="cell-request">{client.licensing_data?.application?.request_number || '—'}</td>
                           <td className="cell-updated">
-                            {client.last_updated_at ? (
-                              <>
-                                <bdi dir="ltr">{formatDate(client.last_updated_at)}</bdi>
-                                {client.last_change_summary && (
-                                  <div className="client-sub-faint" title={client.last_change_summary}>{client.last_change_summary}</div>
-                                )}
-                              </>
-                            ) : <span className="muted">—</span>}
+                            {client.last_updated_at
+                              ? <bdi dir="ltr">{formatDate(client.last_updated_at)}</bdi>
+                              : <span className="muted">—</span>}
                           </td>
                           <td className="cell-secondary">
-                            <bdi dir="ltr">{new Date(client.created_at).toLocaleDateString('he-IL')}</bdi>
+                            <bdi dir="ltr">{formatDate(client.created_at)}</bdi>
                           </td>
                           <td className="cell-actions" onClick={e => e.stopPropagation()}>
                             <div className="row-actions">

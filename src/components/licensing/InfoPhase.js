@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { Fragment } from 'react';
 import { useOnLock } from '../../utils/useOnLock';
 import { makeEmptyPerson } from './PersonForm';
 import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
-import { useLandEditor, LandForm, LandView, EditToggle } from '../LandFields';
+import { useLandEditor, LandForm } from '../LandFields';
 import {
   LICENSING_DOCUMENTS,
-  DOC_STATUS_MISSING, DOC_STATUS_PRESENT,
+  DOC_STATUS_MISSING, DOC_STATUS_PRESENT, DOC_STATUS_NOT_REQUIRED,
   INFO_NOTE_SENT, INFO_NOTE_NOT_SENT,
   DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS,
   CONDITIONS_STATUS_OPTIONS, CONDITIONS_STATUS_RECEIVED,
@@ -29,9 +29,9 @@ const DOC_COLUMNS = [
   { key: 'label', type: 'text', header: 'מסמך' },
   {
     key: 'status', type: 'select', header: 'סטטוס', options: DOC_STATUS_OPTIONS,
-    statusColors: { [DOC_STATUS_PRESENT]: 'green', [DOC_STATUS_MISSING]: 'red' }
+    statusColors: { [DOC_STATUS_PRESENT]: 'green', [DOC_STATUS_MISSING]: 'red', [DOC_STATUS_NOT_REQUIRED]: 'gray' }
   },
-  { key: 'note', type: 'input', header: 'הערה', placeholder: 'הערה' },
+  { key: 'note', type: 'input', header: 'הערה', placeholder: '—' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
@@ -57,109 +57,76 @@ const CONDITIONS_COLUMNS = [
 
 const DOC_LABELS = Object.fromEntries(LICENSING_DOCUMENTS.map(d => [d.type, d.label]));
 
-export function InfoCard({ title, children, wide }) {
+// The client's details as one panel: a row per topic, its title on the side.
+export function InfoPanel({ children }) {
+  return <div className="info-panel">{children}</div>;
+}
+
+export function InfoRow({ title, actions, children }) {
   return (
-    <div className={`info-card${wide ? ' info-card-wide' : ''}`}>
-      <div className="info-card-title">{title}</div>
-      {children}
-    </div>
+    <section className="info-row">
+      <div className="info-row-side">
+        <h3 className="info-row-title">{title}</h3>
+        {actions}
+      </div>
+      <div className="info-row-body">{children}</div>
+    </section>
   );
 }
 
-export function PersonReadOnly({ people }) {
-  if (!people.length) return <span className="muted small">לא נוספו</span>;
-  return people.map((p, idx) => (
-    <div key={p.id} className="info-card-person">
-      {people.length > 1 && <div className="muted small" style={{ marginBottom: 4 }}>#{idx + 1}</div>}
-      {[
-        { label: 'שם', value: [p.name, p.surname].filter(Boolean).join(' ') },
-        { label: 'ת"ז', value: p.id_number },
-        { label: 'טלפון', value: p.phone },
-        { label: 'אימייל', value: p.email },
-      ].map(f => (
-        <div key={f.label} className="detail-row">
-          <span className="detail-label">{f.label}</span>
-          <span>{f.value || <span className="muted">—</span>}</span>
-        </div>
-      ))}
-    </div>
-  ));
-}
+const fullName = (p) => [p.name, p.surname].filter(Boolean).join(' ');
 
-function PersonCardEdit({ people, onChange, onFillFromClient, copyFrom }) {
-  const [selectedIds, setSelectedIds] = useState([]);
-
+// People edited in place: one row per person, the field names once on top.
+// copyFrom offers the other list's people as one-click chips (hidden once copied).
+export function PeopleEditor({ people, onChange, copyFrom }) {
   const updateField = (id, key, value) =>
     onChange(people.map(p => p.id === id ? { ...p, [key]: value } : p));
-  const addPerson = () => onChange([...people, makeEmptyPerson()]);
   const removePerson = (id) => onChange(people.filter(p => p.id !== id));
 
-  const toggleSelected = (id) =>
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-
-  const copySelected = () => {
-    const copies = copyFrom.people
-      .filter(p => selectedIds.includes(p.id))
-      .map(p => ({ ...p, id: crypto.randomUUID() }));
-    onChange([...people, ...copies]);
-    setSelectedIds([]);
-  };
+  const alreadyHere = (p) => people.some(q => fullName(q) === fullName(p) && (q.id_number || '') === (p.id_number || ''));
+  const copyable = (copyFrom?.people || []).filter(p => !alreadyHere(p));
+  const copyPerson = (p) => onChange([...people, { ...p, id: crypto.randomUUID() }]);
 
   return (
     <>
-      {copyFrom && copyFrom.people.length > 0 && (
+      {copyable.length > 0 && (
         <div className="person-copy-box">
-          <span className="muted small">העתק מתוך {copyFrom.label}:</span>
-          <div className="person-copy-options">
-            {copyFrom.people.map(p => (
-              <label key={p.id} className="person-copy-option">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(p.id)}
-                  onChange={() => toggleSelected(p.id)}
-                />
-                {[p.name, p.surname].filter(Boolean).join(' ') || 'ללא שם'}
-              </label>
-            ))}
-          </div>
-          <button className="btn btn-ghost btn-sm" disabled={!selectedIds.length} onClick={copySelected}>
-            העתק נבחרים
-          </button>
+          <span className="person-copy-label">העתקה מ{copyFrom.label}:</span>
+          {copyable.map(p => (
+            <button key={p.id} type="button" className="person-copy-chip" onClick={() => copyPerson(p)}>
+              + {fullName(p) || 'ללא שם'}
+            </button>
+          ))}
         </div>
       )}
-      <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 8, marginBottom: 8 }}>
-        <button className="btn btn-primary btn-sm" onClick={addPerson}>+ הוסף</button>
-        {onFillFromClient && (
-          <button className="btn btn-ghost btn-sm" onClick={onFillFromClient}>העתק מפרטי הלקוח</button>
-        )}
-      </div>
-      {people.length === 0 && <p className="muted small">לא נוספו רשומות</p>}
-      {people.map((p, idx) => (
-        <div key={p.id} className="person-row">
-          <div className="person-row-header">
-            <span className="muted small">#{idx + 1}</span>
-            <button className="btn btn-ghost btn-sm" onClick={() => removePerson(p.id)}>✕</button>
-          </div>
-          <div className="person-fields">
-            {PERSON_FIELDS.map(f => (
-              <div key={f.key} className="form-group">
-                <label>{f.label}</label>
+      {people.length === 0 ? (
+        <p className="muted small">לא נוספו עדיין</p>
+      ) : (
+        <div className="person-grid">
+          {PERSON_FIELDS.map(f => <span key={f.key} className="person-grid-head">{f.label}</span>)}
+          <span />
+          {people.map(p => (
+            <Fragment key={p.id}>
+              {PERSON_FIELDS.map(f => (
                 <input
+                  key={f.key}
                   type={f.type}
+                  aria-label={f.label}
+                  placeholder="—"
                   value={p[f.key] || ''}
                   onChange={e => updateField(p.id, f.key, e.target.value)}
                 />
-              </div>
-            ))}
-          </div>
+              ))}
+              <button type="button" className="row-icon-btn" onClick={() => removePerson(p.id)} title="הסרה" aria-label="הסרה">✕</button>
+            </Fragment>
+          ))}
         </div>
-      ))}
+      )}
     </>
   );
 }
 
 export default function InfoPhase({ client, onUpdateClient, info, onChange, reminders = [], onReminderChange, onClearReminders, onNext }) {
-  const [editMode, setEditMode] = useState(false);
   const { land, updateLand, flushLand } = useLandEditor(client, onUpdateClient);
 
   const patch = (key, value) => onChange({ [key]: value });
@@ -173,50 +140,43 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
 
   return (
     <div className="licensing-info" onBlur={flushLand}>
-      <EditToggle editMode={editMode} onToggle={() => setEditMode(m => !m)} />
+      <InfoPanel>
+        <InfoRow title="פרטי קרקע">
+          <LandForm land={land} onChange={updateLand} />
+        </InfoRow>
 
-      {/* ── Cards stacked vertically, each full width ── */}
-      <InfoCard title="פרטי קרקע">
-        {editMode ? <LandForm land={land} onChange={updateLand} /> : <LandView land={land} />}
-      </InfoCard>
+        <InfoRow
+          title="פרטי מבקש"
+          actions={<button type="button" className="link-btn" onClick={() => patch('requesters', [...info.requesters, makeEmptyPerson()])}>+ הוספה</button>}
+        >
+          <PeopleEditor people={info.requesters} onChange={next => patch('requesters', next)} />
+        </InfoRow>
 
-      <InfoCard title="פרטי מבקש">
-        {editMode ? (
-          <PersonCardEdit
-            people={info.requesters}
-            onChange={next => patch('requesters', next)}
-            onFillFromClient={() => {
-              const fill = (p) => ({ ...p, name: client.name || '', phone: client.phone || '', email: client.email || '' });
-              patch('requesters', info.requesters.length
-                ? info.requesters.map((p, i) => i === 0 ? fill(p) : p)
-                : [fill(makeEmptyPerson())]);
-            }}
-          />
-        ) : (
-          <PersonReadOnly people={info.requesters} />
-        )}
-      </InfoCard>
-
-      <InfoCard title="בעלי זכות">
-        {editMode ? (
-          <PersonCardEdit
+        <InfoRow
+          title="בעלי זכות"
+          actions={<button type="button" className="link-btn" onClick={() => patch('rights_holders', [...info.rights_holders, makeEmptyPerson()])}>+ הוספה</button>}
+        >
+          <PeopleEditor
             people={info.rights_holders}
             onChange={next => patch('rights_holders', next)}
             copyFrom={{ people: info.requesters, label: 'המבקשים' }}
           />
-        ) : (
-          <PersonReadOnly people={info.rights_holders} />
-        )}
-      </InfoCard>
+        </InfoRow>
 
-      <InfoCard title="מהות בקשה">
-        <textarea
-          value={info.description}
-          onChange={e => patch('description', e.target.value)}
-          placeholder="תיאור מהות הפרויקט"
-          rows={3}
-        />
-      </InfoCard>
+      </InfoPanel>
+
+      
+
+      <InfoPanel>
+        <InfoRow title="מהות בקשה">
+          <textarea
+            value={info.description}
+            onChange={e => patch('description', e.target.value)}
+            placeholder="תיאור מהות הפרויקט"
+            rows={2}
+          />
+        </InfoRow>
+      </InfoPanel>
 
       {/* ── Documents table ── */}
       <StatusTable
@@ -224,7 +184,7 @@ export default function InfoPhase({ client, onUpdateClient, info, onChange, remi
         rows={info.documents.map(d => ({ ...d, label: DOC_LABELS[d.type] }))}
         columns={DOC_COLUMNS}
         onChange={(next) => patch('documents', next.map(({ label, ...rest }) => rest))}
-        rowClassName={(r) => r.status === DOC_STATUS_MISSING ? 'doc-missing' : 'doc-present'}
+        rowClassName={(r) => r.status === DOC_STATUS_MISSING ? 'doc-missing' : r.status === DOC_STATUS_PRESENT ? 'doc-present' : ''}
         reminders={sectionReminders(SK_DOCS)}
         onReminderChange={onReminderChange?.(SK_DOCS)}
       />

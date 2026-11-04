@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { callAdminUsers } from '../utils/adminUsers';
 import { useAuth } from '../contexts/AuthContext';
+import { formatDate } from '../utils/format';
 import { ROLE_ADMIN, ROLE_MANAGER, ROLE_USER, ROLE_VIEWER, ROLE_LABELS } from '../constants';
 
 const ROLE_OPTIONS = [ROLE_USER, ROLE_VIEWER, ROLE_MANAGER, ROLE_ADMIN]
@@ -189,7 +190,7 @@ export default function SettingsView() {
                         <span className="type-tag">{ROLE_LABELS[u.role] || u.role}</span>
                       </td>
                       {isAdmin && <td style={TD_MUTED}>{u.officeName || '—'}</td>}
-                      <td style={TD_MUTED}>{new Date(u.createdAt).toLocaleDateString('he-IL')}</td>
+                      <td style={TD_MUTED}>{formatDate(u.createdAt)}</td>
                       <td style={{ padding: '10px 12px', textAlign: 'left' }}>
                         {canAct(userRole, u.role) && (
                           <button
@@ -246,7 +247,7 @@ export default function SettingsView() {
                           )}
                         </td>
                         {isAdmin && <td style={TD_MUTED}>{u.officeName || '—'}</td>}
-                        <td style={TD_MUTED}>{new Date(u.createdAt).toLocaleDateString('he-IL')}</td>
+                        <td style={TD_MUTED}>{formatDate(u.createdAt)}</td>
                         <td style={{ padding: '10px 12px', textAlign: 'left' }}>
                           {editable && (
                             <button

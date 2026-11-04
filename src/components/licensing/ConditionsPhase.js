@@ -48,7 +48,7 @@ const CONDITION_COLUMNS = [
   { key: 'label',    type: 'text',   header: 'תנאי' },
   { key: 'status',   type: 'select', header: 'סטטוס', options: CONDITION_ROW_STATUS_OPTIONS,
     statusColors: CONDITION_STATUS_COLORS, rowSelect: conditionRowSelect },
-  { key: 'note',     type: 'input',  header: 'הערה', placeholder: 'הערה' },
+  { key: 'note',     type: 'input',  header: 'הערה', placeholder: '—' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 

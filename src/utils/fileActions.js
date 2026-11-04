@@ -76,7 +76,7 @@ export async function printImage(url, captionLines = []) {
   frame.style.cssText = 'position:fixed;width:0;height:0;border:0;left:-9999px';
   frame.srcdoc = `<!doctype html><html dir="rtl"><head><meta charset="utf-8"><style>
     @page { margin: 12mm; }
-    html, body { margin: 0; font-family: Heebo, 'Segoe UI', Arial, sans-serif; }
+    html, body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; }
     .cap { margin: 0 0 4mm; font-size: 11pt; }
     .cap p { margin: 0 0 1mm; }
     img { display: block; max-width: 100%; max-height: 240mm; margin: 0 auto; object-fit: contain; }

@@ -71,7 +71,7 @@ const ACTION_COLUMNS = [
       [ACTION_STATUS_NOT_REQUIRED]: 'gray',
     },
     rowSelect: (row) => ROW_SELECTS[row.label] },
-  { key: 'note',     type: 'input',  header: 'הערה', placeholder: 'הערה' },
+  { key: 'note',     type: 'input',  header: 'הערה', placeholder: '—' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 

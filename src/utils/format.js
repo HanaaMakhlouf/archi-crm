@@ -1,9 +1,10 @@
-// "12.10.2026, 14:32"
-export const formatDateTime = (iso) => new Date(iso).toLocaleString('he-IL', {
+// "12/10/2026, 14:32" (en-GB: day/month/year with slashes; he-IL uses dots)
+export const formatDateTime = (iso) => new Date(iso).toLocaleString('en-GB', {
   day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
 });
 
-export const formatDate = (iso) => new Date(iso).toLocaleDateString('he-IL', {
+// "12/10/2026"
+export const formatDate = (iso) => new Date(iso).toLocaleDateString('en-GB', {
   day: '2-digit', month: '2-digit', year: 'numeric',
 });
 
