@@ -19,7 +19,6 @@ import {
   DOC_STATUS_MISSING,
   INFO_NOTE_NOT_SENT,
   SUBMISSION_NOT_STARTED,
-  ACTION_STATUS_NOT_SENT,
   DEFAULT_REQUEST_ACTIONS,
   PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_SIGNED,
   DEFAULT_CONDITION_ROWS, RENAMED_CONDITION_ROWS, conditionRowOptions,
@@ -32,6 +31,7 @@ import {
   QUESTION_ROWS, ANSWER_YES, Q_PUBLIC_USE, Q_RELIEFS, actionRowDefaultStatus,
   ACTION_LABEL_DEPOSIT, ACTION_LABEL_ONLINE_PERMIT, ACTION_LABEL_SUPERVISION, REMOVED_REQUEST_ACTIONS,
   ACTION_LABEL_BUILDING_ASSIGN, BUILDING_ASSIGN_STATUS_FROM_OLD,
+  ACTION_LABEL_TAKANA, TAKANA_STATUS_FROM_OLD, ACTION_LABEL_ESTATE_NOTICE, ESTATE_NOTICE_STATUS_FROM_OLD,
 } from '../constants';
 
 const migrateConditionsPassed = (val) => {
@@ -67,16 +67,24 @@ const buildInitialInfo = (client, src = {}) => {
   };
 };
 
+// Rows that moved off the generic dropdown: old status → its new one.
+const ACTION_STATUS_FROM_OLD = {
+  [ACTION_LABEL_BUILDING_ASSIGN]: BUILDING_ASSIGN_STATUS_FROM_OLD,
+  [ACTION_LABEL_TAKANA]: TAKANA_STATUS_FROM_OLD,
+  [ACTION_LABEL_ESTATE_NOTICE]: ESTATE_NOTICE_STATUS_FROM_OLD,
+};
+
 // Brings an existing client's פעולות up to date: drops rows no longer used,
-// moves שיוך מבנים to its own statuses and adds בקשה לרישוי זמין + פיקוח
-// after פקדון (3rd and 4th).
+// moves rows with their own dropdown to its statuses and adds בקשה לרישוי זמין
+// + פיקוח after פקדון (3rd and 4th).
 const NEW_ACTION_ROWS = [ACTION_LABEL_ONLINE_PERMIT, ACTION_LABEL_SUPERVISION];
 const migrateActionRows = (saved) => {
   const actions = saved
     .filter(a => !REMOVED_REQUEST_ACTIONS.includes(a.label))
-    .map(a => (a.label === ACTION_LABEL_BUILDING_ASSIGN && BUILDING_ASSIGN_STATUS_FROM_OLD[a.status]
-      ? { ...a, status: BUILDING_ASSIGN_STATUS_FROM_OLD[a.status] }
-      : a));
+    .map(a => {
+      const status = ACTION_STATUS_FROM_OLD[a.label]?.[a.status];
+      return status ? { ...a, status } : a;
+    });
   const missing = NEW_ACTION_ROWS.filter(label => !actions.some(a => a.label === label));
   if (!missing.length) return actions;
   const at = actions.findIndex(a => a.label === ACTION_LABEL_DEPOSIT) + 1 || Math.min(2, actions.length);
@@ -94,7 +102,7 @@ const buildInitialRequest = (src = {}) => {
     },
     actions: existing.actions?.length
       ? migrateActionRows(existing.actions)
-      : DEFAULT_REQUEST_ACTIONS.map(label => newStatusRow(label, ACTION_STATUS_NOT_SENT)),
+      : DEFAULT_REQUEST_ACTIONS.map(label => newStatusRow(label, actionRowDefaultStatus(label))),
     meeting: {
       status: existing.meeting?.status ?? null,
       note: existing.meeting?.note || '',

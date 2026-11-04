@@ -187,13 +187,48 @@ export const BUILDING_ASSIGN_STATUS_FROM_OLD = {
   [ACTION_STATUS_PRESENT]: BUILDING_ASSIGN_STATUS_SIGNED,
 };
 
+// תקנה and פרסום עזבון share "הפקת נוסח" (setting it on תקנה sets it on
+// פרסום עזבון too) and "התקבל".
+export const ACTION_LABEL_TAKANA = 'תקנה';
+export const ACTION_LABEL_ESTATE_NOTICE = 'פרסום עזבון';
+export const TEXT_STATUS_PREPARING = 'text_preparing';
+export const TEXT_STATUS_READY = 'text_ready';
+export const TEXT_STATUS_CONTACTED = 'contacted';
+export const TEXT_STATUS_TO_COURIER = 'to_courier';
+export const TEXT_STATUS_RECEIVED = 'received';
+export const TEXT_STATUS_NOT_RECEIVED = 'not_received';
+export const TAKANA_STATUS_OPTIONS = [
+  { value: TEXT_STATUS_PREPARING, label: 'הפקת נוסח' },
+  { value: TEXT_STATUS_READY, label: 'הופק נוסח' },
+  { value: TEXT_STATUS_CONTACTED, label: 'נוצר קשר' },
+  { value: TEXT_STATUS_TO_COURIER, label: 'נמסר לשליח' },
+  { value: TEXT_STATUS_RECEIVED, label: 'התקבל' },
+  { value: ACTION_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
+export const ESTATE_NOTICE_STATUS_OPTIONS = [
+  { value: TEXT_STATUS_PREPARING, label: 'הפקת נוסח' },
+  { value: ACTION_STATUS_SENT, label: 'נשלח' },
+  { value: TEXT_STATUS_RECEIVED, label: 'התקבל' },
+  { value: TEXT_STATUS_NOT_RECEIVED, label: 'לא התקבל' },
+];
+// Statuses saved under the old generic dropdown, in each row's new terms.
+export const TAKANA_STATUS_FROM_OLD = {
+  [ACTION_STATUS_NOT_SENT]: TEXT_STATUS_PREPARING,
+  [ACTION_STATUS_SENT]: TEXT_STATUS_TO_COURIER,
+  [ACTION_STATUS_PRESENT]: TEXT_STATUS_RECEIVED,
+};
+export const ESTATE_NOTICE_STATUS_FROM_OLD = {
+  [ACTION_STATUS_NOT_SENT]: TEXT_STATUS_PREPARING,
+  [ACTION_STATUS_PRESENT]: TEXT_STATUS_RECEIVED,
+};
+
 export const DEFAULT_REQUEST_ACTIONS = [
   ACTION_LABEL_OWNERSHIP,
   ACTION_LABEL_DEPOSIT,
   ACTION_LABEL_ONLINE_PERMIT,
   ACTION_LABEL_SUPERVISION,
-  'תקנה',
-  'פרסום עזבון',
+  ACTION_LABEL_TAKANA,
+  ACTION_LABEL_ESTATE_NOTICE,
   ACTION_LABEL_BUILDING_ASSIGN,
 ];
 
@@ -223,8 +258,11 @@ export const RELIEF_STATUS_OPTIONS = [
 export const RELIEF_ACTIONS = ['פרסום הקלה', 'הודעה לגובלים', 'צילום בשטח'];
 
 // First status for a new פעולות row.
-export const actionRowDefaultStatus = (label) =>
-  (RELIEF_ACTIONS.includes(label) ? RELIEF_STATUS_MISSING_TEXT : ACTION_STATUS_NOT_SENT);
+export const actionRowDefaultStatus = (label) => {
+  if (RELIEF_ACTIONS.includes(label)) return RELIEF_STATUS_MISSING_TEXT;
+  if (label === ACTION_LABEL_TAKANA || label === ACTION_LABEL_ESTATE_NOTICE) return TEXT_STATUS_PREPARING;
+  return ACTION_STATUS_NOT_SENT;
+};
 
 // Meeting (ישיבה)
 export const MEETING_IN_COMMUNICATION = 'in_communication';
