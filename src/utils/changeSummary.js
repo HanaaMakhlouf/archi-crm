@@ -18,7 +18,7 @@ const FIELD_LABELS = {
   city: 'עיר', email: 'אימייל', gush: 'גוש', helka: 'חלקה', migrash: 'מגרש',
   planning_data: 'תכנון', licensing_data: 'רישוי', detailed_data: 'תיק מפורט',
   type_attributes: 'פרטי סוג', archived_at: 'מצב תיק',
-  public_use: 'שימוש ציבורי', reliefs: 'הקלות / שימוש חורג',
+  online_request_number: "מס' בקשה לזמין", public_use: 'שימוש ציבורי', reliefs: 'הקלות / שימוש חורג',
   // planning_data sections
   offer: 'הצעה', visualization: 'הדמיה', disciplines: 'תחומים',
   construction: 'קונסטרוקציה', water: 'מים', electricity: 'חשמל',

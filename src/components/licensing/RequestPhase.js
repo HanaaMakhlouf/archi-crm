@@ -23,6 +23,11 @@ import {
   TEXT_STATUS_RECEIVED, TEXT_STATUS_NOT_RECEIVED,
 } from '../../constants';
 
+const REQUEST_NUMBER_FIELDS = [
+  { key: 'request_number', label: "מס' בקשה", placeholder: 'מספר הבקשה ברשות הרישוי' },
+  { key: 'online_request_number', label: "מס' בקשה לזמין", placeholder: 'מספר הבקשה ברישוי זמין' },
+];
+
 const SK_SUBMISSION = 'licensing.application.submission';
 const SK_ACTIONS    = 'licensing.application.actions';
 const SK_MEETING    = 'licensing.application.meeting';
@@ -228,17 +233,19 @@ export default function RequestPhase({ request, conditionsPassed, onChange, onAn
 
   return (
     <div className="licensing-info">
-      <div className="detail-section">
-        <h3 className="detail-section-title">מס' בקשה</h3>
-        <div className="form-group request-number-field">
-          <input
-            type="text"
-            dir="ltr"
-            value={request.request_number}
-            onChange={(e) => patch('request_number', e.target.value)}
-            placeholder="מספר הבקשה ברשות הרישוי"
-          />
-        </div>
+      <div className="detail-section request-numbers">
+        {REQUEST_NUMBER_FIELDS.map(f => (
+          <label key={f.key} className="request-number-row">
+            <span className="request-number-label">{f.label}</span>
+            <input
+              type="text"
+              dir="ltr"
+              value={request[f.key]}
+              onChange={(e) => patch(f.key, e.target.value)}
+              placeholder={f.placeholder}
+            />
+          </label>
+        ))}
       </div>
 
       {/* Questions: each "yes" adds rows to פעולות / תנאים */}

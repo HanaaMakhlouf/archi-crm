@@ -96,6 +96,7 @@ const buildInitialRequest = (src = {}) => {
   const existing = src || {};
   return {
     request_number: existing.request_number || '',
+    online_request_number: existing.online_request_number || '',
     submission: {
       status: existing.submission?.status || existing.submission_status || SUBMISSION_NOT_STARTED,
       note: existing.submission?.note || '',
