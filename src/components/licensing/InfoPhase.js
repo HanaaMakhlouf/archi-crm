@@ -7,11 +7,12 @@ import {
   DOC_STATUS_MISSING, DOC_STATUS_PRESENT, DOC_STATUS_NOT_REQUIRED,
   DOC_STATUS_OPTIONS,
   ONLINE_INFO_OPTIONS, ONLINE_INFO_NOT_SENT, ONLINE_INFO_RECEIVED, ONLINE_INFO_REMINDER_DAYS,
+  ONLINE_INFO_SECTION_KEY, ONLINE_INFO_ROW_LABEL,
 } from '../../constants';
 
 const SK_DOCS = 'licensing.info.documents';
-const SK_ONLINE_INFO = 'licensing.info.online_info';
-const ONLINE_INFO_LABEL = 'בקשת מידע לזמין';
+const SK_ONLINE_INFO = ONLINE_INFO_SECTION_KEY;
+const ONLINE_INFO_LABEL = ONLINE_INFO_ROW_LABEL;
 
 const PERSON_FIELDS = [
   { key: 'name',      label: 'שם',      type: 'text'  },

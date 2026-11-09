@@ -30,6 +30,7 @@ import {
   MEETING_APPROVED,
   CONDITIONS_STATUS_NOT_SENT,
   CONDITIONS_STATUS_PASSED,
+  CONDITIONS_STATUS_RETURNED,
   CONDITIONS_STATUS_RECEIVED,
   QUESTION_ROWS, ANSWER_YES, Q_PUBLIC_USE, Q_RELIEFS, actionRowDefaultStatus,
   ACTION_LABEL_DEPOSIT, ACTION_LABEL_ONLINE_PERMIT, ACTION_LABEL_SUPERVISION, REMOVED_REQUEST_ACTIONS,
@@ -52,8 +53,12 @@ const migrateOnlineInfo = (existing) => {
   if (cond !== CONDITIONS_STATUS_NOT_SENT || existing.info_note_status === INFO_NOTE_SENT) return ONLINE_INFO_SENT;
   return ONLINE_INFO_NOT_SENT;
 };
-const migrateOnlineInfoNote = (existing) =>
-  [existing.info_note_note, existing.conditions_note].filter(Boolean).join(' · ');
+// הועבר לתיקון has no place in the new dropdown (it becomes נשלח), so it's kept in the note.
+const migrateOnlineInfoNote = (existing) => [
+  migrateConditionsPassed(existing.conditions_passed) === CONDITIONS_STATUS_RETURNED ? 'הועבר לתיקון' : '',
+  existing.info_note_note,
+  existing.conditions_note,
+].filter(Boolean).join(' · ');
 
 const buildInitialInfo = (client, src = {}) => {
   const existing = src || {};
@@ -64,6 +69,9 @@ const buildInitialInfo = (client, src = {}) => {
   });
 
   return {
+    // Fields this tab no longer shows (e.g. the old info_note_* / conditions_*)
+    // are kept as saved, so nothing a worker entered is ever dropped.
+    ...existing,
     requesters: existing.requesters?.length
       ? existing.requesters
       : [seedPerson()],
@@ -165,7 +173,7 @@ const buildInitialConfirmation = (src = {}) => ({
     : DEFAULT_CONFIRMATION_ROWS.map(label => newStatusRow(label, DOC_STATUS_MISSING)),
 });
 
-const buildInitialLd = (client) => {
+export const buildInitialLd = (client) => {
   const src = client[FIELD_LICENSING_DATA] || {};
   return {
     info: buildInitialInfo(client, src.info),

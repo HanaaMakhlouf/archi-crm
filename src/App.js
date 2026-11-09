@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useDeferredValue } from 'react';
+import { useState, useEffect, useMemo, useCallback, useDeferredValue, useRef } from 'react';
 import './App.css';
 import './styles/Mobile.css';
 import { supabase } from './supabaseClient';
@@ -21,6 +21,7 @@ import { openClientFolder } from './utils/openClientFolder';
 import { helkaToStrings } from './utils/land';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
+import { calcDaysRemaining } from './notifications/reminderUtils';
 import {
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
   VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, VIEW_ARCHIVE, TAB_ACTIVITY,
@@ -29,6 +30,7 @@ import {
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
   FILE_LINK_2_PATH, ROLE_MANAGER, PRIORITY_RED,
+  ONLINE_INFO_SECTION_KEY, ONLINE_INFO_ROW_LABEL, OLD_ONLINE_INFO_SECTION_KEYS,
 } from './constants';
 
 // Maps a reminder's section_key to the tab + licensing phase to navigate to.
@@ -127,6 +129,37 @@ export default function App() {
   }, []);
 
   useEffect(() => { fetchClients(); fetchReminders(); }, [fetchClients, fetchReminders]);
+
+  // Reminders set on שלח בקשת מידע / האם עבר תנאים מקדמיים (replaced by one
+  // בקשת מידע לזמין row) move onto that row, keeping their due date. Per client
+  // the one due first moves; the rest are dropped. Runs once per session.
+  const movedOldRemindersRef = useRef(false);
+  useEffect(() => {
+    if (isViewer || movedOldRemindersRef.current) return;
+    const old = reminders.filter(r =>
+      OLD_ONLINE_INFO_SECTION_KEYS.includes(r.section_key) && !String(r.id).startsWith('opt_'));
+    if (!old.length) return;
+    movedOldRemindersRef.current = true;
+    (async () => {
+      const dueOrder = (r) => calcDaysRemaining(r) ?? Infinity;
+      for (const clientId of new Set(old.map(r => r.client_id))) {
+        const [first, ...rest] = old.filter(r => r.client_id === clientId).sort((a, b) => dueOrder(a) - dueOrder(b));
+        const alreadyThere = reminders.some(r =>
+          r.client_id === clientId && r.section_key === ONLINE_INFO_SECTION_KEY && r.row_label === ONLINE_INFO_ROW_LABEL);
+        const toDelete = alreadyThere ? [first, ...rest] : rest;
+        if (!alreadyThere) {
+          const { error } = await supabase.from(TABLE_ROW_REMINDERS)
+            .update({ section_key: ONLINE_INFO_SECTION_KEY, row_label: ONLINE_INFO_ROW_LABEL })
+            .eq('id', first.id);
+          if (error) { console.error('Move reminder error:', error.message); continue; }
+        }
+        if (toDelete.length) {
+          await supabase.from(TABLE_ROW_REMINDERS).delete().in('id', toDelete.map(r => r.id));
+        }
+      }
+      fetchReminders();
+    })();
+  }, [reminders, isViewer, fetchReminders]);
 
   // Keep selectedClient in sync after any client list update
   useEffect(() => {

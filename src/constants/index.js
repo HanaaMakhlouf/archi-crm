@@ -114,6 +114,12 @@ export const ONLINE_INFO_OPTIONS = [
   { value: ONLINE_INFO_RECEIVED, label: 'התקבל' },
 ];
 
+// Its reminders' section / row, and the sections of the two rows it replaced
+// (their reminders are moved onto it — see App.js).
+export const ONLINE_INFO_SECTION_KEY = 'licensing.info.online_info';
+export const ONLINE_INFO_ROW_LABEL = 'בקשת מידע לזמין';
+export const OLD_ONLINE_INFO_SECTION_KEYS = ['licensing.info.info_note', 'licensing.info.conditions'];
+
 // The reminder (in days) each status sets automatically; התקבל clears it.
 export const ONLINE_INFO_REMINDER_DAYS = {
   [ONLINE_INFO_NOT_SENT]: 1,

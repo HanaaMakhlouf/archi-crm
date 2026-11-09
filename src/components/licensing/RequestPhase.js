@@ -164,14 +164,17 @@ const actionRowSelect = (row) => {
 };
 
 // תקנה and פרסום עזבון share their first two steps: setting either one to
-// הפקת נוסח or הופק נוסח sets the other to it as well.
+// הפקת נוסח or הופק נוסח sets the other to it as well — but only while the
+// other is itself still at one of those steps, so its later progress is never undone.
 const TEXT_ROWS = [ACTION_LABEL_TAKANA, ACTION_LABEL_ESTATE_NOTICE];
 const SHARED_TEXT_STEPS = [TEXT_STATUS_PREPARING, TEXT_STATUS_READY];
-const syncTextRows = (prev, next) => {
+export const syncTextRows = (prev, next) => {
   const changed = next.find(a => TEXT_ROWS.includes(a.label) && SHARED_TEXT_STEPS.includes(a.status)
     && prev.find(p => p.label === a.label)?.status !== a.status);
   if (!changed) return next;
-  return next.map(a => (TEXT_ROWS.includes(a.label) && a.label !== changed.label ? { ...a, status: changed.status } : a));
+  return next.map(a => (TEXT_ROWS.includes(a.label) && a.label !== changed.label && SHARED_TEXT_STEPS.includes(a.status)
+    ? { ...a, status: changed.status }
+    : a));
 };
 
 const isActionDone = (a) => (ROW_SELECTS[a.label]
