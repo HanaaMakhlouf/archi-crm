@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { PRIORITY_OPTIONS, PRIORITY_GREEN } from '../constants';
+import { PRIORITY_OPTIONS, PRIORITY_GREEN, priorityOf } from '../constants';
 
 // Small color-coded priority dot. Read-only for most roles; when `editable`,
 // clicking it opens a small custom popover (colored dot + label per option) —
@@ -8,7 +8,7 @@ import { PRIORITY_OPTIONS, PRIORITY_GREEN } from '../constants';
 export default function PriorityDot({ value, editable, onChange, size = 14 }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
-  const opt = PRIORITY_OPTIONS.find(o => o.value === value) || PRIORITY_OPTIONS.find(o => o.value === PRIORITY_GREEN);
+  const opt = PRIORITY_OPTIONS.find(o => o.value === priorityOf(value)) || PRIORITY_OPTIONS.find(o => o.value === PRIORITY_GREEN);
 
   useEffect(() => {
     if (!open) return;

@@ -1,11 +1,12 @@
-import { PRIORITY_OPTIONS } from '../constants';
+import { PRIORITY_GREEN, PRIORITY_YELLOW, PRIORITY_RED, priorityOf } from '../constants';
 
 // Clients list: newest first unless a column says otherwise.
 export const DEFAULT_SORT = { key: 'created', dir: 'desc' };
 
 const cityOf = (c) => (c.city || '').trim();
-// 0 = נמוכה … 3 = דחופה; -1 = no priority set.
-const priorityRank = (c) => PRIORITY_OPTIONS.findIndex(o => o.value === c.priority);
+// 0 = נמוכה, 1 = בינונית, 2 = דחופה; -1 = מושהה or no priority (always last).
+const PRIORITY_LEVELS = [PRIORITY_GREEN, PRIORITY_YELLOW, PRIORITY_RED];
+const priorityRank = (c) => PRIORITY_LEVELS.indexOf(priorityOf(c.priority));
 // עדכון אחרון: a client never edited since it was added counts from its creation.
 const lastTouched = (c) => new Date(c.last_updated_at || c.created_at);
 
@@ -35,7 +36,7 @@ export function matchesSearch(client, search) {
 // Filters and sorts the clients table.
 // filters: { search, type } ('' = off)
 // sort:    { key: 'name' | 'city' | 'priority' | 'updated' | 'created', dir: 'asc' | 'desc' }
-// Clients without a city (or priority) go last when sorting by it, in either direction.
+// Clients without a city (or priority, or מושהה) go last when sorting by it, in either direction.
 export function filterAndSortClients(clients, filters, sort = DEFAULT_SORT) {
   const { search = '', type } = filters;
 

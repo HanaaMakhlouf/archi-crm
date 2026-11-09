@@ -519,14 +519,19 @@ export const BRAND_TAGLINE = 'ניהול משרד פשוט וברור';
 // ── CLIENT PRIORITY ── (managers/admins only — see App.js)
 export const PRIORITY_GREEN = 'green';
 export const PRIORITY_YELLOW = 'yellow';
-export const PRIORITY_ORANGE = 'orange';
+export const PRIORITY_ORANGE = 'orange'; // גבוהה — no longer offered; reads as בינונית
 export const PRIORITY_RED = 'red';
+export const PRIORITY_ON_HOLD = 'on_hold';
 export const PRIORITY_OPTIONS = [
-  { value: PRIORITY_GREEN,  label: 'נמוכה',  color: '#2e7d32' },
-  { value: PRIORITY_YELLOW, label: 'בינונית', color: '#fbc02d' },
-  { value: PRIORITY_ORANGE, label: 'גבוהה',  color: '#ef6c00' },
-  { value: PRIORITY_RED,    label: 'דחופה',  color: '#c62828' },
+  { value: PRIORITY_GREEN,   label: 'נמוכה',  color: '#2e7d32' },
+  { value: PRIORITY_YELLOW,  label: 'בינונית', color: '#fbc02d' },
+  { value: PRIORITY_RED,     label: 'דחופה',  color: '#c62828' },
+  { value: PRIORITY_ON_HOLD, label: 'מושהה',  color: '#9e9e9e' },
 ];
+// Clients saved as גבוהה show and sort as בינונית.
+export const priorityOf = (value) => (value === PRIORITY_ORANGE ? PRIORITY_YELLOW : value);
+// Kept so the change history still reads old values in Hebrew.
+export const PRIORITY_OLD_OPTIONS = [{ value: PRIORITY_ORANGE, label: 'גבוהה' }];
 
 // ── SHARED FIELD GROUPS ──
 // Land/property fields that live directly on the client row (single source of truth

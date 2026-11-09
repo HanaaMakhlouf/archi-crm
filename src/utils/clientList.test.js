@@ -1,5 +1,5 @@
 import { filterAndSortClients, matchesSearch, DEFAULT_SORT } from './clientList';
-import { PRIORITY_GREEN, PRIORITY_ORANGE, PRIORITY_RED } from '../constants';
+import { PRIORITY_GREEN, PRIORITY_YELLOW, PRIORITY_ORANGE, PRIORITY_RED, PRIORITY_ON_HOLD } from '../constants';
 
 // Local-time timestamps.
 const at = (day, time = '12:00') => new Date(`${day}T${time}`).toISOString();
@@ -37,6 +37,19 @@ describe('filterAndSortClients', () => {
   it('sorts by priority both ways, clients without a priority last', () => {
     expect(run({}, { key: 'priority', dir: 'desc' })).toEqual([1, 4, 5, 2, 3]);
     expect(run({}, { key: 'priority', dir: 'asc' })).toEqual([2, 5, 1, 4, 3]);
+  });
+
+  it('sorts מושהה last both ways, and the old גבוהה as בינונית', () => {
+    const list = [
+      { id: 1, name: 'א', priority: PRIORITY_ON_HOLD, created_at: at('2026-10-01') },
+      { id: 2, name: 'ב', priority: PRIORITY_RED, created_at: at('2026-10-02') },
+      { id: 3, name: 'ג', priority: PRIORITY_ORANGE, created_at: at('2026-10-03') },
+      { id: 4, name: 'ד', priority: PRIORITY_YELLOW, created_at: at('2026-10-04') },
+      { id: 5, name: 'ה', priority: PRIORITY_GREEN, created_at: at('2026-10-05') },
+    ];
+    const sorted = (dir) => ids(filterAndSortClients([...list], {}, { key: 'priority', dir }));
+    expect(sorted('desc')).toEqual([2, 3, 4, 5, 1]);
+    expect(sorted('asc')).toEqual([5, 3, 4, 2, 1]);
   });
 
   it('finds clients by search', () => {
