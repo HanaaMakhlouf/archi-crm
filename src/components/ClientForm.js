@@ -40,6 +40,14 @@ export default function ClientForm({
     [form]
   );
 
+  // Esc in the unsaved-changes dialog = המשך עריכה.
+  useEffect(() => {
+    if (!showDiscardConfirm) return;
+    const onKey = (e) => { if (e.key === 'Escape' && !saving) setShowDiscardConfirm(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showDiscardConfirm, saving]);
+
   const handleBack = () => {
     if (isDirty) {
       setShowDiscardConfirm(true);
@@ -290,18 +298,20 @@ export default function ClientForm({
       </form>
 
       {showDiscardConfirm && (
-        <div className="discard-overlay">
-          <div className="discard-dialog">
-            <p>יש שינויים שלא נשמרו. לבטל אותם?</p>
+        // A click on the dimmed background, like Esc, keeps editing.
+        <div className="discard-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget && !saving) setShowDiscardConfirm(false); }}>
+          <div className="discard-dialog" role="alertdialog" aria-labelledby="discard-title" aria-describedby="discard-text">
+            <h3 id="discard-title">שינויים שלא נשמרו</h3>
+            <p id="discard-text">לשמור את השינויים לפני היציאה?</p>
             <div className="discard-actions">
-              <button className="btn btn-ghost" disabled={saving} onClick={() => setShowDiscardConfirm(false)}>
+              <button type="button" className="btn btn-primary" disabled={saving} onClick={handleSaveFromDialog} autoFocus>
+                {saving ? 'שומר...' : 'שמירה'}
+              </button>
+              <button type="button" className="btn btn-danger" disabled={saving} onClick={onCancel}>
+                יציאה בלי לשמור
+              </button>
+              <button type="button" className="btn btn-ghost" disabled={saving} onClick={() => setShowDiscardConfirm(false)}>
                 המשך עריכה
-              </button>
-              <button className="btn btn-danger" disabled={saving} onClick={onCancel}>
-                בטל שינויים
-              </button>
-              <button className="btn btn-primary" disabled={saving} onClick={handleSaveFromDialog}>
-                {saving ? 'שומר...' : 'שמור שינויים'}
               </button>
             </div>
           </div>

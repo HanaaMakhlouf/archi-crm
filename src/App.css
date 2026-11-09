@@ -1203,23 +1203,33 @@ textarea {
 .discard-dialog {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
-  padding: 30px 32px;
-  max-width: 360px;
-  width: 90%;
+  padding: 26px 28px 24px;
+  max-width: 460px;
+  width: calc(100% - 32px);
+  box-sizing: border-box;
   text-align: center;
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--color-border);
 }
 
-.discard-dialog p {
-  margin: 0 0 20px;
-  font-size: 16px;
-  font-weight: 500;
+.discard-dialog h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
 }
 
+.discard-dialog p {
+  margin: 0 0 22px;
+  font-size: 15px;
+  color: var(--color-text-muted);
+}
+
+/* Three choices; they wrap onto two lines rather than spill out of a narrow window */
 .discard-actions {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
   justify-content: center;
 }
 

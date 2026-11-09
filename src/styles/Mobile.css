@@ -134,6 +134,11 @@
 
   .docs-table td:nth-child(2) { width: 100%; }
 
+  /* מידע's fixed תזכורת column and בקשת מידע לזמין's number box are for wide screens */
+  .info-phase .docs-table td:last-child { width: 100%; }
+  .online-info-fields { flex-wrap: wrap; }
+  .docs-table .online-info-fields .online-info-number { flex: 1 1 100%; }
+
   .docs-table .status-badge-wrap {
     width: 100%;
     display: flex;
