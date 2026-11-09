@@ -41,6 +41,8 @@
   --color-warning-light: #f8efdc;
   --color-blue: #3f6c86;
   --color-blue-light: #e5eef3;
+  --color-yellow: #7a6400;
+  --color-yellow-light: #fbf3c4;
   --color-neutral-text: #4b5552;
   --color-neutral-light: #eef0f2;
 
@@ -93,6 +95,8 @@
   --color-warning-light: rgba(184, 134, 47, 0.18);
   --color-blue: #7fa9c4;
   --color-blue-light: rgba(58, 107, 138, 0.2);
+  --color-yellow: #e6cf5c;
+  --color-yellow-light: rgba(214, 186, 40, 0.2);
   --color-neutral-text: #b6bfbb;
   --color-neutral-light: rgba(150, 165, 160, 0.12);
 
@@ -2586,6 +2590,10 @@ textarea {
   background: var(--color-blue-light);
 }
 
+.status-badge-yellow {
+  background: var(--color-yellow-light);
+}
+
 .docs-table .status-badge-blue select {
   background: var(--color-blue-light);
   color: var(--color-blue);
@@ -2609,6 +2617,11 @@ textarea {
 .docs-table .status-badge-gray select {
   background: var(--color-neutral-light);
   color: var(--color-neutral-text);
+}
+
+.docs-table .status-badge-yellow select {
+  background: var(--color-yellow-light);
+  color: var(--color-yellow);
 }
 
 .submission-stepper {

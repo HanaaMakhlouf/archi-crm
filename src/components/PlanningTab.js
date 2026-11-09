@@ -12,19 +12,39 @@ const NOT_REQUIRED = 'not_required';
 
 // ── Status options ──
 
+// מוכן is split in two: מוכן לעיון (yellow), then מוכן לביצוע (green) — which
+// keeps the old מוכן's code, so rows saved as מוכן read as מוכן לביצוע.
+const STATUS_READY_FOR_REVIEW = 'ready_for_review';
+const READY_FOR_REVIEW = { value: STATUS_READY_FOR_REVIEW, label: 'מוכן לעיון' };
+const READY_TO_BUILD = { value: STATUS_READY, label: 'מוכן לביצוע' };
+
 export const OFFER_OPTIONS = [
   { value: NOT_REQUIRED,       label: 'לא נדרש' },
   { value: STATUS_NOT_STARTED, label: 'לא התחלנו' },
   { value: STATUS_IN_PROGRESS, label: 'בסדר עבודה' },
-  { value: STATUS_READY,       label: 'מוכן' },
-  { value: STATUS_AGREED,      label: 'מאושר' },
+  READY_FOR_REVIEW,
+  READY_TO_BUILD,
 ];
 const OFFER_COLORS = {
-  [NOT_REQUIRED]:       'gray',
-  [STATUS_NOT_STARTED]: 'red',
-  [STATUS_IN_PROGRESS]: 'orange',
-  [STATUS_READY]:       'green',
-  [STATUS_AGREED]:      'green',
+  [NOT_REQUIRED]:            'gray',
+  [STATUS_NOT_STARTED]:      'red',
+  [STATUS_IN_PROGRESS]:      'orange',
+  [STATUS_READY_FOR_REVIEW]: 'yellow',
+  [STATUS_READY]:            'green',
+};
+
+// מים / חשמל
+const REVIEW_OPTIONS = [
+  { value: NOT_REQUIRED,     label: 'לא נדרש' },
+  { value: STATUS_NOT_READY, label: 'לא מוכן' },
+  READY_FOR_REVIEW,
+  READY_TO_BUILD,
+];
+const REVIEW_COLORS = {
+  [NOT_REQUIRED]:            'gray',
+  [STATUS_NOT_READY]:        'red',
+  [STATUS_READY_FOR_REVIEW]: 'yellow',
+  [STATUS_READY]:            'green',
 };
 
 export const DISCIPLINE_OPTIONS = [
@@ -44,20 +64,23 @@ export const WORK_PLANS_OPTIONS = [
   { value: NOT_REQUIRED,       label: 'לא נדרש' },
   { value: STATUS_NOT_STARTED, label: 'לא התחלנו' },
   { value: STATUS_IN_PROGRESS, label: 'בסדר עבודה' },
-  { value: STATUS_SCHEMATIC,   label: 'סכימתי' },
-  { value: STATUS_READY,       label: 'מוכן' },
+  { value: STATUS_SCHEMATIC,   label: 'נמסר לעיון' }, // was סכימתי
+  READY_FOR_REVIEW,
+  READY_TO_BUILD,
 ];
 const WORK_PLANS_COLORS = {
-  [NOT_REQUIRED]:       'gray',
-  [STATUS_NOT_STARTED]: 'red',
-  [STATUS_IN_PROGRESS]: 'orange',
-  [STATUS_SCHEMATIC]:   'blue',
-  [STATUS_READY]:       'green',
+  [NOT_REQUIRED]:            'gray',
+  [STATUS_NOT_STARTED]:      'red',
+  [STATUS_IN_PROGRESS]:      'orange',
+  [STATUS_SCHEMATIC]:        'blue',
+  [STATUS_READY_FOR_REVIEW]: 'yellow',
+  [STATUS_READY]:            'green',
 };
 
 // Each row's dropdown comes from its `scale` (default: לא מוכן / מוכן).
 const SCALES = {
   offer:      { options: OFFER_OPTIONS,      statusColors: OFFER_COLORS },
+  review:     { options: REVIEW_OPTIONS,     statusColors: REVIEW_COLORS },
   work_plans: { options: WORK_PLANS_OPTIONS, statusColors: WORK_PLANS_COLORS },
   discipline: { options: DISCIPLINE_OPTIONS, statusColors: DISCIPLINE_COLORS },
 };
@@ -95,8 +118,9 @@ const archSectionFor = (rowLabel) => {
 // ── Initial state builder (with backward-compat migration) ──
 // Shape: see FIELD_PLANNING_DATA in constants.
 
+// מאושר is gone: rows saved with it become מוכן לביצוע, the green final step.
 const entry = (e, fallbackStatus, fallbackNotes = '') => ({
-  status: (e?.status === STATUS_READY_SIMPLE ? STATUS_READY : e?.status) || fallbackStatus,
+  status: ([STATUS_READY_SIMPLE, STATUS_AGREED].includes(e?.status) ? STATUS_READY : e?.status) || fallbackStatus,
   notes: e?.notes ?? fallbackNotes,
 });
 
@@ -141,12 +165,12 @@ const buildInitialPd = (client) => {
 };
 
 // For the clients list: which planning stage this client is currently at
-// (furthest table in progress — visualization only once the offer is agreed).
+// (furthest table in progress — visualization only once the offer is מוכן לביצוע).
 export function getCurrentPlanningStageLabel(client) {
   const pd = buildInitialPd(client);
   if (!pd.architecture_required) return 'אדריכלות - לא נדרש';
   const label = (status) => OFFER_OPTIONS.find(o => o.value === status)?.label || '';
-  if (pd.tables.offer.status !== STATUS_AGREED) {
+  if (pd.tables.offer.status !== STATUS_READY) {
     return `${LABEL_OFFER} - ${label(pd.tables.offer.status)}`;
   }
   return `${LABEL_VIZ} - ${label(pd.tables.visualization.status)}`;
@@ -227,8 +251,8 @@ export default function PlanningTab({ client, onUpdate, reminders = [], onRemind
     { id: 'offer',       label: LABEL_OFFER,     scale: 'offer', optional: true, ...tables.offer },
     { id: 'viz',         label: LABEL_VIZ,       scale: 'offer', optional: true, ...tables.visualization },
     { id: 'work_plan',   label: 'תוכנית עבודה', scale: 'offer', optional: true, ...tables.work_plan },
-    { id: 'water',       label: 'מים',           optional: true, ...tables.disciplines.water },
-    { id: 'electricity', label: 'חשמל',          optional: true, ...tables.disciplines.electricity },
+    { id: 'water',       label: 'מים',           scale: 'review', optional: true, ...tables.disciplines.water },
+    { id: 'electricity', label: 'חשמל',          scale: 'review', optional: true, ...tables.disciplines.electricity },
     ...tables.architecture_extra.map(r => ({ ...r, optional: true, extra: true })),
   ];
 
