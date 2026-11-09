@@ -225,10 +225,10 @@ export const TAKANA_STATUS_OPTIONS = [
   { value: TEXT_STATUS_RECEIVED, label: 'התקבל' },
   { value: ACTION_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
 ];
-export const ESTATE_NOTICE_STATUS_OPTIONS = [
-  { value: TEXT_STATUS_PREPARING, label: 'הפקת נוסח' },
-  { value: ACTION_STATUS_SENT, label: 'נשלח' },
-  { value: TEXT_STATUS_RECEIVED, label: 'התקבל' },
+// פרסום עזבון has the same dropdown as תקנה.
+export const ESTATE_NOTICE_STATUS_OPTIONS = TAKANA_STATUS_OPTIONS;
+// No longer offered; kept so rows and history saved with it still read in Hebrew.
+export const ESTATE_NOTICE_OLD_STATUS_OPTIONS = [
   { value: TEXT_STATUS_NOT_RECEIVED, label: 'לא התקבל' },
 ];
 // Statuses saved under the old generic dropdown, in each row's new terms.

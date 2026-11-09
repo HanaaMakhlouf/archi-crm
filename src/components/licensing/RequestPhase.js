@@ -18,7 +18,7 @@ import {
   ACTION_LABEL_ONLINE_PERMIT, ONLINE_PERMIT_STATUS_OPTIONS, ONLINE_PERMIT_STATUS_DRAFT, ONLINE_PERMIT_STATUS_RETURNED,
   ACTION_LABEL_SUPERVISION, SUPERVISION_STATUS_OPTIONS, SUPERVISION_STATUS_DELIVERED,
   ACTION_LABEL_BUILDING_ASSIGN, BUILDING_ASSIGN_STATUS_OPTIONS, BUILDING_ASSIGN_STATUS_SIGNED,
-  ACTION_LABEL_TAKANA, ACTION_LABEL_ESTATE_NOTICE, TAKANA_STATUS_OPTIONS, ESTATE_NOTICE_STATUS_OPTIONS,
+  ACTION_LABEL_TAKANA, ACTION_LABEL_ESTATE_NOTICE, TAKANA_STATUS_OPTIONS, ESTATE_NOTICE_OLD_STATUS_OPTIONS,
   TEXT_STATUS_PREPARING, TEXT_STATUS_READY, TEXT_STATUS_CONTACTED, TEXT_STATUS_TO_COURIER,
   TEXT_STATUS_RECEIVED, TEXT_STATUS_NOT_RECEIVED,
 } from '../../constants';
@@ -111,7 +111,9 @@ const BUILDING_ASSIGN_SELECT = {
   doneValues: [BUILDING_ASSIGN_STATUS_SIGNED, ACTION_STATUS_NOT_REQUIRED],
 };
 
-const TAKANA_SELECT = {
+// תקנה and פרסום עזבון: one dropdown. נשלח / לא התקבל are only on פרסום עזבון
+// rows saved before, and keep their colours.
+const TEXT_ROW_SELECT = {
   options: TAKANA_STATUS_OPTIONS,
   statusColors: {
     [TEXT_STATUS_PREPARING]:      'red',
@@ -120,19 +122,8 @@ const TAKANA_SELECT = {
     [TEXT_STATUS_TO_COURIER]:     'orange',
     [TEXT_STATUS_RECEIVED]:       'green',
     [ACTION_STATUS_NOT_REQUIRED]: 'gray',
-  },
-  doneValues: [TEXT_STATUS_RECEIVED, ACTION_STATUS_NOT_REQUIRED],
-};
-
-// לא נדרש isn't offered any more, but a row already set to it still counts as done.
-const ESTATE_NOTICE_SELECT = {
-  options: ESTATE_NOTICE_STATUS_OPTIONS,
-  statusColors: {
-    [TEXT_STATUS_PREPARING]:      'red',
     [ACTION_STATUS_SENT]:         'orange',
-    [TEXT_STATUS_RECEIVED]:       'green',
     [TEXT_STATUS_NOT_RECEIVED]:   'red',
-    [ACTION_STATUS_NOT_REQUIRED]: 'gray',
   },
   doneValues: [TEXT_STATUS_RECEIVED, ACTION_STATUS_NOT_REQUIRED],
 };
@@ -155,15 +146,16 @@ const ROW_SELECTS = {
   [ACTION_LABEL_ONLINE_PERMIT]: ONLINE_PERMIT_SELECT,
   [ACTION_LABEL_SUPERVISION]: SUPERVISION_SELECT,
   [ACTION_LABEL_BUILDING_ASSIGN]: BUILDING_ASSIGN_SELECT,
-  [ACTION_LABEL_TAKANA]: TAKANA_SELECT,
-  [ACTION_LABEL_ESTATE_NOTICE]: ESTATE_NOTICE_SELECT,
+  [ACTION_LABEL_TAKANA]: TEXT_ROW_SELECT,
+  [ACTION_LABEL_ESTATE_NOTICE]: TEXT_ROW_SELECT,
   [ACTION_LABEL_TRANSPORT]: TRANSPORT_SELECT,
   ...Object.fromEntries(RELIEF_ACTIONS.map(label => [label, RELIEF_SELECT])),
 };
 
 // A row's own dropdown; a saved status that isn't in it any more stays listed.
 const ACTION_STATUS_LABELS = Object.fromEntries(
-  [ACTION_STATUS_OPTIONS, ...Object.values(ROW_SELECTS).map(s => s.options)].flat().map(o => [o.value, o.label]),
+  [ACTION_STATUS_OPTIONS, ...Object.values(ROW_SELECTS).map(s => s.options), ESTATE_NOTICE_OLD_STATUS_OPTIONS]
+    .flat().map(o => [o.value, o.label]),
 );
 const actionRowSelect = (row) => {
   const select = ROW_SELECTS[row.label];
@@ -171,12 +163,15 @@ const actionRowSelect = (row) => {
   return { ...select, options: [...select.options, { value: row.status, label: ACTION_STATUS_LABELS[row.status] || row.status }] };
 };
 
-// Setting תקנה to הפקת נוסח sets פרסום עזבון to it as well.
-const syncEstateNotice = (prev, next) => {
-  const takana = next.find(a => a.label === ACTION_LABEL_TAKANA);
-  const wasPreparing = prev.find(a => a.label === ACTION_LABEL_TAKANA)?.status === TEXT_STATUS_PREPARING;
-  if (takana?.status !== TEXT_STATUS_PREPARING || wasPreparing) return next;
-  return next.map(a => (a.label === ACTION_LABEL_ESTATE_NOTICE ? { ...a, status: TEXT_STATUS_PREPARING } : a));
+// תקנה and פרסום עזבון share their first two steps: setting either one to
+// הפקת נוסח or הופק נוסח sets the other to it as well.
+const TEXT_ROWS = [ACTION_LABEL_TAKANA, ACTION_LABEL_ESTATE_NOTICE];
+const SHARED_TEXT_STEPS = [TEXT_STATUS_PREPARING, TEXT_STATUS_READY];
+const syncTextRows = (prev, next) => {
+  const changed = next.find(a => TEXT_ROWS.includes(a.label) && SHARED_TEXT_STEPS.includes(a.status)
+    && prev.find(p => p.label === a.label)?.status !== a.status);
+  if (!changed) return next;
+  return next.map(a => (TEXT_ROWS.includes(a.label) && a.label !== changed.label ? { ...a, status: changed.status } : a));
 };
 
 const isActionDone = (a) => (ROW_SELECTS[a.label]
@@ -275,7 +270,7 @@ export default function RequestPhase({ request, conditionsPassed, onChange, onAn
           title="פעולות"
           rows={actions}
           columns={ACTION_COLUMNS}
-          onChange={(next) => patch('actions', mergeShownRows(request.actions, syncEstateNotice(actions, next), 'actions', request))}
+          onChange={(next) => patch('actions', mergeShownRows(request.actions, syncTextRows(actions, next), 'actions', request))}
           reminders={sectionReminders(SK_ACTIONS)}
           onReminderChange={onReminderChange?.(SK_ACTIONS)}
           footer={(
