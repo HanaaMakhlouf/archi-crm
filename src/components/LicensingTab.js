@@ -18,7 +18,8 @@ import {
   LICENSING_PHASES,
   LICENSING_DOCUMENTS,
   DOC_STATUS_MISSING,
-  INFO_NOTE_NOT_SENT,
+  INFO_NOTE_SENT,
+  ONLINE_INFO_NOT_SENT, ONLINE_INFO_SENT, ONLINE_INFO_PASSED, ONLINE_INFO_RECEIVED,
   SUBMISSION_NOT_STARTED,
   DEFAULT_REQUEST_ACTIONS,
   PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_SIGNED,
@@ -28,6 +29,7 @@ import {
   DEFAULT_CONFIRMATION_ROWS,
   MEETING_APPROVED,
   CONDITIONS_STATUS_NOT_SENT,
+  CONDITIONS_STATUS_PASSED,
   CONDITIONS_STATUS_RECEIVED,
   QUESTION_ROWS, ANSWER_YES, Q_PUBLIC_USE, Q_RELIEFS, actionRowDefaultStatus,
   ACTION_LABEL_DEPOSIT, ACTION_LABEL_ONLINE_PERMIT, ACTION_LABEL_SUPERVISION, REMOVED_REQUEST_ACTIONS,
@@ -40,6 +42,18 @@ const migrateConditionsPassed = (val) => {
   if (typeof val === 'string' && val.startsWith('cond_')) return val;
   return CONDITIONS_STATUS_NOT_SENT;
 };
+
+// Clients saved before בקשת מידע לזמין: the old שלח בקשת מידע + תנאים מקדמיים
+// rows become its status, and their notes its note.
+const migrateOnlineInfo = (existing) => {
+  const cond = migrateConditionsPassed(existing.conditions_passed);
+  if (cond === CONDITIONS_STATUS_RECEIVED) return ONLINE_INFO_RECEIVED;
+  if (cond === CONDITIONS_STATUS_PASSED) return ONLINE_INFO_PASSED;
+  if (cond !== CONDITIONS_STATUS_NOT_SENT || existing.info_note_status === INFO_NOTE_SENT) return ONLINE_INFO_SENT;
+  return ONLINE_INFO_NOT_SENT;
+};
+const migrateOnlineInfoNote = (existing) =>
+  [existing.info_note_note, existing.conditions_note].filter(Boolean).join(' · ');
 
 const buildInitialInfo = (client, src = {}) => {
   const existing = src || {};
@@ -61,10 +75,9 @@ const buildInitialInfo = (client, src = {}) => {
       const found = existing.documents?.find(x => x.type === d.type);
       return found || { type: d.type, status: DOC_STATUS_MISSING, note: '' };
     }),
-    info_note_status: existing.info_note_status || INFO_NOTE_NOT_SENT,
-    info_note_note: existing.info_note_note || '',
-    conditions_passed: migrateConditionsPassed(existing.conditions_passed),
-    conditions_note: existing.conditions_note || '',
+    online_info_status: existing.online_info_status || migrateOnlineInfo(existing),
+    online_info_number: existing.online_info_number || '',
+    online_info_note: existing.online_info_note ?? migrateOnlineInfoNote(existing),
   };
 };
 
@@ -165,7 +178,7 @@ const buildInitialLd = (client) => {
 // Derives the real current phase from progress, so the stepper always opens
 // on where the client actually stands rather than whatever was last clicked.
 const computeCurrentPhase = (ld) => {
-  const conditionsPassed = ld.info.conditions_passed === CONDITIONS_STATUS_RECEIVED;
+  const conditionsPassed = ld.info.online_info_status === ONLINE_INFO_RECEIVED;
   const meetingApproved = ld.application.meeting?.status === MEETING_APPROVED;
   const conditionsComplete = ld.conditions.permit_status === PERMIT_STATUS_SIGNED && ld.conditions.needs_start_approval !== null;
   if (!conditionsPassed) return LICENSING_PHASE_INFO;
@@ -239,7 +252,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
 
   // GrayOut reset: conditionsPassed controls פעולות + ישיבה tables in RequestPhase.
   // This MUST live in LicensingTab (always mounted) — RequestPhase unmounts when not on the application phase.
-  const conditionsPassed = ld.info.conditions_passed === CONDITIONS_STATUS_RECEIVED;
+  const conditionsPassed = ld.info.online_info_status === ONLINE_INFO_RECEIVED;
   useOnLock(conditionsPassed, () => {
     onClearReminders?.('licensing.application.actions');
     onClearReminders?.('licensing.application.meeting');

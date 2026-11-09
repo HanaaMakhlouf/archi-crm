@@ -12,3 +12,8 @@ export function useOnLock(unlocked, onLock) {
     prev.current = unlocked;
   }, [unlocked]);
 }
+
+// Runs onUnlock when `unlocked` turns from false to true — a section opens up.
+export function useOnUnlock(unlocked, onUnlock) {
+  useOnLock(!unlocked, onUnlock);
+}

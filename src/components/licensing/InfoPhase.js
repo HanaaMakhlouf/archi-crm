@@ -1,19 +1,17 @@
 import { Fragment } from 'react';
-import { useOnLock } from '../../utils/useOnLock';
+import { useOnLock, useOnUnlock } from '../../utils/useOnLock';
 import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
 import {
   LICENSING_DOCUMENTS,
   DOC_STATUS_MISSING, DOC_STATUS_PRESENT, DOC_STATUS_NOT_REQUIRED,
-  INFO_NOTE_SENT, INFO_NOTE_NOT_SENT,
-  DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS,
-  CONDITIONS_STATUS_OPTIONS, CONDITIONS_STATUS_RECEIVED,
-  CONDITIONS_STATUS_NOT_SENT,
+  DOC_STATUS_OPTIONS,
+  ONLINE_INFO_OPTIONS, ONLINE_INFO_NOT_SENT, ONLINE_INFO_RECEIVED, ONLINE_INFO_REMINDER_DAYS,
 } from '../../constants';
 
 const SK_DOCS = 'licensing.info.documents';
-const SK_INFO_NOTE = 'licensing.info.info_note';
-const SK_CONDITIONS = 'licensing.info.conditions';
+const SK_ONLINE_INFO = 'licensing.info.online_info';
+const ONLINE_INFO_LABEL = 'בקשת מידע לזמין';
 
 const PERSON_FIELDS = [
   { key: 'name',      label: 'שם',      type: 'text'  },
@@ -30,26 +28,6 @@ const DOC_COLUMNS = [
     statusColors: { [DOC_STATUS_PRESENT]: 'green', [DOC_STATUS_MISSING]: 'red', [DOC_STATUS_NOT_REQUIRED]: 'gray' }
   },
   { key: 'note', type: 'input', header: 'הערה', placeholder: '—' },
-  { key: 'reminder', type: 'reminder', header: 'תזכורת' },
-];
-
-const INFO_NOTE_COLUMNS = [
-  { key: 'label', type: 'text' },
-  {
-    key: 'status', type: 'select', options: INFO_NOTE_OPTIONS,
-    statusColors: { [INFO_NOTE_SENT]: 'green', [INFO_NOTE_NOT_SENT]: 'gray' }
-  },
-  { key: 'note', type: 'input', placeholder: 'הערה' },
-  { key: 'reminder', type: 'reminder', header: 'תזכורת' },
-];
-
-const CONDITIONS_COLUMNS = [
-  { key: 'label', type: 'text' },
-  {
-    key: 'status', type: 'select', options: CONDITIONS_STATUS_OPTIONS,
-    statusColors: { [CONDITIONS_STATUS_RECEIVED]: 'green', [CONDITIONS_STATUS_NOT_SENT]: 'gray' }
-  },
-  { key: 'note', type: 'input', placeholder: 'הערה' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
@@ -128,9 +106,46 @@ export default function InfoPhase({ info, onChange, reminders = [], onReminderCh
   const patch = (key, value) => onChange({ [key]: value });
 
   const allDocumentsDone = info.documents.every(d => d.status !== DOC_STATUS_MISSING);
-  const infoNoteSent = info.info_note_status === INFO_NOTE_SENT;
+  const onlineInfo = info.online_info_status;
+  const onlineInfoReceived = onlineInfo === ONLINE_INFO_RECEIVED;
+  const setOnlineInfoReminder = (days) => onReminderChange?.(SK_ONLINE_INFO)?.(ONLINE_INFO_LABEL, days);
 
-  useOnLock(allDocumentsDone, () => onClearReminders?.(SK_INFO_NOTE));
+  // Unlocked while still טרם נשלח → a 1-day reminder; locked again → cleared.
+  useOnUnlock(allDocumentsDone, () => {
+    if (onlineInfo === ONLINE_INFO_NOT_SENT) setOnlineInfoReminder(ONLINE_INFO_REMINDER_DAYS[ONLINE_INFO_NOT_SENT]);
+  });
+  useOnLock(allDocumentsDone, () => onClearReminders?.(SK_ONLINE_INFO));
+
+  // Each status sets its own reminder (התקבל, the last option, is cleared by StatusTable).
+  const changeOnlineInfo = ([row]) => {
+    onChange({ online_info_status: row.status, online_info_note: row.note });
+    const days = ONLINE_INFO_REMINDER_DAYS[row.status];
+    if (row.status !== onlineInfo && days) setOnlineInfoReminder(days);
+  };
+
+  // From נשלח on, the request's number in זמין — kept through התקבל.
+  const onlineInfoColumns = [
+    { key: 'label', type: 'text' },
+    {
+      key: 'status', type: 'select', options: ONLINE_INFO_OPTIONS,
+      statusColors: { [ONLINE_INFO_RECEIVED]: 'green', [ONLINE_INFO_NOT_SENT]: 'gray' }
+    },
+    {
+      key: 'number', type: 'text',
+      render: () => onlineInfo !== ONLINE_INFO_NOT_SENT && (
+        <input
+          type="text"
+          dir="ltr"
+          value={info.online_info_number}
+          onChange={e => patch('online_info_number', e.target.value)}
+          placeholder="מספר בקשת מידע בזמין"
+          aria-label="מספר בקשת מידע בזמין"
+        />
+      ),
+    },
+    { key: 'note', type: 'input', placeholder: 'הערה' },
+    { key: 'reminder', type: 'reminder', header: 'תזכורת' },
+  ];
 
   const sectionReminders = (sk) => reminders.filter(r => r.section_key === sk);
 
@@ -147,47 +162,22 @@ export default function InfoPhase({ info, onChange, reminders = [], onReminderCh
         onReminderChange={onReminderChange?.(SK_DOCS)}
       />
 
-      {/* ── Info note ── */}
+      {/* ── בקשת מידע לזמין ── */}
       <GrayOut disabled={!allDocumentsDone} reason="ממתין לסיום כל המסמכים">
         <StatusTable
-          title="בקשת מידע"
           showHeader={false}
           rows={[{
-            id: 'info_note',
-            label: 'שלח בקשת מידע',
-            status: info.info_note_status,
-            note: info.info_note_note || '',
+            id: 'online_info',
+            label: ONLINE_INFO_LABEL,
+            status: onlineInfo,
+            note: info.online_info_note || '',
           }]}
-          columns={INFO_NOTE_COLUMNS}
-          onChange={(next) => onChange({
-            info_note_status: next[0].status,
-            info_note_note: next[0].note,
-          })}
-          rowClassName={() => infoNoteSent ? 'doc-present' : 'doc-missing'}
-          reminders={sectionReminders(SK_INFO_NOTE)}
-          onReminderChange={onReminderChange?.(SK_INFO_NOTE)}
-        />
-      </GrayOut>
-
-      {/* ── Preliminary conditions — single-row status table ── */}
-      <GrayOut disabled={!infoNoteSent} reason="ממתין לשליחת אגרת מידע">
-        <StatusTable
-          showHeader={false}
-          rows={[{
-            id: 'conditions',
-            label: 'האם עבר תנאים מקדמיים?',
-            status: info.conditions_passed,
-            note: info.conditions_note || '',
-          }]}
-          columns={CONDITIONS_COLUMNS}
-          onChange={(next) => onChange({
-            conditions_passed: next[0].status,
-            conditions_note: next[0].note,
-          })}
-          rowClassName={() => info.conditions_passed === CONDITIONS_STATUS_RECEIVED ? 'doc-present' : 'doc-missing'}
-          reminders={sectionReminders(SK_CONDITIONS)}
-          onReminderChange={onReminderChange?.(SK_CONDITIONS)}
-          footer={info.conditions_passed === CONDITIONS_STATUS_RECEIVED
+          columns={onlineInfoColumns}
+          onChange={changeOnlineInfo}
+          rowClassName={() => onlineInfoReceived ? 'doc-present' : 'doc-missing'}
+          reminders={sectionReminders(SK_ONLINE_INFO)}
+          onReminderChange={onReminderChange?.(SK_ONLINE_INFO)}
+          footer={onlineInfoReceived
             ? <button className="btn btn-primary btn-sm" onClick={onNext}>עבור לשלב הבא ←</button>
             : null}
         />

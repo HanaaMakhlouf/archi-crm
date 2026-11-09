@@ -101,6 +101,26 @@ export const INFO_NOTE_OPTIONS = [
   { value: INFO_NOTE_SENT, label: 'נשלח' },
 ];
 
+// בקשת מידע לזמין — one row in מידע, replacing שלח בקשת מידע + האם עבר תנאים מקדמיים.
+export const ONLINE_INFO_NOT_SENT = 'online_info_not_sent';
+export const ONLINE_INFO_SENT = 'online_info_sent';
+export const ONLINE_INFO_PASSED = 'online_info_passed';
+export const ONLINE_INFO_RECEIVED = 'online_info_received';
+
+export const ONLINE_INFO_OPTIONS = [
+  { value: ONLINE_INFO_NOT_SENT, label: 'טרם נשלח' },
+  { value: ONLINE_INFO_SENT, label: 'נשלח' },
+  { value: ONLINE_INFO_PASSED, label: 'עבר תנאים מקדמיים' },
+  { value: ONLINE_INFO_RECEIVED, label: 'התקבל' },
+];
+
+// The reminder (in days) each status sets automatically; התקבל clears it.
+export const ONLINE_INFO_REMINDER_DAYS = {
+  [ONLINE_INFO_NOT_SENT]: 1,
+  [ONLINE_INFO_SENT]: 5,
+  [ONLINE_INFO_PASSED]: 30,
+};
+
 // ── REQUEST (APPLICATION) PHASE ──
 // Submission (הגשה)
 export const SUBMISSION_NOT_STARTED = 'not_started';
