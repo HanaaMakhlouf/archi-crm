@@ -234,6 +234,17 @@ export default function Inbox({
                     </fieldset>
 
                     <div style={{ display: 'flex', gap: 6 }}>
+                      {/* Task done: delete the reminder (the row's status isn't changed). */}
+                      {notification.type === NOTIF_TYPE_ROW_REMINDER && !isViewer && (
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => onUpdateReminder?.(notification.reminderMeta.reminderId, null)}
+                          title="המשימה בוצעה — מחיקת ההתראה"
+                        >
+                          <Icon name="check" size={14} />
+                          בוצע
+                        </button>
+                      )}
                       <button className="btn btn-ghost btn-sm" onClick={() => setSendFor(notification)}>
                         <Icon name="mail" size={14} />
                         שליחה לעובד

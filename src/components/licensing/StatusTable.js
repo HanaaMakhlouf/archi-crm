@@ -113,7 +113,8 @@ export default function StatusTable({
 
     if (col.type === 'select') {
       // rowSelect(row) may return { options, statusColors, doneValues } to give one row its own dropdown.
-      const { options, statusColors, doneValues } = { ...col, ...col.rowSelect?.(row) };
+      // onlyDoneValues: the last option isn't "done" by itself — only doneValues are.
+      const { options, statusColors, doneValues, onlyDoneValues } = { ...col, ...col.rowSelect?.(row) };
       const colorName = statusColors?.[value];
       const lastOptionValue = options?.length ? options[options.length - 1].value : null;
       return (
@@ -122,8 +123,10 @@ export default function StatusTable({
             const newVal = e.target.value;
             updateCell(rowIdx, col.key, newVal);
             // Auto-clear reminder on terminal statuses (done or not-needed).
-            const isTerminal = newVal && (newVal === lastOptionValue || newVal === 'not_required' || newVal === 'present'
-              || doneValues?.includes(newVal));
+            const isTerminal = newVal && (onlyDoneValues
+              ? doneValues.includes(newVal)
+              : (newVal === lastOptionValue || newVal === 'not_required' || newVal === 'present'
+                || doneValues?.includes(newVal)));
             if (isTerminal && onReminderChange) {
               const rowLabel = row.label || row.type || String(rowIdx);
               onReminderChange(rowLabel, null);

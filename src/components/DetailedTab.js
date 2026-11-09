@@ -53,17 +53,19 @@ const SK_PIRSUM_A = 'detailed.pirsum_a';
 const SK_ISHUR    = 'detailed.ishur';
 const SK_PIRSUM_B = 'detailed.pirsum_b';
 
-const makeTableCols = (options, statusColors) => [
+// doneValues: the green status, which removes the row's reminder. (Not the last
+// option — in הכנה / הפקדה / אישור that's the red one.)
+const makeTableCols = (options, statusColors, doneValues) => [
   { key: 'label',    type: 'text' },
-  { key: 'status',   type: 'select', options, statusColors },
+  { key: 'status',   type: 'select', options, statusColors, doneValues, onlyDoneValues: true },
   { key: 'note',     type: 'input', placeholder: 'הערה' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
-const HACHANA_COLS  = makeTableCols(HACHANA_OPTIONS,        HACHANA_COLORS);
-const HAFKADA_COLS  = makeTableCols(HAFKADA_ISHUR_OPTIONS,  HAFKADA_ISHUR_COLORS);
-const PIRSOOM_COLS  = makeTableCols(PIRSOOM_OPTIONS,        PIRSOOM_COLORS);
-const ISHUR_COLS    = makeTableCols(HAFKADA_ISHUR_OPTIONS,  HAFKADA_ISHUR_COLORS);
+const HACHANA_COLS  = makeTableCols(HACHANA_OPTIONS,        HACHANA_COLORS,       [DETAILED_HACHANA_KEN]);
+const HAFKADA_COLS  = makeTableCols(HAFKADA_ISHUR_OPTIONS,  HAFKADA_ISHUR_COLORS, [DETAILED_SHUBATS]);
+const PIRSOOM_COLS  = makeTableCols(PIRSOOM_OPTIONS,        PIRSOOM_COLORS,       [DETAILED_HITKABEL]);
+const ISHUR_COLS    = makeTableCols(HAFKADA_ISHUR_OPTIONS,  HAFKADA_ISHUR_COLORS, [DETAILED_SHUBATS]);
 
 // ── Initial state builder ──
 
