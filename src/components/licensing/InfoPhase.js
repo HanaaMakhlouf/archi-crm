@@ -130,27 +130,40 @@ export default function InfoPhase({ info, onChange, reminders = [], onReminderCh
       key: 'status', type: 'select', options: ONLINE_INFO_OPTIONS,
       statusColors: { [ONLINE_INFO_RECEIVED]: 'green', [ONLINE_INFO_NOT_SENT]: 'gray' }
     },
+    // Same four columns as מסמכים נדרשים, so the rows line up; the number sits
+    // beside the note.
     {
-      key: 'number', type: 'text',
-      render: () => onlineInfo !== ONLINE_INFO_NOT_SENT && (
-        <input
-          type="text"
-          dir="ltr"
-          value={info.online_info_number}
-          onChange={e => patch('online_info_number', e.target.value)}
-          placeholder="מספר בקשת מידע בזמין"
-          aria-label="מספר בקשת מידע בזמין"
-        />
+      key: 'note', type: 'text',
+      render: () => (
+        <div className="online-info-fields">
+          {onlineInfo !== ONLINE_INFO_NOT_SENT && (
+            <input
+              type="text"
+              dir="ltr"
+              className="online-info-number"
+              value={info.online_info_number}
+              onChange={e => patch('online_info_number', e.target.value)}
+              placeholder="מספר בקשת מידע בזמין"
+              aria-label="מספר בקשת מידע בזמין"
+            />
+          )}
+          <input
+            type="text"
+            value={info.online_info_note || ''}
+            onChange={e => patch('online_info_note', e.target.value)}
+            placeholder="הערה"
+            aria-label="הערה"
+          />
+        </div>
       ),
     },
-    { key: 'note', type: 'input', placeholder: 'הערה' },
     { key: 'reminder', type: 'reminder', header: 'תזכורת' },
   ];
 
   const sectionReminders = (sk) => reminders.filter(r => r.section_key === sk);
 
   return (
-    <div className="licensing-info">
+    <div className="licensing-info info-phase">
       {/* ── Documents table ── */}
       <StatusTable
         title="מסמכים נדרשים"

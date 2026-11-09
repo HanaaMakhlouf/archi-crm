@@ -3091,6 +3091,29 @@ textarea {
   background: var(--color-surface-2);
 }
 
+/* מידע: a fixed תזכורת column, so its separate cards line up */
+.info-phase .docs-table th:last-child,
+.info-phase .docs-table td:last-child {
+  width: 170px;
+}
+
+/* בקשת מידע לזמין: the request's number beside the note, in the note column */
+.online-info-fields {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.docs-table .online-info-fields input[type="text"] {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.docs-table .online-info-fields .online-info-number {
+  flex: 0 0 210px;
+  font-weight: 600;
+}
+
 .docs-table tr.doc-missing td:nth-child(2) select {
   border-color: transparent;
   background: var(--color-warning-light);
