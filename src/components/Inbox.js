@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NOTIF_TYPE_ROW_REMINDER, ONE_DAY_MS, NOTIFICATION_DELAY_UNIT } from '../constants';
 import DatePickerButton from './DatePickerButton';
 import SendMessageDialog from './SendMessageDialog';
@@ -15,6 +15,57 @@ const SNOOZE_PRESETS = [
   { label: '3 ימים', days: 3 },
   { label: 'שבוע', days: 7 },
 ];
+
+// One דחייה button; its menu holds the presets and a date.
+function SnoozeMenu({ onPick, onPickDate, disabled }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    // The date picker's calendar floats outside the menu — clicks there don't close it.
+    const onDown = (e) => {
+      if (!ref.current?.contains(e.target) && !e.target.closest?.('.date-picker-popover')) setOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const pick = (fn) => (value) => { setOpen(false); fn(value); };
+
+  return (
+    <div className="snooze-menu" ref={ref}>
+      <button
+        type="button"
+        className="btn btn-ghost btn-sm"
+        disabled={disabled}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen(o => !o)}
+      >
+        <Icon name="clock" size={14} />
+        דחייה
+        <span className="snooze-menu-caret" aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="snooze-menu-list" role="menu">
+          {SNOOZE_PRESETS.map(({ label, days }) => (
+            <button key={days} type="button" role="menuitem" className="snooze-menu-item" onClick={() => pick(onPick)(days)}>
+              {label}
+            </button>
+          ))}
+          <div className="snooze-menu-sep" />
+          <DatePickerButton label="בחירת תאריך…" onSelect={pick(onPickDate)} />
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Automatic notifications are for managers only (`notifications` is empty for
 // everyone else); each can be forwarded to employees with a message and a
@@ -219,43 +270,34 @@ export default function Inbox({
                   </div>
 
                   <div className="notification-actions">
-                    <fieldset disabled={isViewer} className="snooze-presets" style={{ border: 0, margin: 0, padding: 0 }}>
-                      <span className="snooze-label">דחה:</span>
-                      {SNOOZE_PRESETS.map(({ label, days }) => (
-                        <button
-                          key={days}
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => handlePresetDelay(notification, days)}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                      <DatePickerButton onSelect={(dateStr) => handleDateSnooze(notification, dateStr)} />
-                    </fieldset>
-
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      {/* Task done: delete the reminder (the row's status isn't changed). */}
-                      {notification.type === NOTIF_TYPE_ROW_REMINDER && !isViewer && (
-                        <button
-                          className="btn btn-ghost btn-sm"
-                          onClick={() => onUpdateReminder?.(notification.reminderMeta.reminderId, null)}
-                          title="המשימה בוצעה — מחיקת ההתראה"
-                        >
-                          <Icon name="check" size={14} />
-                          בוצע
-                        </button>
-                      )}
-                      <button className="btn btn-ghost btn-sm" onClick={() => setSendFor(notification)}>
-                        <Icon name="mail" size={14} />
-                        שליחה לעובד
-                      </button>
+                    {/* Task done: delete the reminder (the row's status isn't changed). */}
+                    {notification.type === NOTIF_TYPE_ROW_REMINDER && !isViewer && (
                       <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => onGoToClient?.(notification.client, notification.reminderMeta?.sectionKey)}
+                        type="button"
+                        className="btn btn-ghost btn-sm notification-done-btn"
+                        onClick={() => onUpdateReminder?.(notification.reminderMeta.reminderId, null)}
+                        title="המשימה בוצעה — מחיקת ההתראה"
                       >
-                        עבור ללקוח
+                        <Icon name="check" size={14} />
+                        בוצע
                       </button>
-                    </div>
+                    )}
+                    <SnoozeMenu
+                      disabled={isViewer}
+                      onPick={(days) => handlePresetDelay(notification, days)}
+                      onPickDate={(dateStr) => handleDateSnooze(notification, dateStr)}
+                    />
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSendFor(notification)}>
+                      <Icon name="mail" size={14} />
+                      שליחה לעובד
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => onGoToClient?.(notification.client, notification.reminderMeta?.sectionKey)}
+                    >
+                      עבור ללקוח
+                    </button>
                   </div>
                 </div>
               ))

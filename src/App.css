@@ -1586,8 +1586,64 @@ textarea {
 .notification-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
+}
+
+.notification-done-btn {
+  color: var(--color-success);
+}
+
+/* דחייה: one button, the presets and a date in a small menu under it */
+.snooze-menu {
+  position: relative;
+}
+
+.snooze-menu-caret {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.snooze-menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  z-index: 50;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.snooze-menu-item,
+.snooze-menu-list .btn {
+  justify-content: flex-start;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  text-align: right;
+  cursor: pointer;
+}
+
+.snooze-menu-item:hover,
+.snooze-menu-list .btn:hover {
+  background: var(--color-surface-2);
+}
+
+.snooze-menu-sep {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--color-border);
 }
 
 /* ── MESSAGES (manager → employee) ── */
