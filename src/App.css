@@ -1225,6 +1225,12 @@ textarea {
   color: var(--color-text-muted);
 }
 
+/* confirmDialog / alertDialog (AppDialog.js): messages may hold line breaks */
+.app-dialog p {
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
 /* Three choices; they wrap onto two lines rather than spill out of a narrow window */
 .discard-actions {
   display: flex;

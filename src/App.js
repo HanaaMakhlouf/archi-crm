@@ -11,6 +11,7 @@ import SettingsView from './components/SettingsView';
 import ActivityView from './components/ActivityView';
 import ArchiveView from './components/ArchiveView';
 import PriorityDot from './components/PriorityDot';
+import { confirmDialog, alertDialog } from './components/AppDialog';
 import Icon, { getInitials } from './components/Icon';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
 import { getCurrentPlanningStageLabel } from './components/PlanningTab';
@@ -209,11 +210,16 @@ export default function App() {
     if (isViewer) return;
     const client = clients.find(c => c.id === id);
     const name = client?.name || 'לקוח זה';
-    if (!window.confirm(`למחוק את "${name}"? פעולה זו אינה הפיכה.`)) return;
+    if (!(await confirmDialog({
+      title: 'מחיקת לקוח',
+      message: `למחוק את "${name}"? פעולה זו אינה הפיכה.`,
+      confirmLabel: 'מחיקה',
+      danger: true,
+    }))) return;
     const { error } = await supabase.from(TABLE_CLIENTS).delete().eq('id', id);
     if (error) {
       console.error(error.message);
-      alert('שגיאה במחיקת הלקוח. נסה שוב.');
+      alertDialog('שגיאה במחיקת הלקוח. נסה שוב.');
     } else {
       fetchClients();
     }
@@ -330,10 +336,14 @@ export default function App() {
   const setArchived = async (client, archivedAt) => {
     if (!isManager) return;
     const error = await handleUpdateClient(client.id, { [FIELD_ARCHIVED_AT]: archivedAt });
-    if (error) alert('שגיאה בשמירת מצב התיק. ייתכן שעדכון מסד הנתונים לארכיון עדיין לא הורץ.');
+    if (error) alertDialog('שגיאה בשמירת מצב התיק. ייתכן שעדכון מסד הנתונים לארכיון עדיין לא הורץ.');
   };
-  const handleArchive = (client) => {
-    if (!window.confirm(`לסגור את התיק של "${client.name}"?\nהתיק יעבור לארכיון עם כל הנתונים, ואפשר להפעיל אותו מחדש בכל עת.`)) return;
+  const handleArchive = async (client) => {
+    if (!(await confirmDialog({
+      title: 'סגירת תיק',
+      message: `לסגור את התיק של "${client.name}"?\nהתיק יעבור לארכיון עם כל הנתונים, ואפשר להפעיל אותו מחדש בכל עת.`,
+      confirmLabel: 'סגירת התיק',
+    }))) return;
     setArchived(client, new Date().toISOString());
   };
   const handleReactivate = (client) => setArchived(client, null);
@@ -538,7 +548,7 @@ export default function App() {
                                   onClick={async () => {
                                     if (!window.electronAPI?.isElectron) return;
                                     const err = await openClientFolder(client[FILE_LINK_2_PATH], (u) => handleUpdateClient(client.id, u));
-                                    if (err) alert(err);
+                                    if (err) alertDialog(err);
                                   }}
                                   title={`פתח תיקייה: ${client[FILE_LINK_2_PATH]}`}
                                 >

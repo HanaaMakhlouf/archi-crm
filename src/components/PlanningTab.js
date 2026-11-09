@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import StatusTable from './licensing/StatusTable';
 import AddRow from './AddRow';
+import { confirmDialog } from './AppDialog';
 import { useDeferredSave } from '../utils/useDeferredSave';
 import {
   FIELD_PLANNING_DATA,
@@ -238,7 +239,9 @@ export default function PlanningTab({ client, onUpdate, reminders = [], onRemind
         type="button"
         className="row-remove-btn"
         title="הסרת שורה"
-        onClick={() => { if (window.confirm(`להסיר את "${row.label}"?`)) onRemove(row); }}
+        onClick={async () => {
+          if (await confirmDialog({ title: 'הסרת שורה', message: `להסיר את "${row.label}"?`, confirmLabel: 'הסרה', danger: true })) onRemove(row);
+        }}
       >
         ✕
       </button>

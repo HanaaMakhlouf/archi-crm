@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import Icon from './Icon';
+import { alertDialog } from './AppDialog';
 import { openClientFolder } from '../utils/openClientFolder';
 import {
   FILE_LINK_1_PATH, FILE_LINK_1_NAME,
@@ -173,7 +174,7 @@ export default function QuickFileLinks({ client, onUpdateClient }) {
       if (error) throw error;
       await onUpdateClient({ [FILE_LINK_1_PATH]: path, [FILE_LINK_1_NAME]: file.name });
     } catch (err) {
-      alert('שגיאה בהעלאת הקובץ: ' + err.message);
+      alertDialog('שגיאה בהעלאת הקובץ: ' + err.message);
     }
     setUploading(false);
   }
@@ -258,7 +259,7 @@ export default function QuickFileLinks({ client, onUpdateClient }) {
 
   async function openPdf() {
     const { data, error } = await supabase.storage.from(PDF_BUCKET).createSignedUrl(client[FILE_LINK_1_PATH], 300);
-    if (error) { alert('שגיאה בפתיחת הקובץ'); return; }
+    if (error) { alertDialog('שגיאה בפתיחת הקובץ'); return; }
     setPdfSignedUrl(data.signedUrl);
     setPdfViewer(true);
   }

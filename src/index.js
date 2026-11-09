@@ -4,6 +4,7 @@ import './index.css';
 import './styles/Login.css';
 import Router from './components/Router';
 import { AuthProvider } from './contexts/AuthContext';
+import { DialogHost } from './components/AppDialog';
 import reportWebVitals from './reportWebVitals';
 
 // Desktop app: after a native alert/confirm/prompt, give the page its focus back
@@ -24,6 +25,7 @@ root.render(
   <React.StrictMode>
     <AuthProvider>
       <Router />
+      <DialogHost />
     </AuthProvider>
   </React.StrictMode>
 );

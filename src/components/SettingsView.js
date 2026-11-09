@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { callAdminUsers } from '../utils/adminUsers';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDate } from '../utils/format';
+import { confirmDialog } from './AppDialog';
 import { ROLE_ADMIN, ROLE_MANAGER, ROLE_USER, ROLE_VIEWER, ROLE_LABELS } from '../constants';
 
 const ROLE_OPTIONS = [ROLE_USER, ROLE_VIEWER, ROLE_MANAGER, ROLE_ADMIN]
@@ -86,8 +87,8 @@ export default function SettingsView() {
     }
   };
 
-  const handleDeleteUser = async (userId, confirmMsg = 'למחוק משתמש זה לצמיתות?') => {
-    if (!window.confirm(confirmMsg)) return;
+  const handleDeleteUser = async (userId, dialog = { title: 'מחיקת משתמש', message: 'למחוק משתמש זה לצמיתות?', confirmLabel: 'מחיקה' }) => {
+    if (!(await confirmDialog({ ...dialog, danger: true }))) return;
     setActionError(null);
     try {
       await callAdminUsers('delete', { userId });
@@ -196,7 +197,7 @@ export default function SettingsView() {
                           <button
                             className="btn btn-ghost btn-sm"
                             style={{ color: 'var(--color-error)' }}
-                            onClick={() => handleDeleteUser(u.id, 'לבטל את ההזמנה? הקישור שנשלח לעובד יפסיק לעבוד.')}
+                            onClick={() => handleDeleteUser(u.id, { title: 'ביטול הזמנה', message: 'לבטל את ההזמנה? הקישור שנשלח לעובד יפסיק לעבוד.', confirmLabel: 'ביטול ההזמנה', cancelLabel: 'חזרה' })}
                           >
                             ביטול הזמנה
                           </button>
