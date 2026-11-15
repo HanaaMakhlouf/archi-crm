@@ -17,4 +17,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('update-state', listener);
   },
   openFileCopy: (name, data) => ipcRenderer.invoke('open-file-copy', name, data),
+  savePdf: (html, defaultName) => ipcRenderer.invoke('save-pdf', html, defaultName),
 });

@@ -241,6 +241,36 @@ ipcMain.handle('open-file-copy', async (_, name, data) => {
   return (await shell.openPath(target)) || null; // '' = opened
 });
 
+// Turns a page the app built (the exported clients list) into a PDF in a
+// hidden window, asks where to save it, then opens it.
+// Returns { path }, { canceled: true } or { error }.
+ipcMain.handle('save-pdf', async (event, html, defaultName) => {
+  const owner = BrowserWindow.fromWebContents(event.sender);
+  const pdfWin = new BrowserWindow({
+    show: false,
+    webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false, javascript: false },
+  });
+  try {
+    await pdfWin.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(String(html)));
+    const pdf = await pdfWin.webContents.printToPDF({ pageSize: 'A4', landscape: true, printBackground: true, preferCSSPageSize: true });
+    const safe = path.basename(String(defaultName || 'export.pdf')).replace(/[<>:"/\\|?*\x00-\x1f]+/g, '_');
+    const r = await dialog.showSaveDialog(owner, {
+      defaultPath: path.join(app.getPath('documents'), safe),
+      filters: [{ name: 'PDF', extensions: ['pdf'] }],
+    });
+    if (r.canceled || !r.filePath) return { canceled: true };
+    await fs.promises.writeFile(r.filePath, pdf);
+    shell.openPath(r.filePath);
+    return { path: r.filePath };
+  } catch (err) {
+    console.error('save-pdf:', err);
+    // EBUSY/EPERM: a file by that name is open (e.g. the last export, still in the PDF viewer).
+    return { error: String(err?.message || err), code: err?.code };
+  } finally {
+    pdfWin.destroy();
+  }
+});
+
 // After a native alert()/confirm() closes, Electron on Windows can leave the
 // page's inputs ignoring clicks and typing until the window loses and regains
 // focus. The renderer calls this right after each such dialog to do just that.

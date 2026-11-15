@@ -11,6 +11,7 @@ import SettingsView from './components/SettingsView';
 import ActivityView from './components/ActivityView';
 import ArchiveView from './components/ArchiveView';
 import PriorityDot from './components/PriorityDot';
+import ExportClientsDialog from './components/ExportClientsDialog';
 import { confirmDialog, alertDialog } from './components/AppDialog';
 import Icon, { getInitials } from './components/Icon';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
@@ -105,6 +106,8 @@ export default function App() {
   // ── FILTERS / SEARCH / SORT ──
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState(DEFAULT_SORT);     // one column sorts at a time
+  const [exportOpen, setExportOpen] = useState(false);
+  const closeExport = useCallback(() => setExportOpen(false), []);
 
   // ── FORM STATE ──
   const [form, setForm] = useState(EMPTY_FORM);
@@ -392,13 +395,26 @@ export default function App() {
                 <h1 className="page-title">לקוחות</h1>
                 <p className="page-subtitle">כל תיקי הלקוחות של המשרד, במקום אחד.</p>
               </div>
-              {!isViewer && (
-                <div className="page-actions">
+              <div className="page-actions">
+                {openClients.length > 0 && (
+                  <button className="btn btn-ghost" onClick={() => setExportOpen(true)}>
+                    <Icon name="download" size={16} />
+                    ייצוא
+                  </button>
+                )}
+                {!isViewer && (
                   <button className="btn btn-primary" onClick={() => openForm()}>
                     <Icon name="plus" size={16} strokeWidth={2.4} />
                     לקוח חדש
                   </button>
-                </div>
+                )}
+              </div>
+              {exportOpen && (
+                // In the list's current order (sort applies; the search box doesn't).
+                <ExportClientsDialog
+                  clients={filterAndSortClients(openClients, {}, sort)}
+                  onClose={closeExport}
+                />
               )}
             </div>
 
