@@ -5,6 +5,7 @@ import HelkaList from './HelkaList';
 import Icon from './Icon';
 import ClientNameInput from './ClientNameInput';
 import { describeClientChange } from '../utils/changeSummary';
+import CityInput from './CityInput';
 import {
   TABLE_CLIENTS,
 } from '../constants';
@@ -213,12 +214,10 @@ export default function ClientForm({
         <div className="form-row">
           <div className="form-group">
             <label>עיר *</label>
-            <input
-              type="text"
+            <CityInput
               value={form.city}
-              onChange={e =>
-                setForm({ ...form, city: e.target.value })
-              }
+              onChange={city => setForm(f => ({ ...f, city }))}
+              placeholder="הקלידו לחיפוש עיר"
             />
           </div>
 

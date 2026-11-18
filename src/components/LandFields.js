@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDeferredSave } from '../utils/useDeferredSave';
 import { landFromClient, landToPayload } from '../utils/land';
+import CityInput from './CityInput';
 
 const LAND_FIELDS = [
   { key: 'city',    label: 'עיר' },
@@ -37,7 +38,9 @@ export function LandForm({ land, onChange }) {
       {LAND_FIELDS.map(f => (
         <div key={f.key} className="form-group">
           <label>{f.label}</label>
-          {f.key === 'helka' ? (
+          {f.key === 'city' ? (
+            <CityInput value={land.city ?? ''} onChange={v => onChange('city', v)} placeholder="—" />
+          ) : f.key === 'helka' ? (
             <input
               type="text"
               value={land.helka.join(', ')}

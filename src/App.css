@@ -1736,6 +1736,27 @@ textarea {
   background: var(--color-surface-2);
 }
 
+/* עיר: a plain list of city names */
+.city-suggest-list { max-height: 280px; padding: 4px; }
+/* One run of text: as a flex row, the bold part and the rest of the name
+   became separate items with a gap between them (בס מ"ה). */
+.city-suggest-item { display: block; padding: 9px 10px; font-size: 15px; }
+/* The typed letters in bold, with no box or padding around them. */
+.city-suggest-item mark {
+  background: none;
+  color: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+.city-suggest-new {
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius) var(--radius);
+  color: var(--color-primary);
+  font-size: 14px;
+}
+.city-suggest-new:first-child { border-top: none; }
+.city-suggest-new strong { margin-inline-start: 4px; }
+
 .suggest-avatar {
   width: 32px;
   height: 32px;

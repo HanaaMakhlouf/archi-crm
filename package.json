@@ -18,7 +18,8 @@
     "electron:build:mac": "npm run build:electron && electron-builder --mac --publish never",
     "electron:publish": "npm run build:electron && electron-builder --win --publish always",
     "build:electron": "cross-env GENERATE_SOURCEMAP=false react-scripts build",
-    "electron:icon": "node scripts/start-electron.js scripts/make-icon.js"
+    "electron:icon": "node scripts/start-electron.js scripts/make-icon.js",
+    "update-cities": "node scripts/update-cities.js"
   },
   "eslintConfig": {
     "extends": [
