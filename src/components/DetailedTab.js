@@ -62,16 +62,16 @@ const makeTableCols = (options, statusColors, doneValues) => [
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
-const HACHANA_COLS  = makeTableCols(HACHANA_OPTIONS,        HACHANA_COLORS,       [DETAILED_HACHANA_KEN]);
-const HAFKADA_COLS  = makeTableCols(HAFKADA_ISHUR_OPTIONS,  HAFKADA_ISHUR_COLORS, [DETAILED_SHUBATS]);
-const PIRSOOM_COLS  = makeTableCols(PIRSOOM_OPTIONS,        PIRSOOM_COLORS,       [DETAILED_HITKABEL]);
-const ISHUR_COLS    = makeTableCols(HAFKADA_ISHUR_OPTIONS,  HAFKADA_ISHUR_COLORS, [DETAILED_SHUBATS]);
+export const HACHANA_COLS  = makeTableCols(HACHANA_OPTIONS,        HACHANA_COLORS,       [DETAILED_HACHANA_KEN]);
+export const HAFKADA_COLS  = makeTableCols(HAFKADA_ISHUR_OPTIONS,  HAFKADA_ISHUR_COLORS, [DETAILED_SHUBATS]);
+export const PIRSOOM_COLS  = makeTableCols(PIRSOOM_OPTIONS,        PIRSOOM_COLORS,       [DETAILED_HITKABEL]);
+export const ISHUR_COLS    = makeTableCols(HAFKADA_ISHUR_OPTIONS,  HAFKADA_ISHUR_COLORS, [DETAILED_SHUBATS]);
 
 // ── Initial state builder ──
 
 const stepEntry = (e, fallbackStatus) => ({ status: e?.status || fallbackStatus, note: e?.note || '' });
 
-const buildInitialDetailed = (client, src = {}) => {
+export const buildInitialDetailed = (client, src = {}) => {
   const existing = src || {};
   return {
     info: {

@@ -12,6 +12,8 @@ import {
   TAB_GENERAL, TAB_ACTIVITY, ROLE_MANAGER, FIELD_ARCHIVED_AT,
 } from '../constants';
 import { formatDate } from '../utils/format';
+import { exportClientSummaryPdf } from '../utils/clientSummaryPdf';
+import { alertDialog } from './AppDialog';
 
 export default function ClientDetail({
   client,
@@ -43,6 +45,15 @@ export default function ClientDetail({
   const archivedAt = client[FIELD_ARCHIVED_AT];
   const readOnly = isViewer || !!archivedAt; // a closed file is kept as-is until reactivated
 
+  // Every worker can export, closed files too — it only reads.
+  const [exporting, setExporting] = useState(false);
+  const handleExportSummary = async () => {
+    setExporting(true);
+    const err = await exportClientSummaryPdf(client);
+    setExporting(false);
+    if (err) alertDialog(err);
+  };
+
   return (
     <>
       <section className="detail-hero">
@@ -73,6 +84,10 @@ export default function ClientDetail({
             />
           </div>
           <div className="detail-hero-group">
+            <button className="btn btn-sm btn-ghost" onClick={handleExportSummary} disabled={exporting} title="ייצוא כל השלבים עד השלב הנוכחי לקובץ PDF">
+              <Icon name="download" size={15} />
+              {exporting ? 'מייצא...' : 'ייצוא סיכום'}
+            </button>
             {!readOnly && (
               <button className="btn btn-sm btn-primary" onClick={onEdit}>
                 <Icon name="edit" size={15} />

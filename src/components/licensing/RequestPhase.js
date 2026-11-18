@@ -23,7 +23,7 @@ import {
   TEXT_STATUS_RECEIVED, TEXT_STATUS_NOT_RECEIVED,
 } from '../../constants';
 
-const REQUEST_NUMBER_FIELDS = [
+export const REQUEST_NUMBER_FIELDS = [
   { key: 'request_number', label: "מס' בקשה", placeholder: 'מספר הבקשה ברשות הרישוי' },
   { key: 'online_request_number', label: "מס' בקשה לזמין", placeholder: 'מספר הבקשה ברישוי זמין' },
 ];
@@ -32,7 +32,7 @@ const SK_SUBMISSION = 'licensing.application.submission';
 const SK_ACTIONS    = 'licensing.application.actions';
 const SK_MEETING    = 'licensing.application.meeting';
 
-const SUBMISSION_COLUMNS = [
+export const SUBMISSION_COLUMNS = [
   { key: 'label',    type: 'text' },
   { key: 'status',   type: 'select', options: SUBMISSION_OPTIONS,
     statusColors: {
@@ -177,11 +177,11 @@ export const syncTextRows = (prev, next) => {
     : a));
 };
 
-const isActionDone = (a) => (ROW_SELECTS[a.label]
+export const isActionDone = (a) => (ROW_SELECTS[a.label]
   ? ROW_SELECTS[a.label].doneValues.includes(a.status)
   : a.status === ACTION_STATUS_PRESENT || a.status === ACTION_STATUS_NOT_REQUIRED);
 
-const ACTION_COLUMNS = [
+export const ACTION_COLUMNS = [
   { key: 'label',    type: 'text',   header: 'פעולה' },
   { key: 'status',   type: 'select', header: 'סטטוס', options: ACTION_STATUS_OPTIONS,
     statusColors: {
@@ -195,7 +195,7 @@ const ACTION_COLUMNS = [
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
-const MEETING_COLUMNS = [
+export const MEETING_COLUMNS = [
   { key: 'label',    type: 'text' },
   { key: 'status',   type: 'select', options: MEETING_OPTIONS,
     statusColors: {

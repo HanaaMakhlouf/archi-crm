@@ -4,7 +4,7 @@ import { DOC_STATUS_MISSING, DOC_STATUS_PRESENT, DOC_STATUS_OPTIONS } from '../.
 
 const SK_CONFIRMATION = 'licensing.confirmation.rows';
 
-const CONDITION_COLUMNS = [
+export const CONFIRMATION_COLUMNS = [
   { key: 'label',    type: 'text',   header: 'תנאי' },
   { key: 'status',   type: 'select', header: 'סטטוס', options: DOC_STATUS_OPTIONS,
     statusColors: { [DOC_STATUS_PRESENT]: 'green', [DOC_STATUS_MISSING]: 'red' } },
@@ -18,7 +18,7 @@ export default function ConfirmationPhase({ confirmation, onChange, reminders = 
       <StatusTable
         title="תנאים לאישור תחילת עבודה"
         rows={confirmation.rows}
-        columns={CONDITION_COLUMNS}
+        columns={CONFIRMATION_COLUMNS}
         onChange={(next) => onChange({ rows: next })}
         reminders={reminders.filter(r => r.section_key === SK_CONFIRMATION)}
         onReminderChange={onReminderChange?.(SK_CONFIRMATION)}

@@ -185,7 +185,7 @@ export const buildInitialLd = (client) => {
 
 // Derives the real current phase from progress, so the stepper always opens
 // on where the client actually stands rather than whatever was last clicked.
-const computeCurrentPhase = (ld) => {
+export const computeCurrentPhase = (ld) => {
   const conditionsPassed = ld.info.online_info_status === ONLINE_INFO_RECEIVED;
   const meetingApproved = ld.application.meeting?.status === MEETING_APPROVED;
   const conditionsComplete = ld.conditions.permit_status === PERMIT_STATUS_SIGNED && ld.conditions.needs_start_approval !== null;

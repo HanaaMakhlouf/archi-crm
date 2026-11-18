@@ -49,7 +49,7 @@ const conditionRowSelect = (row) => {
   };
 };
 
-const CONDITION_COLUMNS = [
+export const CONDITION_COLUMNS = [
   { key: 'label',    type: 'text',   header: 'תנאי' },
   { key: 'status',   type: 'select', header: 'סטטוס', options: CONDITION_ROW_STATUS_OPTIONS,
     statusColors: CONDITION_STATUS_COLORS, rowSelect: conditionRowSelect },
@@ -57,7 +57,7 @@ const CONDITION_COLUMNS = [
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
-const PERMIT_COLUMNS = [
+export const PERMIT_COLUMNS = [
   { key: 'label',    type: 'text' },
   { key: 'status',   type: 'select', options: PERMIT_STATUS_OPTIONS,
     statusColors: {

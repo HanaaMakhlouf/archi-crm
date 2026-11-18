@@ -14,7 +14,7 @@ const SK_DOCS = 'licensing.info.documents';
 const SK_ONLINE_INFO = ONLINE_INFO_SECTION_KEY;
 const ONLINE_INFO_LABEL = ONLINE_INFO_ROW_LABEL;
 
-const PERSON_FIELDS = [
+export const PERSON_FIELDS = [
   { key: 'name',      label: 'שם',      type: 'text'  },
   { key: 'surname',   label: 'משפחה',   type: 'text'  },
   { key: 'id_number', label: 'ת"ז',     type: 'text'  },
@@ -22,7 +22,7 @@ const PERSON_FIELDS = [
   { key: 'email',     label: 'אימייל',  type: 'email' },
 ];
 
-const DOC_COLUMNS = [
+export const DOC_COLUMNS = [
   { key: 'label', type: 'text', header: 'מסמך' },
   {
     key: 'status', type: 'select', header: 'סטטוס', options: DOC_STATUS_OPTIONS,
@@ -32,7 +32,7 @@ const DOC_COLUMNS = [
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
-const DOC_LABELS = Object.fromEntries(LICENSING_DOCUMENTS.map(d => [d.type, d.label]));
+export const DOC_LABELS = Object.fromEntries(LICENSING_DOCUMENTS.map(d => [d.type, d.label]));
 
 // The client's details as one panel: a row per topic, its title on the side.
 export function InfoPanel({ children }) {
@@ -103,6 +103,8 @@ export function PeopleEditor({ people, onChange, copyFrom }) {
   );
 }
 
+export const ONLINE_INFO_STATUS_COLORS = { [ONLINE_INFO_RECEIVED]: 'green', [ONLINE_INFO_NOT_SENT]: 'gray' };
+
 export default function InfoPhase({ info, onChange, reminders = [], onReminderChange, onClearReminders, onNext }) {
   const patch = (key, value) => onChange({ [key]: value });
 
@@ -129,7 +131,7 @@ export default function InfoPhase({ info, onChange, reminders = [], onReminderCh
     { key: 'label', type: 'text' },
     {
       key: 'status', type: 'select', options: ONLINE_INFO_OPTIONS,
-      statusColors: { [ONLINE_INFO_RECEIVED]: 'green', [ONLINE_INFO_NOT_SENT]: 'gray' }
+      statusColors: ONLINE_INFO_STATUS_COLORS,
     },
     // Same four columns as מסמכים נדרשים, so the rows line up; the number sits
     // beside the note.

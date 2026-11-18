@@ -89,7 +89,7 @@ const SCALES = {
 // Rows that may not be needed for a client (every אדריכלות row and מדידה בשטח)
 // offer "לא נדרש"; the rest don't — unless it's already the saved value, so
 // old data still shows correctly.
-const rowSelect = (row) => {
+export const rowSelect = (row) => {
   const { options, statusColors } = SCALES[row.scale] || SCALES.discipline;
   const keepNotRequired = row.optional || row.status === NOT_REQUIRED;
   return {
@@ -129,7 +129,7 @@ const extraRows = (list) => (Array.isArray(list) ? list : [])
   .filter(r => r && r.id && r.label)
   .map(r => ({ id: r.id, label: r.label, ...entry(r, STATUS_NOT_READY) }));
 
-const buildInitialPd = (client) => {
+export const buildInitialPd = (client) => {
   const src = client[FIELD_PLANNING_DATA] || {};
 
   // Oldest format kept everything flat under architecture / construction / water / electricity.
@@ -164,6 +164,23 @@ const buildInitialPd = (client) => {
     },
   };
 };
+
+// The אדריכלות / קונסטרוקציה tables' rows (also used by the client summary PDF).
+export const archRowsOf = (tables) => [
+  { id: 'offer',       label: LABEL_OFFER,     scale: 'offer', optional: true, ...tables.offer },
+  { id: 'viz',         label: LABEL_VIZ,       scale: 'offer', optional: true, ...tables.visualization },
+  { id: 'work_plan',   label: 'תוכנית עבודה', scale: 'offer', optional: true, ...tables.work_plan },
+  { id: 'water',       label: 'מים',           scale: 'review', optional: true, ...tables.disciplines.water },
+  { id: 'electricity', label: 'חשמל',          scale: 'review', optional: true, ...tables.disciplines.electricity },
+  ...tables.architecture_extra.map(r => ({ ...r, optional: true, extra: true })),
+];
+
+export const constructionRowsOf = (tables) => [
+  { id: 'survey',    label: 'מדידה בשטח (מבנים קיימים)', optional: true, ...tables.construction.survey },
+  { id: 'placement', label: 'העמדה', ...tables.construction.placement },
+  { id: 'work_plans', label: 'תוכניות עבודה', scale: 'work_plans', ...tables.construction.work_plans },
+  ...tables.construction.extra.map(r => ({ ...r, extra: true })),
+];
 
 // For the clients list: which planning stage this client is currently at
 // (furthest table in progress — visualization only once the offer is מוכן לביצוע).
@@ -250,14 +267,7 @@ export default function PlanningTab({ client, onUpdate, reminders = [], onRemind
 
   // ── Part 1: אדריכלות ──
 
-  const archRows = [
-    { id: 'offer',       label: LABEL_OFFER,     scale: 'offer', optional: true, ...tables.offer },
-    { id: 'viz',         label: LABEL_VIZ,       scale: 'offer', optional: true, ...tables.visualization },
-    { id: 'work_plan',   label: 'תוכנית עבודה', scale: 'offer', optional: true, ...tables.work_plan },
-    { id: 'water',       label: 'מים',           scale: 'review', optional: true, ...tables.disciplines.water },
-    { id: 'electricity', label: 'חשמל',          scale: 'review', optional: true, ...tables.disciplines.electricity },
-    ...tables.architecture_extra.map(r => ({ ...r, optional: true, extra: true })),
-  ];
+  const archRows = archRowsOf(tables);
 
   const removeArchExtra = (row) => {
     onReminderChange?.(SK_ARCHITECTURE, row.label, null);
@@ -288,12 +298,7 @@ export default function PlanningTab({ client, onUpdate, reminders = [], onRemind
 
   // ── Part 2: קונסטרוקציה ──
 
-  const constructionRows = [
-    { id: 'survey',    label: 'מדידה בשטח (מבנים קיימים)', optional: true, ...tables.construction.survey },
-    { id: 'placement', label: 'העמדה', ...tables.construction.placement },
-    { id: 'work_plans', label: 'תוכניות עבודה', scale: 'work_plans', ...tables.construction.work_plans },
-    ...tables.construction.extra.map(r => ({ ...r, extra: true })),
-  ];
+  const constructionRows = constructionRowsOf(tables);
 
   const removeConstructionExtra = (row) => {
     onReminderChange?.(SK_CONSTRUCTION, row.label, null);
