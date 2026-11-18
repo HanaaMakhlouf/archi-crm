@@ -1,4 +1,4 @@
-/* ── Mobile-only styles — desktop (≥1024px) is untouched ── */
+/* ── Narrow-window styles — wide desktop (≥1024px) is untouched ── */
 
 /* ── Clients table: card layout on mobile ── */
 @media (max-width: 767px) {
@@ -175,53 +175,10 @@
   body { overflow-x: hidden; }
   img, video { max-width: 100%; height: auto; }
 
-  /* ── Sidebar: hidden slide-in drawer ── */
-  .sidebar {
-    transform: translateX(100%);
-    transition: transform 0.25s ease;
-    z-index: 200;
-  }
-  .sidebar.mobile-open {
-    transform: translateX(0);
-  }
-
-  /* Dark overlay behind open sidebar */
-  .mobile-nav-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    z-index: 199;
-  }
-  .mobile-nav-overlay.mobile-open { display: block; }
-
-  /* ── Hamburger button ── */
-  .mobile-menu-btn {
-    display: flex;
-    position: fixed;
-    top: 14px;
-    right: 14px;
-    z-index: 201;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 8px 10px;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--shadow);
-    min-height: 44px;
-    min-width: 44px;
-    font-size: 20px;
-    color: var(--color-text);
-  }
-
-  /* ── Main content: full width, room for hamburger ── */
+  /* ── Main content: the sidebar still shows, so keep its room ── */
   .main-content {
-    margin-right: 0;
-    max-width: 100%;
-    width: 100%;
-    padding: 64px 16px 24px;
+    max-width: none;
+    padding: 24px 16px 32px;
   }
 
   /* ── Grids → single column ── */
@@ -282,3 +239,57 @@
   /* ── Flow row: stack on very small screens ── */
   .flow-row { flex-wrap: wrap; gap: 8px; }
 }
+
+/* The sidebar fits beside the content down to 860px; narrower, it becomes
+   a slide-in drawer opened from ☰. */
+@media (max-width: 859px) {
+  /* ── Sidebar: hidden slide-in drawer ── */
+  .sidebar {
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    z-index: 200;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Dark overlay behind open sidebar */
+  .mobile-nav-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 199;
+  }
+  .mobile-nav-overlay.mobile-open { display: block; }
+
+  /* ── Hamburger button ── */
+  .mobile-menu-btn {
+    display: flex;
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 201;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    min-height: 44px;
+    min-width: 44px;
+    font-size: 20px;
+    color: var(--color-text);
+  }
+
+  /* ── Main content: full width, room for hamburger ── */
+  .main-content {
+    margin-right: 0;
+    max-width: 100%;
+    width: 100%;
+    padding: 64px 16px 24px;
+  }
+}
+

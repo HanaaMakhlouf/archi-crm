@@ -22,11 +22,18 @@ function UpdateStatus({ update, onCheck }) {
   );
 }
 
+const COLLAPSED_KEY = 'sidebar_collapsed';
+
 export default function Sidebar({ view, setView, notificationCount, archiveCount = 0 }) {
   const { user, logout, isAdmin, userRole, officeId, setOfficeId } = useAuth();
   const { theme, toggle } = useTheme();
   const officeBrand = useOfficeBrand(officeId);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Narrow window: the menu can be folded away to give the page more room.
+  // The buttons only show between 860px and 1300px (App.css).
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem(COLLAPSED_KEY) === '1'; } catch { return false; }
+  });
   const [offices, setOffices] = useState([]);
   const [changingPassword, setChangingPassword] = useState(false);
   const appUpdate = useAppUpdate();
@@ -45,6 +52,11 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
     await supabase.auth.refreshSession();
     setView(VIEW_CLIENTS);
   };
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
+    try { localStorage.setItem(COLLAPSED_KEY, collapsed ? '1' : '0'); } catch { /* not saved */ }
+  }, [collapsed]);
 
   const navigate = (dest) => { setView(dest); setMobileOpen(false); };
 
@@ -69,6 +81,16 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
             <span className="sidebar-brand-name">{officeBrand?.name || BRAND_NAME}</span>
             <span className="sidebar-brand-tagline">{officeBrand?.tagline || BRAND_TAGLINE}</span>
           </div>
+          <button
+            type="button"
+            className="sidebar-toggle-btn"
+            onClick={() => setCollapsed(c => !c)}
+            title={collapsed ? 'הרחבת התפריט' : 'כיווץ התפריט'}
+            aria-label={collapsed ? 'הרחבת התפריט' : 'כיווץ התפריט'}
+            aria-expanded={!collapsed}
+          >
+            <Icon name="panel" size={18} />
+          </button>
         </div>
 
         {/* Scrollable body */}
@@ -78,27 +100,30 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
           <nav className="sidebar-nav">
             <button
               className={`nav-item${view === VIEW_CLIENTS ? ' active' : ''}`}
+              title={collapsed ? 'לקוחות' : undefined}
               onClick={() => navigate(VIEW_CLIENTS)}
             >
               <Icon name="users" />
-              לקוחות
+              <span className="nav-label">לקוחות</span>
             </button>
 
             <button
               className={`nav-item${view === VIEW_ARCHIVE ? ' active' : ''}`}
+              title={collapsed ? 'ארכיון' : undefined}
               onClick={() => navigate(VIEW_ARCHIVE)}
             >
               <Icon name="archive" />
-              ארכיון
+              <span className="nav-label">ארכיון</span>
               {archiveCount > 0 && <span className="nav-count">{archiveCount}</span>}
             </button>
 
             <button
               className={`nav-item${view === VIEW_INBOX ? ' active' : ''}`}
+              title={collapsed ? 'התראות' : undefined}
               onClick={() => navigate(VIEW_INBOX)}
             >
               <Icon name="bell" />
-              התראות
+              <span className="nav-label">התראות</span>
               {notificationCount > 0 && (
                 <span className="notification-badge">{notificationCount}</span>
               )}
@@ -107,20 +132,22 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
             {(isAdmin || userRole === ROLE_MANAGER) && (
               <button
                 className={`nav-item${view === VIEW_ACTIVITY ? ' active' : ''}`}
+                title={collapsed ? 'יומן פעילות' : undefined}
                 onClick={() => navigate(VIEW_ACTIVITY)}
               >
                 <Icon name="activity" />
-                יומן פעילות
+                <span className="nav-label">יומן פעילות</span>
               </button>
             )}
 
             {(isAdmin || userRole === ROLE_MANAGER) && (
               <button
                 className={`nav-item${view === VIEW_SETTINGS ? ' active' : ''}`}
+                title={collapsed ? 'הגדרות' : undefined}
                 onClick={() => navigate(VIEW_SETTINGS)}
               >
                 <Icon name="settings" />
-                הגדרות
+                <span className="nav-label">הגדרות</span>
               </button>
             )}
           </nav>

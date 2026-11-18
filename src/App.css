@@ -421,6 +421,7 @@ h6 {
 .main-content {
   margin-right: var(--sidebar-width);
   flex: 1;
+  min-width: 0; /* wide content scrolls inside its own box, never the page */
   min-height: 100vh;
   background: var(--color-bg);
   padding: 30px 40px 48px;
@@ -841,6 +842,103 @@ h6 {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
+}
+
+/* Last resort for a very narrow window: the table scrolls sideways inside
+   its card instead of being cut off or pushing the whole page wider. */
+.clients-table-scroll {
+  overflow-x: auto;
+}
+
+/* Short values stay on one line ("אום אל פחם", "20340 / 152"). */
+.clients-table td.cell-city,
+.clients-table td.cell-plot,
+.clients-table td.cell-request,
+.clients-table td.cell-created {
+  white-space: nowrap;
+}
+
+/* Narrower card: the table measures itself (useFitColumns) and steps down
+   until it fits — first tighter cells, then the least-needed columns, one
+   by one. (Phones use the card layout in Mobile.css instead.) */
+@media (min-width: 768px) {
+  .clients-table-scroll:not([data-hide="0"]) .clients-table thead th,
+  .clients-table-scroll:not([data-hide="0"]) .clients-table td { padding-inline: 12px; }
+  .clients-table-scroll:not([data-hide="0"]) .clients-table thead th:last-child { width: auto; }
+  .clients-table-scroll:not([data-hide="0"]) .client-cell { min-width: 200px; }
+  .clients-table-scroll:is([data-hide="2"], [data-hide="3"], [data-hide="4"], [data-hide="5"]) .col-created,
+  .clients-table-scroll:is([data-hide="3"], [data-hide="4"], [data-hide="5"]) .col-updated,
+  /* סוג תיק is also written under each name (רישוי · ..., תכנון · ...). */
+  .clients-table-scroll:is([data-hide="4"], [data-hide="5"]) .col-type,
+  .clients-table-scroll[data-hide="5"] .col-request { display: none; }
+  .clients-table-scroll[data-hide="5"] .clients-table thead th,
+  .clients-table-scroll[data-hide="5"] .clients-table td { padding-inline: 8px; }
+  .clients-table-scroll[data-hide="5"] .clients-table td.cell-actions { padding-inline: 6px; }
+  .clients-table-scroll[data-hide="5"] .client-cell { min-width: 140px; gap: 10px; }
+}
+
+/* Folding the sidebar into a strip of icons (Sidebar.js) — offered only
+   when the window is narrow; wide windows always show the full menu. */
+.sidebar-toggle-btn { display: none; }
+
+@media (min-width: 860px) and (max-width: 1300px) {
+  .sidebar-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-inline-start: auto;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .sidebar-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--sidebar-border);
+    color: var(--color-text);
+  }
+
+  html.sidebar-collapsed { --sidebar-width: 68px; }
+
+  /* Top: only the button that opens the menu again */
+  html.sidebar-collapsed .sidebar-brand { justify-content: center; padding: 18px 0 14px; }
+  html.sidebar-collapsed .sidebar-brand > :not(.sidebar-toggle-btn) { display: none; }
+  html.sidebar-collapsed .sidebar-toggle-btn { margin: 0; width: 40px; height: 40px; }
+
+  /* Menu: icons only, the name shows on hover */
+  html.sidebar-collapsed .sidebar-body { padding: 6px 10px 16px; }
+  html.sidebar-collapsed .sidebar-section-label,
+  html.sidebar-collapsed .nav-label,
+  html.sidebar-collapsed .nav-count { display: none; }
+  html.sidebar-collapsed .nav-item { justify-content: center; padding: 11px 0; }
+  html.sidebar-collapsed .nav-item.active::before { right: -10px; }
+  html.sidebar-collapsed .notification-badge {
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    font-size: 11px;
+  }
+
+  /* Bottom: the user's initial and the small buttons, stacked */
+  html.sidebar-collapsed .sidebar-user { padding: 12px 10px; align-items: center; }
+  html.sidebar-collapsed .office-switcher,
+  html.sidebar-collapsed .user-meta,
+  html.sidebar-collapsed .update-card,
+  html.sidebar-collapsed .app-version { display: none; }
+  html.sidebar-collapsed .sidebar-user-row,
+  html.sidebar-collapsed .sidebar-user-actions { flex-direction: column; align-items: center; gap: 6px; }
+}
+
+/* Sidebar still open but the window not wide: less padding around the page. */
+@media (min-width: 1024px) and (max-width: 1300px) {
+  .main-content { padding-inline: 24px; }
 }
 
 .clients-table {

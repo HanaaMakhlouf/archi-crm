@@ -21,6 +21,7 @@ import { formatDate } from './utils/format';
 import { DEFAULT_SORT, filterAndSortClients } from './utils/clientList';
 import { openClientFolder } from './utils/openClientFolder';
 import { helkaToStrings } from './utils/land';
+import { useFitColumns } from './utils/useFitColumns';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
 import { calcDaysRemaining } from './notifications/reminderUtils';
@@ -364,6 +365,9 @@ export default function App() {
     search: deferredSearch,
   }, sort), [openClients, deferredSearch, sort]);
 
+  // Narrow window: the table drops columns until it fits (see App.css).
+  const tableBoxRef = useFitColumns(5, [view, filtered]);
+
   const urgentCount = useMemo(() => openClients.filter(c => c.priority === PRIORITY_RED).length, [openClients]);
 
   const STATS = [
@@ -476,19 +480,20 @@ export default function App() {
 
                 /* ── CLIENTS TABLE ── */
               ) : (
+                <div className="clients-table-scroll" ref={tableBoxRef}>
                 <table className="clients-table">
                   <thead>
                     <tr>
                       <th><SortHeader column="name" label="לקוח" sort={sort} onChange={setSort} /></th>
                       <th><SortHeader column="priority" label="עדיפות" sort={sort} onChange={setSort} firstDir="desc" /></th>
-                      <th>סוג תיק</th>
+                      <th className="col-type">סוג תיק</th>
                       <th><SortHeader column="city" label="עיר" sort={sort} onChange={setSort} /></th>
                       <th>גוש / חלקה</th>
-                      <th>מס' בקשה</th>
-                      <th>
+                      <th className="col-request">מס' בקשה</th>
+                      <th className="col-updated">
                         <SortHeader column="updated" label="עדכון אחרון" sort={sort} onChange={setSort} firstDir="desc" />
                       </th>
-                      <th>
+                      <th className="col-created">
                         <SortHeader column="created" label="תאריך יצירה" sort={sort} onChange={setSort} firstDir="desc" />
                       </th>
                       <th></th>
@@ -538,22 +543,22 @@ export default function App() {
                               onChange={(v) => handleUpdateClient(client.id, { priority: v })}
                             />
                           </td>
-                          <td>
+                          <td className="col-type">
                             {types.length > 0
                               ? <div className="type-tags-cell">{types.map(t => <span key={t} className="type-tag">{t}</span>)}</div>
                               : <span className="muted">—</span>}
                           </td>
-                          <td className="cell-secondary">{client.city || '—'}</td>
+                          <td className="cell-secondary cell-city">{client.city || '—'}</td>
                           <td className="cell-plot">
                             {client.gush || helkaText ? `${client.gush || '—'} / ${helkaText || '—'}` : '—'}
                           </td>
-                          <td className="cell-request">{client.licensing_data?.application?.request_number || '—'}</td>
-                          <td className="cell-updated">
+                          <td className="cell-request col-request">{client.licensing_data?.application?.request_number || '—'}</td>
+                          <td className="cell-updated col-updated">
                             {client.last_updated_at
                               ? <bdi dir="ltr">{formatDate(client.last_updated_at)}</bdi>
                               : <span className="muted">—</span>}
                           </td>
-                          <td className="cell-secondary">
+                          <td className="cell-secondary cell-created col-created">
                             <bdi dir="ltr">{formatDate(client.created_at)}</bdi>
                           </td>
                           <td className="cell-actions" onClick={e => e.stopPropagation()}>
@@ -588,6 +593,7 @@ export default function App() {
                     })}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           </>

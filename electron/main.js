@@ -35,8 +35,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
-    minWidth: 900,
-    minHeight: 600,
+    minWidth: 420, // narrow layouts: ☰ menu below 860px, client cards below 768px
+    minHeight: 480,
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#ffffff',
