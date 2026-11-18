@@ -1623,7 +1623,9 @@ textarea {
   flex-wrap: wrap;
   gap: 10px;
   font-size: 30px;
-  font-weight: 800;
+  /* Not 800: on Windows that's "Segoe UI Black", which has no Hebrew, so the
+     name was drawn half in Times New Roman. 700 is Segoe UI Bold. */
+  font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.3px;
   color: var(--color-text);
