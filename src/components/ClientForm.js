@@ -100,6 +100,7 @@ export default function ClientForm({
       ...(form.planning_data && { planning_data: form.planning_data }),
     };
     let error;
+    let created = null;
     if (editingId) {
       const summary = describeClientChange(payload, editingClient);
       const updatePayload = summary
@@ -107,7 +108,7 @@ export default function ClientForm({
         : payload;
       ({ error } = await supabase.from(TABLE_CLIENTS).update(updatePayload).eq('id', editingId));
     } else {
-      ({ error } = await supabase.from(TABLE_CLIENTS).insert([{ ...payload, office_id: officeId }]));
+      ({ data: created, error } = await supabase.from(TABLE_CLIENTS).insert([{ ...payload, office_id: officeId }]).select().single());
     }
     setSaving(false);
 
@@ -121,7 +122,9 @@ export default function ClientForm({
       return false;
     }
     fetchClients();
-    onCancel();
+    // A new client opens straight on its own page; an edit returns to where it came from.
+    if (created) onOpenClient(created);
+    else onCancel();
     return true;
   };
 
