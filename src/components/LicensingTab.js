@@ -11,6 +11,7 @@ import { makeEmptyPerson } from './licensing/PersonForm';
 import { addMissingRows } from './licensing/questionRows';
 import { useDeferredSave } from '../utils/useDeferredSave';
 import { useOnLock } from '../utils/useOnLock';
+import { useHistoryStep, recordedStep } from '../utils/useHistoryStep';
 import {
   FIELD_LICENSING_DATA,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
@@ -204,7 +205,9 @@ export function getCurrentLicensingPhaseLabel(client) {
 
 export default function LicensingTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {
   const [ld, setLd] = useState(() => buildInitialLd(client));
-  const [activePhase, setActivePhase] = useState(() => computeCurrentPhase(ld));
+  const [activePhase, setActivePhase] = useState(() => recordedStep('phase', client.id) || computeCurrentPhase(ld));
+  // Moving between מידע / בקשה / תנאים is a step: back returns to the one before.
+  const selectPhase = useHistoryStep('phase', activePhase, setActivePhase, client.id);
   const ldRef = useRef(ld);
   ldRef.current = ld;
 
@@ -252,7 +255,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
     }
   };
 
-  const handlePhaseClick = (phase) => setActivePhase(phase);
+  const handlePhaseClick = selectPhase;
 
   const meetingApproved = ld.application.meeting?.status === MEETING_APPROVED;
   const conditionsComplete = ld.conditions.permit_status === PERMIT_STATUS_SIGNED && ld.conditions.needs_start_approval !== null;
@@ -313,7 +316,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           reminders={licReminders}
           onReminderChange={makeReminderChange}
           onClearReminders={onClearReminders}
-          onNext={() => setActivePhase(LICENSING_PHASE_APPLICATION)}
+          onNext={() => selectPhase(LICENSING_PHASE_APPLICATION)}
         />
       )}
       {shownPhase === LICENSING_PHASE_APPLICATION && (
@@ -325,7 +328,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           reminders={licReminders}
           onReminderChange={makeReminderChange}
           onClearReminders={onClearReminders}
-          onNext={() => setActivePhase(LICENSING_PHASE_CONDITIONS)}
+          onNext={() => selectPhase(LICENSING_PHASE_CONDITIONS)}
         />
       )}
       {shownPhase === LICENSING_PHASE_CONDITIONS && (

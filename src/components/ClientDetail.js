@@ -14,6 +14,7 @@ import {
 import { formatDate } from '../utils/format';
 import { exportClientSummaryPdf } from '../utils/clientSummaryPdf';
 import { alertDialog } from './AppDialog';
+import { useHistoryStep, recordedStep } from '../utils/useHistoryStep';
 
 export default function ClientDetail({
   client,
@@ -29,6 +30,8 @@ export default function ClientDetail({
 }) {
   const tabStorageKey = `client_tab_${client.id}`;
   const [activeTab, setActiveTab] = useState(() => {
+    const recorded = recordedStep('tab', client.id); // back/forward onto this page
+    if (recorded) return recorded;
     if (initialTab) return initialTab;
     let saved = null;
     try { saved = sessionStorage.getItem(tabStorageKey); } catch { /* storage unavailable */ }
@@ -36,6 +39,9 @@ export default function ClientDetail({
     const alwaysThere = saved === TAB_GENERAL || saved === TAB_ACTIVITY;
     return saved && (alwaysThere || (client.client_type || []).includes(saved)) ? saved : TAB_GENERAL;
   });
+
+  // Switching tabs is a step: back returns to the tab before.
+  const selectTab = useHistoryStep('tab', activeTab, setActiveTab, client.id);
 
   useEffect(() => {
     try { sessionStorage.setItem(tabStorageKey, activeTab); } catch { /* storage unavailable */ }
@@ -127,7 +133,7 @@ export default function ClientDetail({
       <div className="tabs">
         <button
           className={`tab-button ${activeTab === TAB_GENERAL ? 'active' : ''}`}
-          onClick={() => setActiveTab(TAB_GENERAL)}
+          onClick={() => selectTab(TAB_GENERAL)}
         >
           כללי
         </button>
@@ -138,7 +144,7 @@ export default function ClientDetail({
             <button
               key={type}
               className={`tab-button ${isActive ? 'active' : ''} ${enabled ? '' : 'disabled'}`}
-              onClick={() => setActiveTab(type)}
+              onClick={() => selectTab(type)}
               disabled={!enabled}
             >
               {type}
@@ -147,7 +153,7 @@ export default function ClientDetail({
         })}
         <button
           className={`tab-button ${activeTab === TAB_ACTIVITY ? 'active' : ''}`}
-          onClick={() => setActiveTab(TAB_ACTIVITY)}
+          onClick={() => selectTab(TAB_ACTIVITY)}
         >
           פעילות
         </button>

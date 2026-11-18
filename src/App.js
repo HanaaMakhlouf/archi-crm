@@ -22,6 +22,7 @@ import { DEFAULT_SORT, filterAndSortClients } from './utils/clientList';
 import { openClientFolder } from './utils/openClientFolder';
 import { helkaToStrings } from './utils/land';
 import { useFitColumns } from './utils/useFitColumns';
+import { goBack, historyState } from './utils/useHistoryStep';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
 import { calcDaysRemaining } from './notifications/reminderUtils';
@@ -190,6 +191,45 @@ export default function App() {
     } catch { /* storage unavailable — just don't persist */ }
   }, [view, selectedClient, editingId]);
 
+  // ── BROWSER BACK ──
+  // Each page change becomes a browser-history step, so the browser's (and the
+  // phone's) back button returns to the page before instead of leaving the app.
+  // The form is a passing step: leaving it forward replaces it.
+  const navClientId = view === VIEW_DETAIL ? selectedClient?.id ?? null : view === VIEW_FORM ? editingId : null;
+  useEffect(() => {
+    if (view === VIEW_DETAIL && !selectedClient) return; // still loading the client
+    const st = historyState();
+    const next = { view, clientId: navClientId };
+    if (st.nav?.view === next.view && st.nav?.clientId === next.clientId) return;
+    if (!st.nav) window.history.replaceState({ nav: next, idx: 0 }, '');
+    else if (st.nav.view === VIEW_FORM) window.history.replaceState({ nav: next, idx: st.idx ?? 0 }, '');
+    else window.history.pushState({ nav: next, idx: (st.idx ?? 0) + 1 }, '');
+  }, [view, navClientId, selectedClient]);
+
+  const clientsRef = useRef(clients);
+  clientsRef.current = clients;
+  const openFormRef = useRef(null);
+  useEffect(() => {
+    const onPop = (e) => {
+      const nav = e.state?.nav;
+      if (!nav) return;
+      const client = nav.clientId != null ? clientsRef.current.find(c => c.id === nav.clientId) : null;
+      if (nav.view === VIEW_FORM) { openFormRef.current(client); return; }
+      if (nav.view === VIEW_DETAIL) {
+        if (!client) { setSelectedClient(null); setView(VIEW_CLIENTS); return; }
+        setInitialTab(e.state.tab || null);
+        setSelectedClient(client);
+        setView(VIEW_DETAIL);
+        return;
+      }
+      setSelectedClient(null);
+      setEditingId(null);
+      setView(nav.view);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
   const openForm = (client = null) => {
     if (client) {
       setForm({
@@ -209,6 +249,7 @@ export default function App() {
     setFormError('');
     setView(VIEW_FORM);
   };
+  openFormRef.current = openForm;
 
   const handleDelete = async (id) => {
     if (isViewer) return;
@@ -604,7 +645,7 @@ export default function App() {
           <ClientDetail
             key={selectedClient.id}
             client={selectedClient}
-            onBack={() => { setView(selectedClient[FIELD_ARCHIVED_AT] ? VIEW_ARCHIVE : VIEW_CLIENTS); setSelectedClient(null); }}
+            onBack={() => goBack(() => { setView(selectedClient[FIELD_ARCHIVED_AT] ? VIEW_ARCHIVE : VIEW_CLIENTS); setSelectedClient(null); })}
             onEdit={() => openForm(selectedClient)}
             onArchive={() => handleArchive(selectedClient)}
             onReactivate={() => handleReactivate(selectedClient)}
@@ -623,7 +664,7 @@ export default function App() {
             editingClient={clients.find(c => c.id === editingId) || null}
             formError={formError}
             setFormError={setFormError}
-            onCancel={() => { setView(VIEW_CLIENTS); setEditingId(null); }}
+            onCancel={() => goBack(() => { setView(VIEW_CLIENTS); setEditingId(null); })}
             toggleType={toggleType}
             clientTypes={CLIENT_TYPES}
             fetchClients={fetchClients}
