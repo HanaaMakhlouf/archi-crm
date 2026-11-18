@@ -95,6 +95,84 @@
   }
 
   .client-cell { min-width: 0; }
+
+  /* Card inside: name on top (priority dot in its corner), then the short
+     details in two labelled columns, then the buttons. */
+  .clients-table tr.clients-table-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 8px;
+    position: relative;
+  }
+  .clients-table td.cell-name { grid-column: 1 / -1; padding-inline-end: 28px; }
+  .clients-table td.cell-priority {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: auto;
+    padding: 0;
+  }
+  /* The type is already under the name; the created date isn't needed here. */
+  .clients-table td.col-type,
+  .clients-table td.col-created { display: none; }
+  .clients-table td[data-label] { font-size: 14.5px; color: var(--color-text); }
+  .clients-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 12px;
+    color: var(--color-text-faint);
+    margin-bottom: 1px;
+    direction: rtl;
+  }
+  .clients-table td.cell-plot,
+  .clients-table td.cell-request { text-align: right; }
+  .clients-table td.cell-actions { grid-column: 1 / -1; padding: 0; }
+  .clients-table td.cell-actions .row-actions {
+    border-top: 1px solid var(--color-border);
+    padding-top: 10px;
+  }
+  .clients-table .clients-table-empty td { grid-column: 1 / -1; }
+
+  /* Client page buttons: an even two-column grid instead of ragged rows. */
+  .detail-hero-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px 14px;
+  }
+  .detail-hero-group { display: contents; }
+  .detail-hero-bar .btn { width: 100%; justify-content: center; height: 40px; padding: 0 10px; }
+
+  /* Settings → users: one short card per user instead of five columns. */
+  .users-table thead { display: none; }
+  .users-table tr {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 10px 0;
+  }
+  .users-table td { display: block; padding: 0 !important; }
+  .users-table td.users-email { flex-basis: 100%; font-weight: 600; overflow-wrap: anywhere; }
+  .users-table td[data-label]::before { content: attr(data-label) ' '; }
+  .users-table td.users-action { margin-inline-start: auto; }
+  .users-table td.users-action:empty { display: none; }
+
+  /* iPhone zooms the page in when a field's text is under 16px — keep it at 16. */
+  input, select, textarea { font-size: 16px; }
+
+  /* Folders open only in the desktop app — on a phone these buttons do nothing. */
+  .row-actions .folder-btn--set,
+  .folder-chip:disabled { display: none; }
+
+  /* יומן פעילות: client and worker on their own rows, the two dates side by side. */
+  .activity-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; padding: 14px; }
+  .activity-filters .form-group:nth-child(-n+2),
+  .activity-filters .activity-filters-clear { grid-column: 1 / -1; }
+
+  /* Yes/no questions (רישוי): the question takes the row, the toggle sits after it. */
+  .request-questions { grid-template-columns: minmax(0, 1fr) auto; }
 }
 
 /* ── docs-table (StatusTable): card layout on mobile ── */
@@ -164,9 +242,37 @@
     flex-wrap: wrap;
     gap: 6px;
   }
+
+  /* Compact step card — two short rows instead of four tall ones:
+       step name ·········· [status]
+       note ··············· reminder                                   */
+  .docs-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px 10px;
+  }
+  .docs-table td,
+  .docs-table td:first-child,
+  .docs-table td:nth-child(2),
+  .info-phase .docs-table td:last-child { width: auto; min-width: 0; }
+  .docs-table td:first-child {
+    font-weight: 600;
+    padding: 0;
+    margin: 0;
+    border-bottom: none;
+  }
+  .docs-table td:nth-child(2) { padding: 0; }
+  .docs-table .status-badge-wrap { width: auto; min-width: 118px; }
+  .docs-table td:nth-child(n+3) { padding: 0; }
+  /* No reminder column: the note takes the whole row. */
+  .docs-table td:nth-child(3):last-child { grid-column: 1 / -1; }
+  .docs-table td input[type="text"] { height: 34px; font-size: 16px; }
+  .docs-table .reminder-select { width: auto; font-size: 14px; }
 }
 
 /* Always hide these elements on desktop */
+.mobile-topbar      { display: none; }
 .mobile-menu-btn    { display: none; }
 .mobile-nav-overlay { display: none; }
 
@@ -193,9 +299,22 @@
   /* ── Info panel: title above its fields ── */
   .info-row    { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .land-grid   { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .person-grid { grid-template-columns: minmax(0, 1fr); }
+  /* People (מבקש, בעלי זכות): a labelled card per person */
+  .person-grid { display: flex; flex-direction: column; gap: 10px; }
   .person-grid-head { display: none; }
-  .person-grid .row-icon-btn { justify-self: end; }
+  .person-grid .person-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+  }
+  .person-grid .person-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .person-grid .person-field-label { display: block; font-size: 12.5px; font-weight: 500; color: var(--color-text-muted); }
+  .person-grid .person-field--email { grid-column: 1 / -1; }
+  .person-grid .person-field input { height: 40px; font-size: 15px; }
+  .person-grid .row-icon-btn { grid-column: 1 / -1; justify-self: end; width: 32px; height: 32px; }
 
   /* ── Phase stepper: labels may wrap ── */
   .phase-label { white-space: normal; font-size: 11px; }
@@ -246,11 +365,14 @@
   /* ── Sidebar: hidden slide-in drawer ── */
   .sidebar {
     transform: translateX(100%);
-    transition: transform 0.25s ease;
+    visibility: hidden; /* closed: never peeks in, even if the page pans */
+    transition: transform 0.25s ease, visibility 0s linear 0.25s;
     z-index: 200;
   }
   .sidebar.mobile-open {
     transform: translateX(0);
+    visibility: visible;
+    transition: transform 0.25s ease;
   }
 
   /* Dark overlay behind open sidebar */
@@ -263,33 +385,51 @@
   }
   .mobile-nav-overlay.mobile-open { display: block; }
 
-  /* ── Hamburger button ── */
+  /* ── Top bar: ☰ and the office name, always in place, never over the page ── */
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: fixed;
+    top: 0;
+    inset-inline: 0;
+    height: 56px;
+    padding: 0 10px;
+    z-index: 150;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+  }
+  .mobile-topbar-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .mobile-menu-btn {
     display: flex;
-    position: fixed;
-    top: 14px;
-    right: 14px;
-    z-index: 201;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 8px 10px;
-    cursor: pointer;
     align-items: center;
     justify-content: center;
-    box-shadow: var(--shadow);
-    min-height: 44px;
-    min-width: 44px;
-    font-size: 20px;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 22px;
     color: var(--color-text);
+    cursor: pointer;
   }
+  .mobile-menu-btn:active { background: var(--color-surface-2); }
 
-  /* ── Main content: full width, room for hamburger ── */
+  /* ── Main content: full width, below the top bar ── */
   .main-content {
     margin-right: 0;
     max-width: 100%;
     width: 100%;
-    padding: 64px 16px 24px;
+    padding: 72px 16px 24px;
   }
 }
 

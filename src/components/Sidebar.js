@@ -68,7 +68,11 @@ export default function Sidebar({ view, setView, notificationCount, archiveCount
 
   return (
     <>
-      <button className="mobile-menu-btn" onClick={() => setMobileOpen(o => !o)} aria-label="תפריט">☰</button>
+      {/* Phone / narrow window: a slim bar across the top with ☰ and the office name. */}
+      <header className="mobile-topbar">
+        <button className="mobile-menu-btn" onClick={() => setMobileOpen(o => !o)} aria-label="תפריט">☰</button>
+        <span className="mobile-topbar-name">{officeBrand?.name || BRAND_NAME}</span>
+      </header>
       <div className={`mobile-nav-overlay${mobileOpen ? ' mobile-open' : ''}`} onClick={() => setMobileOpen(false)} />
       <aside className={`sidebar${mobileOpen ? ' mobile-open' : ''}`}>
 

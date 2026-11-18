@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import { useOnLock, useOnUnlock } from '../../utils/useOnLock';
 import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
@@ -82,20 +81,22 @@ export function PeopleEditor({ people, onChange, copyFrom }) {
         <div className="person-grid">
           {PERSON_FIELDS.map(f => <span key={f.key} className="person-grid-head">{f.label}</span>)}
           <span />
+          {/* A row of columns on a computer; a labelled card per person on a phone (Mobile.css). */}
           {people.map(p => (
-            <Fragment key={p.id}>
+            <div key={p.id} className="person-row">
               {PERSON_FIELDS.map(f => (
-                <input
-                  key={f.key}
-                  type={f.type}
-                  aria-label={f.label}
-                  placeholder="—"
-                  value={p[f.key] || ''}
-                  onChange={e => updateField(p.id, f.key, e.target.value)}
-                />
+                <label key={f.key} className={`person-field person-field--${f.key}`}>
+                  <span className="person-field-label">{f.label}</span>
+                  <input
+                    type={f.type}
+                    placeholder="—"
+                    value={p[f.key] || ''}
+                    onChange={e => updateField(p.id, f.key, e.target.value)}
+                  />
+                </label>
               ))}
               <button type="button" className="row-icon-btn" onClick={() => removePerson(p.id)} title="הסרה" aria-label="הסרה">✕</button>
-            </Fragment>
+            </div>
           ))}
         </div>
       )}

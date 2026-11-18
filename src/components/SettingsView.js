@@ -173,7 +173,7 @@ export default function SettingsView() {
               <p className="muted" style={{ fontSize: 12.5, marginBottom: 10 }}>
                 עובדים שהוזמנו וטרם אימתו את האימייל והגדירו סיסמה.
               </p>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table className="users-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'right' }}>
                     <th style={TH}>אימייל</th>
@@ -186,13 +186,13 @@ export default function SettingsView() {
                 <tbody>
                   {pendingUsers.map(u => (
                     <tr key={u.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                      <td style={{ padding: '10px 12px', fontSize: 14 }}>{u.email}</td>
+                      <td className="users-email" style={{ padding: '10px 12px', fontSize: 14 }}>{u.email}</td>
                       <td style={{ padding: '10px 12px' }}>
                         <span className="type-tag">{ROLE_LABELS[u.role] || u.role}</span>
                       </td>
-                      {isAdmin && <td style={TD_MUTED}>{u.officeName || '—'}</td>}
-                      <td style={TD_MUTED}>{formatDate(u.createdAt)}</td>
-                      <td style={{ padding: '10px 12px', textAlign: 'left' }}>
+                      {isAdmin && <td style={TD_MUTED} data-label="משרד">{u.officeName || '—'}</td>}
+                      <td style={TD_MUTED} data-label="נשלחה">{formatDate(u.createdAt)}</td>
+                      <td className="users-action" style={{ padding: '10px 12px', textAlign: 'left' }}>
                         {canAct(userRole, u.role) && (
                           <button
                             className="btn btn-ghost btn-sm"
@@ -216,7 +216,7 @@ export default function SettingsView() {
             {activeUsers.length === 0 ? (
               <p className="muted">אין משתמשים</p>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table className="users-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'right' }}>
                     <th style={TH}>אימייל</th>
@@ -231,7 +231,7 @@ export default function SettingsView() {
                     const editable = canAct(userRole, u.role);
                     return (
                       <tr key={u.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                        <td style={{ padding: '10px 12px', fontSize: 14 }}>{u.email}</td>
+                        <td className="users-email" style={{ padding: '10px 12px', fontSize: 14 }}>{u.email}</td>
                         <td style={{ padding: '10px 12px' }}>
                           {editable ? (
                             <select
@@ -247,9 +247,9 @@ export default function SettingsView() {
                             <span className="type-tag">{ROLE_LABELS[u.role] || u.role}</span>
                           )}
                         </td>
-                        {isAdmin && <td style={TD_MUTED}>{u.officeName || '—'}</td>}
-                        <td style={TD_MUTED}>{formatDate(u.createdAt)}</td>
-                        <td style={{ padding: '10px 12px', textAlign: 'left' }}>
+                        {isAdmin && <td style={TD_MUTED} data-label="משרד">{u.officeName || '—'}</td>}
+                        <td style={TD_MUTED} data-label="הצטרפות">{formatDate(u.createdAt)}</td>
+                        <td className="users-action" style={{ padding: '10px 12px', textAlign: 'left' }}>
                           {editable && (
                             <button
                               className="btn btn-ghost btn-sm"

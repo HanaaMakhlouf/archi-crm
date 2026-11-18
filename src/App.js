@@ -536,7 +536,7 @@ export default function App() {
                               </div>
                             </div>
                           </td>
-                          <td>
+                          <td className="cell-priority">
                             <PriorityDot
                               value={client.priority}
                               editable={canEditPriority}
@@ -548,12 +548,12 @@ export default function App() {
                               ? <div className="type-tags-cell">{types.map(t => <span key={t} className="type-tag">{t}</span>)}</div>
                               : <span className="muted">—</span>}
                           </td>
-                          <td className="cell-secondary cell-city">{client.city || '—'}</td>
-                          <td className="cell-plot">
+                          <td className="cell-secondary cell-city" data-label="עיר">{client.city || '—'}</td>
+                          <td className="cell-plot" data-label="גוש / חלקה">
                             {client.gush || helkaText ? `${client.gush || '—'} / ${helkaText || '—'}` : '—'}
                           </td>
-                          <td className="cell-request col-request">{client.licensing_data?.application?.request_number || '—'}</td>
-                          <td className="cell-updated col-updated">
+                          <td className="cell-request col-request" data-label="מס' בקשה">{client.licensing_data?.application?.request_number || '—'}</td>
+                          <td className="cell-updated col-updated" data-label="עדכון אחרון">
                             {client.last_updated_at
                               ? <bdi dir="ltr">{formatDate(client.last_updated_at)}</bdi>
                               : <span className="muted">—</span>}

@@ -2947,6 +2947,12 @@ textarea {
   color: var(--color-text-muted);
 }
 
+/* Each person and field is wrapped (for the phone card, Mobile.css); on a
+   computer the wrappers step aside and the cells sit straight in the grid. */
+.person-row,
+.person-field { display: contents; }
+.person-field-label { display: none; }
+
 .person-grid input {
   width: 100%;
   min-width: 0;
