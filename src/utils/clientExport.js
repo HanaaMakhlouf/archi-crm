@@ -1,3 +1,5 @@
+import { savePdf, escapeHtml, dateDots, dateDashes } from './pdf';
+
 // The clients list's columns for the exported PDF — without עדיפות, the
 // current stage, עדכון אחרון and תאריך יצירה.
 export const EXPORT_COLUMNS = [
@@ -13,13 +15,6 @@ export const EXPORT_COLUMNS = [
   },
   { label: "מס' בקשה", value: (c) => c.licensing_data?.application?.request_number },
 ];
-
-const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[ch]));
-
-const p2 = (n) => String(n).padStart(2, '0');
-const dateText = (d) => `${p2(d.getDate())}.${p2(d.getMonth() + 1)}.${d.getFullYear()}`;
 
 // A printable page (right-to-left table, the header row repeats on every
 // page) that becomes the PDF.
@@ -46,38 +41,15 @@ export function clientsToHtml(clients, { date = new Date(), columns = EXPORT_COL
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   </style></head><body>
     <h1>רשימת לקוחות</h1>
-    <p class="meta">${clients.length} לקוחות · <bdi dir="ltr">${dateText(date)}</bdi></p>
+    <p class="meta">${clients.length} לקוחות · <bdi dir="ltr">${dateDots(date)}</bdi></p>
     <table><thead><tr><th class="num">#</th>${head}</tr></thead><tbody>${body}</tbody></table>
   </body></html>`;
 }
 
 // "לקוחות 15-11-2026.pdf"
 export function exportFileName(date = new Date()) {
-  return `לקוחות ${p2(date.getDate())}-${p2(date.getMonth() + 1)}-${date.getFullYear()}.pdf`;
+  return `לקוחות ${dateDashes(date)}.pdf`;
 }
 
-// Desktop app: saves a PDF (Save dialog) and opens it. Browser: the print
-// dialog, where "Save as PDF" is one of the printers.
 // Returns null when done or cancelled, or an error message.
-export async function exportClientsPdf(clients) {
-  const html = clientsToHtml(clients);
-  if (window.electronAPI?.savePdf) {
-    const r = await window.electronAPI.savePdf(html, exportFileName());
-    if (!r?.error) return null;
-    if (r.code === 'EBUSY' || r.code === 'EPERM') {
-      return 'לא ניתן לשמור: קובץ בשם הזה פתוח כרגע בתוכנה אחרת.\nסגרו אותו ונסו שוב, או שמרו בשם אחר.';
-    }
-    return 'שגיאה ביצירת קובץ ה-PDF. נסה שוב.';
-  }
-  const frame = document.createElement('iframe');
-  frame.setAttribute('aria-hidden', 'true');
-  frame.style.cssText = 'position:fixed;width:0;height:0;border:0;left:-9999px';
-  frame.srcdoc = html;
-  await new Promise(resolve => { frame.onload = resolve; document.body.appendChild(frame); });
-  const cleanup = () => frame.remove();
-  frame.contentWindow.addEventListener('afterprint', () => setTimeout(cleanup, 0));
-  frame.contentWindow.focus();
-  frame.contentWindow.print();
-  setTimeout(() => { if (frame.isConnected) cleanup(); }, 5 * 60_000);
-  return null;
-}
+export const exportClientsPdf = (clients) => savePdf(clientsToHtml(clients), exportFileName());
