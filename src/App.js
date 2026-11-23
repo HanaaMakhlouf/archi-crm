@@ -4,6 +4,7 @@ import './styles/Mobile.css';
 import { supabase } from './supabaseClient';
 import { useAuth } from './contexts/AuthContext';
 import { useClients } from './hooks/useClients';
+import { useReminders } from './hooks/useReminders';
 import Sidebar from './components/Sidebar';
 import ClientDetail from './components/ClientDetail';
 import ClientForm from './components/ClientForm';
@@ -26,20 +27,14 @@ import { ClientsContext } from './utils/addedRows';
 import { goBack, historyState } from './utils/useHistoryStep';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
-import { calcDaysRemaining } from './notifications/reminderUtils';
 import {
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
   VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, VIEW_ARCHIVE, TAB_ACTIVITY,
   FIELD_ARCHIVED_AT,
-  TABLE_ROW_REMINDERS,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION, LICENSING_PHASE_FORM4,
   FILE_LINK_2_PATH, ROLE_MANAGER, PRIORITY_RED,
-  ONLINE_INFO_SECTION_KEY, ONLINE_INFO_ROW_LABEL, OLD_ONLINE_INFO_SECTION_KEYS,
-  RENAMED_CONDITION_ROWS,
 } from './constants';
-
-const CONDITIONS_SECTION_KEY = 'licensing.conditions.rows';
 
 // Maps a reminder's section_key to the tab + licensing phase to navigate to.
 function resolveNavHint(sectionKey) {
@@ -87,7 +82,7 @@ function readSavedNav() {
 }
 
 export default function App() {
-  const { officeId, isViewer, isAdmin, userRole } = useAuth();
+  const { isViewer, isAdmin, userRole } = useAuth();
   const isManager = isAdmin || userRole === ROLE_MANAGER;
   const canEditPriority = isManager;
 
@@ -96,7 +91,9 @@ export default function App() {
     clients, openClients, archivedClients, loading, fetchError,
     fetchClients, handleUpdateClient, handleDelete, handleArchive, handleReactivate,
   } = useClients({ isManager });
-  const [reminders, setReminders] = useState([]);
+  const {
+    reminders, fetchReminders, handleReminderChange, handleClearReminders, handleUpdateReminder,
+  } = useReminders();
 
   // ── NAVIGATION / VIEW ──
   // The current page survives a refresh (per browser tab). An unsaved form
@@ -119,66 +116,6 @@ export default function App() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
   const [formError, setFormError] = useState('');
-
-  const fetchReminders = useCallback(async () => {
-    const { data, error } = await supabase.from(TABLE_ROW_REMINDERS).select('*');
-    if (!error) setReminders(data || []);
-  }, []);
-
-  useEffect(() => { fetchReminders(); }, [fetchReminders]);
-
-  // Reminders set on שלח בקשת מידע / האם עבר תנאים מקדמיים (replaced by one
-  // בקשת מידע לזמין row) move onto that row, keeping their due date. Per client
-  // the one due first moves; the rest are dropped. Runs once per session.
-  const movedOldRemindersRef = useRef(false);
-  useEffect(() => {
-    if (isViewer || movedOldRemindersRef.current) return;
-    const old = reminders.filter(r =>
-      OLD_ONLINE_INFO_SECTION_KEYS.includes(r.section_key) && !String(r.id).startsWith('opt_'));
-    if (!old.length) return;
-    movedOldRemindersRef.current = true;
-    (async () => {
-      const dueOrder = (r) => calcDaysRemaining(r) ?? Infinity;
-      for (const clientId of new Set(old.map(r => r.client_id))) {
-        const [first, ...rest] = old.filter(r => r.client_id === clientId).sort((a, b) => dueOrder(a) - dueOrder(b));
-        const alreadyThere = reminders.some(r =>
-          r.client_id === clientId && r.section_key === ONLINE_INFO_SECTION_KEY && r.row_label === ONLINE_INFO_ROW_LABEL);
-        const toDelete = alreadyThere ? [first, ...rest] : rest;
-        if (!alreadyThere) {
-          const { error } = await supabase.from(TABLE_ROW_REMINDERS)
-            .update({ section_key: ONLINE_INFO_SECTION_KEY, row_label: ONLINE_INFO_ROW_LABEL })
-            .eq('id', first.id);
-          if (error) { console.error('Move reminder error:', error.message); continue; }
-        }
-        if (toDelete.length) {
-          await supabase.from(TABLE_ROW_REMINDERS).delete().in('id', toDelete.map(r => r.id));
-        }
-      }
-      fetchReminders();
-    })();
-  }, [reminders, isViewer, fetchReminders]);
-
-  // Reminders on a renamed תנאים row (e.g. עירייה → 145 ד עירייה) follow the
-  // row's new name, since reminders are keyed by it. Runs once per session.
-  const renamedRemindersRef = useRef(false);
-  useEffect(() => {
-    if (isViewer || renamedRemindersRef.current) return;
-    const old = reminders.filter(r => r.section_key === CONDITIONS_SECTION_KEY
-      && RENAMED_CONDITION_ROWS[r.row_label] && !String(r.id).startsWith('opt_'));
-    if (!old.length) return;
-    renamedRemindersRef.current = true;
-    (async () => {
-      for (const r of old) {
-        const label = RENAMED_CONDITION_ROWS[r.row_label];
-        const taken = reminders.some(x => x.client_id === r.client_id && x.section_key === CONDITIONS_SECTION_KEY && x.row_label === label);
-        const { error } = taken
-          ? await supabase.from(TABLE_ROW_REMINDERS).delete().eq('id', r.id)
-          : await supabase.from(TABLE_ROW_REMINDERS).update({ row_label: label }).eq('id', r.id);
-        if (error) console.error('Rename reminder error:', error.message);
-      }
-      fetchReminders();
-    })();
-  }, [reminders, isViewer, fetchReminders]);
 
   // Keep selectedClient in sync after any client list update
   useEffect(() => {
@@ -263,79 +200,6 @@ export default function App() {
     setView(VIEW_FORM);
   };
   openFormRef.current = openForm;
-
-  // Set or clear a reminder for a specific row.
-  // days === null → delete the reminder; days > 0 → upsert it.
-  // Optimistic update first so Inbox reflects the change immediately.
-  const handleReminderChange = useCallback(async (clientId, sectionKey, rowLabel, days) => {
-    if (isViewer) return;
-    if (days === null) {
-      // Remove optimistically — notification disappears from Inbox at once.
-      setReminders(prev => prev.filter(r =>
-        !(r.client_id === clientId && r.section_key === sectionKey && r.row_label === rowLabel)
-      ));
-      await supabase.from(TABLE_ROW_REMINDERS)
-        .delete()
-        .eq('client_id', clientId)
-        .eq('section_key', sectionKey)
-        .eq('row_label', rowLabel);
-    } else {
-      const setAt = new Date().toISOString();
-      // Update optimistically — countdown badge and future notification reflect new value.
-      setReminders(prev => {
-        const filtered = prev.filter(r =>
-          !(r.client_id === clientId && r.section_key === sectionKey && r.row_label === rowLabel)
-        );
-        return [...filtered, { id: `opt_${Date.now()}`, client_id: clientId, section_key: sectionKey, row_label: rowLabel, days, set_at: setAt }];
-      });
-      await supabase.from(TABLE_ROW_REMINDERS)
-        .upsert(
-          { client_id: clientId, section_key: sectionKey, row_label: rowLabel, days, set_at: setAt, office_id: officeId },
-          { onConflict: 'client_id,section_key,row_label' }
-        );
-    }
-    // Sync with real DB id (replaces optimistic placeholder).
-    fetchReminders();
-  }, [fetchReminders, officeId, isViewer]);
-
-  // Delete all reminders for a section (GrayOut reset).
-  // sectionKey ending with '*' → prefix match (clears all sub-sections).
-  const handleClearReminders = useCallback(async (clientId, sectionKey) => {
-    if (isViewer) return;
-    // Optimistic: remove from state immediately so Inbox clears at once.
-    if (sectionKey.endsWith('*')) {
-      const prefix = sectionKey.slice(0, -1);
-      setReminders(prev => prev.filter(r => !(r.client_id === clientId && r.section_key.startsWith(prefix))));
-    } else {
-      setReminders(prev => prev.filter(r => !(r.client_id === clientId && r.section_key === sectionKey)));
-    }
-    let q = supabase.from(TABLE_ROW_REMINDERS).delete().eq('client_id', clientId);
-    if (sectionKey.endsWith('*')) {
-      q = q.like('section_key', sectionKey.slice(0, -1) + '%');
-    } else {
-      q = q.eq('section_key', sectionKey);
-    }
-    await q;
-    fetchReminders();
-  }, [fetchReminders, isViewer]);
-
-  // Update an existing reminder by its DB id (used from InboxView delay/dismiss).
-  const handleUpdateReminder = useCallback(async (reminderId, newDays) => {
-    if (isViewer) return;
-    if (newDays === null) {
-      // Optimistic: remove immediately so Inbox clears at once.
-      setReminders(prev => prev.filter(r => r.id !== reminderId));
-      await supabase.from(TABLE_ROW_REMINDERS).delete().eq('id', reminderId);
-    } else {
-      const setAt = new Date().toISOString();
-      // Optimistic: reset set_at so it's no longer "due" until new delay expires.
-      setReminders(prev => prev.map(r => r.id === reminderId ? { ...r, days: newDays, set_at: setAt } : r));
-      await supabase.from(TABLE_ROW_REMINDERS)
-        .update({ days: newDays, set_at: setAt })
-        .eq('id', reminderId);
-    }
-    fetchReminders();
-  }, [fetchReminders, isViewer]);
 
   const toggleType = (type) => setForm(prev => {
     const newTypes = prev.client_type.includes(type)
