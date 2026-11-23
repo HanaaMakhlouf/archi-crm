@@ -333,16 +333,41 @@ export const CONDITIONS_STATUS_OPTIONS = [
 ];
 
 // ── CONDITIONS PHASE (Phase 3) ──
-export const PERMIT_STATUS_FEE_NOT_GIVEN = 'fee_not_given'; // לא נמסרה אגרה
-export const PERMIT_STATUS_FEE_GIVEN = 'fee_given';     // נמסרה אגרה
+// אגרות (after the תנאים): the fee, then היתר (printed → signed).
+export const FEE_STATUS_NOT_ISSUED = 'fee_not_issued';
+export const FEE_STATUS_ISSUED = 'fee_issued';
+export const FEE_STATUS_PAID = 'fee_paid';
+export const FEE_STATUS_UPDATED = 'fee_updated';
+export const FEE_STATUS_NOT_REQUIRED = 'fee_not_required';
+export const FEE_STATUS_OPTIONS = [
+  { value: FEE_STATUS_NOT_ISSUED, label: 'לא הופק' },
+  { value: FEE_STATUS_ISSUED, label: 'הופק' },
+  { value: FEE_STATUS_PAID, label: 'שולם' },
+  { value: FEE_STATUS_UPDATED, label: 'עודכן' },
+  { value: FEE_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
+// The fee is settled (and היתר opens) once it's paid, updated or not needed.
+export const FEE_DONE_STATUSES = [FEE_STATUS_PAID, FEE_STATUS_UPDATED, FEE_STATUS_NOT_REQUIRED];
+
+export const PERMIT_STATUS_NOT_PRINTED = 'not_printed'; // לא הודפס
 export const PERMIT_STATUS_PRINTED = 'printed';       // הודפס
 export const PERMIT_STATUS_SIGNED = 'signed';        // נחתם
-
 export const PERMIT_STATUS_OPTIONS = [
-  { value: PERMIT_STATUS_FEE_NOT_GIVEN, label: 'לא נמסרה אגרה' },
-  { value: PERMIT_STATUS_FEE_GIVEN, label: 'נמסרה אגרה' },
+  { value: PERMIT_STATUS_NOT_PRINTED, label: 'לא הודפס' },
   { value: PERMIT_STATUS_PRINTED, label: 'הודפס' },
   { value: PERMIT_STATUS_SIGNED, label: 'נחתם' },
+];
+
+// היתר counts as signed only once the fee is settled too (it opens after it).
+export const isPermitSigned = (conditions) =>
+  FEE_DONE_STATUSES.includes(conditions.fee_status) && conditions.permit_status === PERMIT_STATUS_SIGNED;
+
+// Before אגרות had its own row, היתר's list began with the fee.
+export const PERMIT_STATUS_FEE_NOT_GIVEN = 'fee_not_given'; // לא נמסרה אגרה
+export const PERMIT_STATUS_FEE_GIVEN = 'fee_given';     // נמסרה אגרה
+export const PERMIT_OLD_STATUS_OPTIONS = [
+  { value: PERMIT_STATUS_FEE_NOT_GIVEN, label: 'לא נמסרה אגרה' },
+  { value: PERMIT_STATUS_FEE_GIVEN, label: 'נמסרה אגרה' },
 ];
 
 export const CONDITION_HASHBACHA = 'השבחה';

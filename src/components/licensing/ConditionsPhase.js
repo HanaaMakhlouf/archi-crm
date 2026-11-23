@@ -9,13 +9,15 @@ import {
   CONDITION_ROW_STATUS_SENT, CONDITION_ROW_STATUS_OPTIONS, CONDITION_ROW_SELECT_OPTIONS, conditionRowOptions,
   CONDITION_DONE_STATUSES, isConditionRowDone,
   COND_MISSING_DOCS, COND_SENT_COMMITTEE, COND_TO_APPRAISER, COND_SENT_CORP, COND_CHARGE_RECEIVED, COND_RETURNED_FOR_FIXES,
-  PERMIT_STATUS_OPTIONS, PERMIT_STATUS_SIGNED,
-  PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_FEE_GIVEN, PERMIT_STATUS_PRINTED,
+  PERMIT_STATUS_OPTIONS, PERMIT_STATUS_SIGNED, PERMIT_STATUS_NOT_PRINTED, PERMIT_STATUS_PRINTED,
+  FEE_STATUS_OPTIONS, FEE_DONE_STATUSES, FEE_STATUS_NOT_ISSUED, FEE_STATUS_ISSUED, FEE_STATUS_PAID,
+  FEE_STATUS_UPDATED, FEE_STATUS_NOT_REQUIRED,
   INSTITUTE_STATUS_NOT_CHOSEN, INSTITUTE_STATUS_CHOSEN, INSTITUTE_STATUS_HANDLING,
   isBuiltInRow,
 } from '../../constants';
 
 const SK_CONDITIONS = 'licensing.conditions.rows';
+const SK_FEE        = 'licensing.conditions.fee';
 const SK_PERMIT     = 'licensing.conditions.permit';
 
 const CONDITION_STATUS_COLORS = {
@@ -59,17 +61,33 @@ export const CONDITION_COLUMNS = [
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
+// The היתר box: אגרות, then היתר itself — each row with its own dropdown.
+const FEE_SELECT = {
+  options: FEE_STATUS_OPTIONS,
+  doneValues: FEE_DONE_STATUSES,
+  statusColors: {
+    [FEE_STATUS_NOT_ISSUED]:   'red',
+    [FEE_STATUS_ISSUED]:       'orange',
+    [FEE_STATUS_PAID]:         'green',
+    [FEE_STATUS_UPDATED]:      'green',
+    [FEE_STATUS_NOT_REQUIRED]: 'gray',
+  },
+};
 export const PERMIT_COLUMNS = [
   { key: 'label',    type: 'text' },
   { key: 'status',   type: 'select', options: PERMIT_STATUS_OPTIONS,
     statusColors: {
-      [PERMIT_STATUS_FEE_NOT_GIVEN]: 'red',
-      [PERMIT_STATUS_FEE_GIVEN]:     'orange',
-      [PERMIT_STATUS_PRINTED]:       'orange',
-      [PERMIT_STATUS_SIGNED]:        'green',
-    } },
+      [PERMIT_STATUS_NOT_PRINTED]: 'red',
+      [PERMIT_STATUS_PRINTED]:     'orange',
+      [PERMIT_STATUS_SIGNED]:      'green',
+    },
+    rowSelect: (row) => (row.id === 'fee' ? FEE_SELECT : undefined) },
   { key: 'note',     type: 'input',  placeholder: 'הערה' },
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
+];
+export const permitBoxRows = (conditions) => [
+  { id: 'fee', label: 'אגרות', status: conditions.fee_status, note: conditions.fee_note },
+  { id: 'permit', label: 'היתר', status: conditions.permit_status, note: conditions.permit_note },
 ];
 
 // answers: the request (בקשה), whose questions decide which rows apply.
@@ -78,10 +96,12 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
 
   const rows = shownRows(conditions.rows, 'conditions', answers);
   const allConditionsDone = rows.every(isConditionRowDone);
-  const permitSigned = conditions.permit_status === PERMIT_STATUS_SIGNED;
+  const feeDone = allConditionsDone && FEE_DONE_STATUSES.includes(conditions.fee_status);
+  const permitSigned = feeDone && conditions.permit_status === PERMIT_STATUS_SIGNED;
 
-  // GrayOut reset: when permit section becomes grayed, clear its reminders.
-  useOnLock(allConditionsDone, () => onClearReminders?.(SK_PERMIT));
+  // GrayOut reset: when a section becomes grayed, clear its reminders.
+  useOnLock(allConditionsDone, () => onClearReminders?.(SK_FEE));
+  useOnLock(feeDone, () => onClearReminders?.(SK_PERMIT));
 
   const sectionReminders = (sk) => reminders.filter(r => r.section_key === sk);
 
@@ -97,12 +117,11 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
     render: (row) => (isBuiltInRow('conditions', row.label) ? row.label : <RemovableLabel row={row} onRemove={removeRow} />),
   }));
 
-  const permitRow = [{
-    id: 'permit',
-    label: 'היתר',
-    status: conditions.permit_status,
-    note: conditions.permit_note,
-  }];
+  // אגרות and היתר share one box, each keeping its own reminders.
+  const sectionOfRow = { אגרות: SK_FEE, היתר: SK_PERMIT };
+  const permitBoxReminders = reminders.filter(r => r.section_key === sectionOfRow[r.row_label]);
+  const permitBoxReminderChange = onReminderChange
+    && ((rowLabel, days) => onReminderChange(sectionOfRow[rowLabel])?.(rowLabel, days));
 
   return (
     <div className="licensing-info">
@@ -127,16 +146,25 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
         )}
       />
 
-      {/* Section 2 — Permit (היתר) */}
+      {/* Section 2 — Permit (היתר): אגרות, then היתר once the fee is settled */}
       <GrayOut disabled={!allConditionsDone} reason="ממתין לסיום כל התנאים">
         <StatusTable
           title="היתר"
           showHeader={false}
-          rows={permitRow}
-          columns={PERMIT_COLUMNS}
-          onChange={(next) => onChange({ permit_status: next[0].status, permit_note: next[0].note })}
-          reminders={sectionReminders(SK_PERMIT)}
-          onReminderChange={onReminderChange?.(SK_PERMIT)}
+          rows={permitBoxRows(conditions)}
+          columns={feeDone ? PERMIT_COLUMNS : PERMIT_COLUMNS.map(c => (c.key !== 'label' ? c : {
+            ...c,
+            render: (row) => (row.id === 'permit'
+              ? <>{row.label}<span className="row-locked-hint">ממתין לתשלום אגרות</span></>
+              : row.label),
+          }))}
+          rowClassName={(row) => (row.id === 'permit' && !feeDone ? 'row-locked' : '')}
+          onChange={([fee, permit]) => onChange({
+            fee_status: fee.status, fee_note: fee.note,
+            permit_status: permit.status, permit_note: permit.note,
+          })}
+          reminders={permitBoxReminders}
+          onReminderChange={permitBoxReminderChange}
         />
       </GrayOut>
 

@@ -23,7 +23,8 @@ import {
   ONLINE_INFO_NOT_SENT, ONLINE_INFO_SENT, ONLINE_INFO_PASSED, ONLINE_INFO_RECEIVED,
   SUBMISSION_NOT_STARTED,
   DEFAULT_REQUEST_ACTIONS,
-  PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_SIGNED,
+  PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_FEE_GIVEN, PERMIT_STATUS_NOT_PRINTED, isPermitSigned,
+  FEE_STATUS_NOT_ISSUED, FEE_STATUS_PAID,
   DEFAULT_CONDITION_ROWS, RENAMED_CONDITION_ROWS, conditionRowOptions,
   CONDITION_HASHBACHA, CONDITION_CORP, CONDITION_CORP_145D,
   isConditionRowDone, CONDITION_ROW_STATUS_SENT, COND_MISSING_DOCS, COND_SENT_COMMITTEE,
@@ -159,11 +160,18 @@ const migrateConditionRows = (rows) => {
   return next;
 };
 
+// Clients saved before אגרות had its own row: היתר's old fee steps tell the
+// fee's status (handed over, or already printed / signed, means it was paid).
+const OLD_FEE_STEPS = [PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_FEE_GIVEN];
+const feeFromOldPermit = (permit) => (permit && permit !== PERMIT_STATUS_FEE_NOT_GIVEN ? FEE_STATUS_PAID : FEE_STATUS_NOT_ISSUED);
+
 const buildInitialConditions = (src = {}) => ({
   rows: src.rows?.length
     ? migrateConditionRows(src.rows)
     : DEFAULT_CONDITION_ROWS.map(newConditionRow),
-  permit_status: src.permit_status || PERMIT_STATUS_FEE_NOT_GIVEN,
+  fee_status: src.fee_status || feeFromOldPermit(src.permit_status),
+  fee_note: src.fee_note || '',
+  permit_status: !src.permit_status || OLD_FEE_STEPS.includes(src.permit_status) ? PERMIT_STATUS_NOT_PRINTED : src.permit_status,
   permit_note: src.permit_note || '',
   needs_start_approval: src.needs_start_approval ?? null,
 });
@@ -189,7 +197,7 @@ export const buildInitialLd = (client) => {
 export const computeCurrentPhase = (ld) => {
   const conditionsPassed = ld.info.online_info_status === ONLINE_INFO_RECEIVED;
   const meetingApproved = ld.application.meeting?.status === MEETING_APPROVED;
-  const conditionsComplete = ld.conditions.permit_status === PERMIT_STATUS_SIGNED && ld.conditions.needs_start_approval !== null;
+  const conditionsComplete = isPermitSigned(ld.conditions) && ld.conditions.needs_start_approval !== null;
   if (!conditionsPassed) return LICENSING_PHASE_INFO;
   if (!meetingApproved) return LICENSING_PHASE_APPLICATION;
   // אישור התחלת עבודה only exists once תנאים answered "yes" to needing it.
@@ -258,7 +266,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
   const handlePhaseClick = selectPhase;
 
   const meetingApproved = ld.application.meeting?.status === MEETING_APPROVED;
-  const conditionsComplete = ld.conditions.permit_status === PERMIT_STATUS_SIGNED && ld.conditions.needs_start_approval !== null;
+  const conditionsComplete = isPermitSigned(ld.conditions) && ld.conditions.needs_start_approval !== null;
   const needsStartApproval = ld.conditions.needs_start_approval === 'yes';
 
   // GrayOut reset: conditionsPassed controls פעולות + ישיבה tables in RequestPhase.

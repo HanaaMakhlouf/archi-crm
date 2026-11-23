@@ -8,7 +8,7 @@ import {
   LICENSING_PHASES, LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
   DOC_STATUS_MISSING, ONLINE_INFO_OPTIONS, ONLINE_INFO_NOT_SENT, ONLINE_INFO_RECEIVED, ONLINE_INFO_ROW_LABEL,
-  MEETING_APPROVED, PERMIT_STATUS_SIGNED, isConditionRowDone,
+  MEETING_APPROVED, isPermitSigned, isConditionRowDone, FEE_DONE_STATUSES,
   REQUEST_QUESTIONS, YES_NO_OPTIONS,
   DETAILED_HACHANA_KEN, DETAILED_SHUBATS, DETAILED_HITKABEL, FIELD_DETAILED_DATA,
 } from '../constants';
@@ -23,7 +23,7 @@ import { DOC_COLUMNS, DOC_LABELS, ONLINE_INFO_STATUS_COLORS, PERSON_FIELDS } fro
 import {
   REQUEST_NUMBER_FIELDS, SUBMISSION_COLUMNS, ACTION_COLUMNS, MEETING_COLUMNS, isActionDone,
 } from '../components/licensing/RequestPhase';
-import { CONDITION_COLUMNS, PERMIT_COLUMNS } from '../components/licensing/ConditionsPhase';
+import { CONDITION_COLUMNS, PERMIT_COLUMNS, permitBoxRows } from '../components/licensing/ConditionsPhase';
 import { CONFIRMATION_COLUMNS } from '../components/licensing/ConfirmationPhase';
 import { shownRows } from '../components/licensing/questionRows';
 import { selectFor } from '../components/licensing/StatusTable';
@@ -105,7 +105,7 @@ function licensingSummary(client) {
 
   const conditionsPassed = info.online_info_status === ONLINE_INFO_RECEIVED;
   const meetingApproved = application.meeting?.status === MEETING_APPROVED;
-  const conditionsComplete = conditions.permit_status === PERMIT_STATUS_SIGNED && conditions.needs_start_approval !== null;
+  const conditionsComplete = isPermitSigned(conditions) && conditions.needs_start_approval !== null;
   const done = {
     [LICENSING_PHASE_INFO]: conditionsPassed,
     [LICENSING_PHASE_APPLICATION]: meetingApproved,
@@ -161,10 +161,11 @@ function licensingSummary(client) {
       const rows = shownRows(conditions.rows, 'conditions', application);
       blocks.push(table('תנאים', CONDITION_COLUMNS, rows));
       if (rows.every(isConditionRowDone)) {
-        blocks.push(table('היתר', PERMIT_COLUMNS,
-          [{ label: 'היתר', status: conditions.permit_status, note: conditions.permit_note }],
-          { showHeader: false }));
-        if (conditions.permit_status === PERMIT_STATUS_SIGNED) {
+        // היתר's own row only once the fee is settled (it's locked until then).
+        const permitRows = permitBoxRows(conditions)
+          .filter(r => r.id === 'fee' || FEE_DONE_STATUSES.includes(conditions.fee_status));
+        blocks.push(table('היתר', PERMIT_COLUMNS, permitRows, { showHeader: false }));
+        if (isPermitSigned(conditions)) {
           blocks.push(fields(null, [{ label: 'האם צריך אישור תחילת עבודה?', value: answerLabel(conditions.needs_start_approval) }]));
         }
       }

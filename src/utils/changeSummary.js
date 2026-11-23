@@ -1,6 +1,7 @@
 import {
   DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS, ONLINE_INFO_OPTIONS, SUBMISSION_OPTIONS, DEPOSIT_STATUS_OPTIONS, ACTION_STATUS_OPTIONS,
-  MEETING_OPTIONS, CONDITIONS_STATUS_OPTIONS, PERMIT_STATUS_OPTIONS, PRIORITY_OPTIONS, PRIORITY_OLD_OPTIONS,
+  MEETING_OPTIONS, CONDITIONS_STATUS_OPTIONS, PERMIT_STATUS_OPTIONS, PERMIT_OLD_STATUS_OPTIONS, FEE_STATUS_OPTIONS,
+  PRIORITY_OPTIONS, PRIORITY_OLD_OPTIONS,
   HASHBACHA_STATUS_OPTIONS, CORP_STATUS_OPTIONS, CORP_145D_STATUS_OPTIONS, HAGA_STATUS_OPTIONS,
   RELIEF_STATUS_OPTIONS, INSTITUTE_STATUS_OPTIONS, YES_NO_OPTIONS,
   ONLINE_PERMIT_STATUS_OPTIONS, SUPERVISION_STATUS_OPTIONS, BUILDING_ASSIGN_STATUS_OPTIONS,
@@ -33,6 +34,7 @@ const FIELD_LABELS = {
   online_info_status: 'בקשת מידע לזמין', online_info_number: 'מספר בקשת מידע בזמין', online_info_note: 'הערת בקשת מידע',
   submission: 'הגשה', actions: 'פעולות', meeting: 'ישיבה', request_number: "מס' בקשה",
   rows: 'שורות', permit_status: 'סטטוס היתר', permit_note: 'הערת היתר',
+  fee_status: 'אגרות', fee_note: 'הערת אגרות',
   needs_start_approval: 'נדרש אישור תחילת עבודה',
   // detailed_data sections
   hachana: 'הכנה', hafkada: 'הפקדה', pirsum_a: 'פרסום א׳', ishur: 'אישור', pirsum_b: 'פרסום ב׳',
@@ -42,7 +44,7 @@ const FIELD_LABELS = {
 // translate it as a status code.
 const FREE_TEXT_KEYS = new Set([
   'notes', 'note', 'description', 'client_requirements', 'work_plan_notes',
-  'permit_note', 'conditions_note', 'info_note_note', 'online_info_number', 'online_info_note',
+  'permit_note', 'fee_note', 'conditions_note', 'info_note_note', 'online_info_number', 'online_info_note',
 ]);
 
 // Merged value→label lookup across every status/option list in the app, so a
@@ -54,7 +56,8 @@ const STATUS_LABELS = {};
   ONLINE_PERMIT_STATUS_OPTIONS, SUPERVISION_STATUS_OPTIONS, BUILDING_ASSIGN_STATUS_OPTIONS,
   TAKANA_STATUS_OPTIONS, ESTATE_NOTICE_STATUS_OPTIONS, ESTATE_NOTICE_OLD_STATUS_OPTIONS,
   DOC_STATUS_OPTIONS, INFO_NOTE_OPTIONS, ONLINE_INFO_OPTIONS, SUBMISSION_OPTIONS, DEPOSIT_STATUS_OPTIONS, ACTION_STATUS_OPTIONS,
-  MEETING_OPTIONS, CONDITIONS_STATUS_OPTIONS, PERMIT_STATUS_OPTIONS, PRIORITY_OPTIONS, PRIORITY_OLD_OPTIONS,
+  MEETING_OPTIONS, CONDITIONS_STATUS_OPTIONS, PERMIT_STATUS_OPTIONS, PERMIT_OLD_STATUS_OPTIONS, FEE_STATUS_OPTIONS,
+  PRIORITY_OPTIONS, PRIORITY_OLD_OPTIONS,
   HASHBACHA_STATUS_OPTIONS, CORP_STATUS_OPTIONS, CORP_145D_STATUS_OPTIONS, HAGA_STATUS_OPTIONS,
   OFFER_OPTIONS, DISCIPLINE_OPTIONS, WORK_PLANS_OPTIONS, HACHANA_OPTIONS, HAFKADA_ISHUR_OPTIONS, PIRSOOM_OPTIONS,
 ].forEach(list => (list || []).forEach(o => {
