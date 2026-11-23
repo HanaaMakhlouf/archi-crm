@@ -16,7 +16,10 @@ const IMAGE_URL_RENEW_MS = 6 * 60 * 60 * 1000;
 function showDesktopNotification(message, onClick) {
   if (!('Notification' in window) || Notification.permission === 'denied') return;
   const body = [message.client_name, message.message].filter(Boolean).join(' — ');
-  const n = new Notification(`הודעה חדשה מ${nameFromEmail(message.sender_email)}`, { body, tag: `msg_${message.id}` });
+  const title = message.kind === 'status_update'
+    ? `${nameFromEmail(message.sender_email)} עדכן/ה סטטוס`
+    : `הודעה חדשה מ${nameFromEmail(message.sender_email)}`;
+  const n = new Notification(title, { body, tag: `msg_${message.id}` });
   n.onclick = () => {
     window.electronAPI?.focusWindow?.();
     window.focus();
@@ -97,5 +100,6 @@ export function useMessages({ onOpen } = {}) {
     unreadCount: messages.filter(m => !m.read_at).length,
     imageUrls,
     markRead,
+    refresh: fetchMessages,
   };
 }

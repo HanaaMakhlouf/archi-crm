@@ -183,11 +183,14 @@ export default function Inbox({
             {messages.map(m => {
               const client = clients.find(c => String(c.id) === m.client_id);
               const imageUrl = m.image_path && imageUrls[m.image_path];
+              // A worker changed the status of a row the manager sent them.
+              const isUpdate = m.kind === 'status_update';
               return (
-                <div key={m.id} className={`notification-card message-card${m.read_at ? ' is-read' : ''}`}>
+                <div key={m.id} className={`notification-card message-card${isUpdate ? ' status-update-card' : ''}${m.read_at ? ' is-read' : ''}`}>
                   <div className="notification-content">
                     <div className="message-meta">
                       {!m.read_at && <span className="message-new">חדש</span>}
+                      {isUpdate && <span className="message-kind">עדכון סטטוס</span>}
                       <strong title={m.sender_email || ''}>{nameFromEmail(m.sender_email)}</strong>
                       <bdi dir="ltr">{formatDateTime(m.created_at)}</bdi>
                     </div>

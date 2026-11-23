@@ -111,10 +111,11 @@ export function selectFor(col, row) {
 //   title, rows, columns, onChange, showHeader, rowClassName, footer — existing
 //   reminders     — array of row_reminders DB rows for this section (filtered externally)
 //   onReminderChange(rowLabel, days|null) — set or clear a reminder for a row
+//   onStatusChange(rowLabel, { from, to, done }) — a row's status was changed by hand
 export default function StatusTable({
   title, rows, columns, onChange,
   showHeader = true, rowClassName, footer,
-  reminders = [], onReminderChange,
+  reminders = [], onReminderChange, onStatusChange,
 }) {
   const updateCell = (rowIdx, key, value) => {
     onChange(rows.map((r, i) => i === rowIdx ? { ...r, [key]: value } : r));
@@ -141,10 +142,14 @@ export default function StatusTable({
               ? doneValues.includes(newVal)
               : (newVal === lastOptionValue || newVal === 'not_required' || newVal === 'present'
                 || doneValues?.includes(newVal)));
-            if (isTerminal && onReminderChange) {
-              const rowLabel = row.label || row.type || String(rowIdx);
-              onReminderChange(rowLabel, null);
-            }
+            const rowLabel = row.label || row.type || String(rowIdx);
+            if (isTerminal && onReminderChange) onReminderChange(rowLabel, null);
+            // A task sent about this row reports back (and closes once done).
+            onStatusChange?.(rowLabel, {
+              from: options.find(o => o.value === value)?.label || '',
+              to: options.find(o => o.value === newVal)?.label || '',
+              done: !!isTerminal,
+            });
           }}>
             {options.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>

@@ -94,7 +94,7 @@ export const buildInitialDetailed = (client, src = {}) => {
 // reminders of every step after it.
 const STEP_SECTIONS = [SK_HAFKADA, SK_PIRSUM_A, SK_ISHUR, SK_PIRSUM_B];
 
-export default function DetailedTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {
+export default function DetailedTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders, onStatusChange }) {
   const [dd, setDd] = useState(() => buildInitialDetailed(client, client[FIELD_DETAILED_DATA]));
   const { land, updateLand, flushLand } = useLandEditor(client, onUpdate);
   const ddRef = useRef(dd);
@@ -169,6 +169,7 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
         onChange={onTableChange('hachana')}
         reminders={sectionReminders(SK_HACHANA)}
         onReminderChange={(rl, days) => onReminderChange?.(SK_HACHANA, rl, days)}
+        onStatusChange={(rl, change) => onStatusChange?.(SK_HACHANA, rl, change)}
       />
 
       <GrayOut disabled={!hachanaDone} reason="ממתין לסיום הכנה">
@@ -180,6 +181,7 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
           onChange={onTableChange('hafkada')}
           reminders={sectionReminders(SK_HAFKADA)}
           onReminderChange={(rl, days) => onReminderChange?.(SK_HAFKADA, rl, days)}
+          onStatusChange={(rl, change) => onStatusChange?.(SK_HAFKADA, rl, change)}
         />
       </GrayOut>
 
@@ -192,6 +194,7 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
           onChange={onTableChange('pirsum_a')}
           reminders={sectionReminders(SK_PIRSUM_A)}
           onReminderChange={(rl, days) => onReminderChange?.(SK_PIRSUM_A, rl, days)}
+          onStatusChange={(rl, change) => onStatusChange?.(SK_PIRSUM_A, rl, change)}
         />
       </GrayOut>
 
@@ -204,6 +207,7 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
           onChange={onTableChange('ishur')}
           reminders={sectionReminders(SK_ISHUR)}
           onReminderChange={(rl, days) => onReminderChange?.(SK_ISHUR, rl, days)}
+          onStatusChange={(rl, change) => onStatusChange?.(SK_ISHUR, rl, change)}
         />
       </GrayOut>
 
@@ -216,6 +220,7 @@ export default function DetailedTab({ client, onUpdate, reminders = [], onRemind
           onChange={onTableChange('pirsum_b')}
           reminders={sectionReminders(SK_PIRSUM_B)}
           onReminderChange={(rl, days) => onReminderChange?.(SK_PIRSUM_B, rl, days)}
+          onStatusChange={(rl, change) => onStatusChange?.(SK_PIRSUM_B, rl, change)}
         />
       </GrayOut>
 

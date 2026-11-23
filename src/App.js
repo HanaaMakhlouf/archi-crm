@@ -398,7 +398,29 @@ export default function App() {
   // messages managers forward to them.
   const { notifications: allNotifications, snoozeNotification } = useNotifications(openClients, reminders);
   const notifications = isManager ? allNotifications : [];
-  const { messages, unreadCount, imageUrls, markRead } = useMessages({ onOpen: () => setView(VIEW_INBOX) });
+  const { messages, unreadCount, imageUrls, markRead, refresh: refreshMessages } = useMessages({ onOpen: () => setView(VIEW_INBOX) });
+
+  // A row's status changed by hand. If a manager sent someone this row as a
+  // task, the manager gets an update; a done status also closes the task
+  // (every worker's copy) and the row's reminder. All in report_row_status
+  // (supabase/migrations/20261123_task_status_updates.sql).
+  const handleRowStatusChange = useCallback(async (client, sectionKey, rowLabel, { from, to, done }) => {
+    if (isViewer || !rowLabel) return;
+    const message = `${done ? '✓ הושלם · ' : ''}${rowLabel}: ${from ? `מ"${from}" ` : ''}ל"${to}"`;
+    const { error } = await supabase.rpc('report_row_status', {
+      p_client_id: String(client.id),
+      p_section_key: sectionKey,
+      p_row_label: rowLabel,
+      p_message: message,
+      p_done: done,
+    });
+    // PGRST202: the database hasn't been updated with the function yet.
+    if (error) {
+      if (error.code !== 'PGRST202') console.error('Status report error:', error.message);
+      return;
+    }
+    if (done) { refreshMessages(); fetchReminders(); }
+  }, [isViewer, refreshMessages, fetchReminders]);
   const notificationCount = notifications.length + unreadCount;
 
   // The box updates on every key; the table follows a beat later, so typing never waits on it.
@@ -662,6 +684,7 @@ export default function App() {
             reminders={reminders.filter(r => r.client_id === selectedClient.id)}
             onReminderChange={handleReminderChange}
             onClearReminders={handleClearReminders}
+            onRowStatusChange={handleRowStatusChange}
             initialTab={initialTab}
           />
         )}

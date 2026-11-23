@@ -206,7 +206,7 @@ function RequiredToggle({ value, onChange }) {
 
 // ── Component ──
 
-export default function PlanningTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {
+export default function PlanningTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders, onStatusChange }) {
   const [pd, setPd] = useState(() => buildInitialPd(client));
   const pdRef = useRef(pd);
   pdRef.current = pd;
@@ -342,6 +342,7 @@ export default function PlanningTab({ client, onUpdate, reminders = [], onRemind
           onChange={onArchChange}
           reminders={archReminders}
           onReminderChange={(rowLabel, days) => onReminderChange?.(archSectionFor(rowLabel), rowLabel, days)}
+          onStatusChange={(rowLabel, change) => onStatusChange?.(archSectionFor(rowLabel), rowLabel, change)}
           footer={(
             <AddRow
               existing={archRows.map(r => r.label)}
@@ -364,6 +365,7 @@ export default function PlanningTab({ client, onUpdate, reminders = [], onRemind
         onChange={onConstructionChange}
         reminders={constructionReminders}
         onReminderChange={(rowLabel, days) => onReminderChange?.(SK_CONSTRUCTION, rowLabel, days)}
+        onStatusChange={(rowLabel, change) => onStatusChange?.(SK_CONSTRUCTION, rowLabel, change)}
         footer={(
           <AddRow
             existing={constructionRows.map(r => r.label)}

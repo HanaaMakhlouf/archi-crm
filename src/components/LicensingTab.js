@@ -211,7 +211,7 @@ export function getCurrentLicensingPhaseLabel(client) {
   return LICENSING_PHASES.find(p => p.key === phaseKey)?.label || '';
 }
 
-export default function LicensingTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders }) {
+export default function LicensingTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders, onStatusChange }) {
   const [ld, setLd] = useState(() => buildInitialLd(client));
   const [activePhase, setActivePhase] = useState(() => recordedStep('phase', client.id) || computeCurrentPhase(ld));
   // Moving between מידע / בקשה / תנאים is a step: back returns to the one before.
@@ -283,6 +283,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
   // Reminder helpers — memoised to avoid re-filtering on every render
   const licReminders = useMemo(() => reminders.filter(r => r.section_key.startsWith('licensing.')), [reminders]);
   const makeReminderChange = useCallback((sectionKey) => (rowLabel, days) => onReminderChange?.(sectionKey, rowLabel, days), [onReminderChange]);
+  const makeStatusChange = useCallback((sectionKey) => (rowLabel, change) => onStatusChange?.(sectionKey, rowLabel, change), [onStatusChange]);
 
   // אישור התחלת עבודה is a step only when תנאים says it's needed.
   const phases = needsStartApproval ? LICENSING_PHASES : LICENSING_PHASES.filter(p => p.key !== LICENSING_PHASE_CONFIRMATION);
@@ -323,6 +324,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           onChange={(p) => updateSection('info', p)}
           reminders={licReminders}
           onReminderChange={makeReminderChange}
+          onStatusChange={makeStatusChange}
           onClearReminders={onClearReminders}
           onNext={() => selectPhase(LICENSING_PHASE_APPLICATION)}
         />
@@ -335,6 +337,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           onAnswer={answerQuestion}
           reminders={licReminders}
           onReminderChange={makeReminderChange}
+          onStatusChange={makeStatusChange}
           onClearReminders={onClearReminders}
           onNext={() => selectPhase(LICENSING_PHASE_CONDITIONS)}
         />
@@ -347,6 +350,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
             onChange={(p) => updateSection('conditions', p)}
             reminders={licReminders}
             onReminderChange={makeReminderChange}
+            onStatusChange={makeStatusChange}
             onClearReminders={onClearReminders}
           />
         </GrayOut>
@@ -357,6 +361,7 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
           onChange={(p) => updateSection('confirmation', p)}
           reminders={licReminders}
           onReminderChange={makeReminderChange}
+          onStatusChange={makeStatusChange}
         />
       )}
     </div>

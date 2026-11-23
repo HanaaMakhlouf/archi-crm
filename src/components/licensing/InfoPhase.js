@@ -106,7 +106,7 @@ export function PeopleEditor({ people, onChange, copyFrom }) {
 
 export const ONLINE_INFO_STATUS_COLORS = { [ONLINE_INFO_RECEIVED]: 'green', [ONLINE_INFO_NOT_SENT]: 'gray' };
 
-export default function InfoPhase({ info, onChange, reminders = [], onReminderChange, onClearReminders, onNext }) {
+export default function InfoPhase({ info, onChange, reminders = [], onReminderChange, onStatusChange, onClearReminders, onNext }) {
   const patch = (key, value) => onChange({ [key]: value });
 
   const allDocumentsDone = info.documents.every(d => d.status !== DOC_STATUS_MISSING);
@@ -177,6 +177,7 @@ export default function InfoPhase({ info, onChange, reminders = [], onReminderCh
         rowClassName={(r) => r.status === DOC_STATUS_MISSING ? 'doc-missing' : r.status === DOC_STATUS_PRESENT ? 'doc-present' : ''}
         reminders={sectionReminders(SK_DOCS)}
         onReminderChange={onReminderChange?.(SK_DOCS)}
+        onStatusChange={onStatusChange?.(SK_DOCS)}
       />
 
       {/* ── בקשת מידע לזמין ── */}
@@ -194,6 +195,7 @@ export default function InfoPhase({ info, onChange, reminders = [], onReminderCh
           rowClassName={() => onlineInfoReceived ? 'doc-present' : 'doc-missing'}
           reminders={sectionReminders(SK_ONLINE_INFO)}
           onReminderChange={onReminderChange?.(SK_ONLINE_INFO)}
+          onStatusChange={onStatusChange?.(SK_ONLINE_INFO)}
           footer={onlineInfoReceived
             ? <button className="btn btn-primary btn-sm" onClick={onNext}>עבור לשלב הבא ←</button>
             : null}

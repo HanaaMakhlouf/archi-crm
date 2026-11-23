@@ -91,7 +91,7 @@ export const permitBoxRows = (conditions) => [
 ];
 
 // answers: the request (בקשה), whose questions decide which rows apply.
-export default function ConditionsPhase({ conditions, answers, onChange, reminders = [], onReminderChange, onClearReminders }) {
+export default function ConditionsPhase({ conditions, answers, onChange, reminders = [], onReminderChange, onStatusChange, onClearReminders }) {
   const patch = (key, value) => onChange({ [key]: value });
 
   const rows = shownRows(conditions.rows, 'conditions', answers);
@@ -122,6 +122,8 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
   const permitBoxReminders = reminders.filter(r => r.section_key === sectionOfRow[r.row_label]);
   const permitBoxReminderChange = onReminderChange
     && ((rowLabel, days) => onReminderChange(sectionOfRow[rowLabel])?.(rowLabel, days));
+  const permitBoxStatusChange = onStatusChange
+    && ((rowLabel, change) => onStatusChange(sectionOfRow[rowLabel])?.(rowLabel, change));
 
   return (
     <div className="licensing-info">
@@ -133,6 +135,7 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
         onChange={(next) => patch('rows', mergeShownRows(conditions.rows, next, 'conditions', answers))}
         reminders={sectionReminders(SK_CONDITIONS)}
         onReminderChange={onReminderChange?.(SK_CONDITIONS)}
+        onStatusChange={onStatusChange?.(SK_CONDITIONS)}
         footer={(
           <AddRow
             {...LICENSING_ADD_ROW_PROPS}
@@ -165,6 +168,7 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
           })}
           reminders={permitBoxReminders}
           onReminderChange={permitBoxReminderChange}
+          onStatusChange={permitBoxStatusChange}
         />
       </GrayOut>
 

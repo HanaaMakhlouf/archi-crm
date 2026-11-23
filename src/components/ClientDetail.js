@@ -24,6 +24,7 @@ export default function ClientDetail({
   reminders = [],
   onReminderChange,
   onClearReminders,
+  onRowStatusChange,
   initialTab,
   onArchive,
   onReactivate,
@@ -224,6 +225,7 @@ export default function ClientDetail({
           reminders={reminders}
           onReminderChange={(sk, rl, days) => onReminderChange(client.id, sk, rl, days)}
           onClearReminders={(sk) => onClearReminders(client.id, sk)}
+          onStatusChange={(sk, rl, change) => onRowStatusChange?.(client, sk, rl, change)}
         />
       )}
       {activeTab === TYPE_LICENSING && (
@@ -233,6 +235,7 @@ export default function ClientDetail({
           reminders={reminders}
           onReminderChange={(sk, rl, days) => onReminderChange(client.id, sk, rl, days)}
           onClearReminders={(sk) => onClearReminders(client.id, sk)}
+          onStatusChange={(sk, rl, change) => onRowStatusChange?.(client, sk, rl, change)}
         />
       )}
       {activeTab === TYPE_DETAILED && (
@@ -242,6 +245,7 @@ export default function ClientDetail({
           reminders={reminders}
           onReminderChange={(sk, rl, days) => onReminderChange(client.id, sk, rl, days)}
           onClearReminders={(sk) => onClearReminders(client.id, sk)}
+          onStatusChange={(sk, rl, change) => onRowStatusChange?.(client, sk, rl, change)}
         />
       )}
       </fieldset>

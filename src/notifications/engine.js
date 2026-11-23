@@ -72,6 +72,6 @@ export function computeReminderNotifications(clients, reminders) {
       type: NOTIF_TYPE_ROW_REMINDER,
       message: `${r.row_label}`,
       created_at: r.set_at,
-      reminderMeta: { reminderId: r.id, sectionKey: r.section_key },
+      reminderMeta: { reminderId: r.id, sectionKey: r.section_key, rowLabel: r.row_label },
     }));
 }

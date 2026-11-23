@@ -13,7 +13,7 @@ export const CONFIRMATION_COLUMNS = [
   { key: 'reminder', type: 'reminder', header: 'תזכורת' },
 ];
 
-export default function ConfirmationPhase({ confirmation, onChange, reminders = [], onReminderChange }) {
+export default function ConfirmationPhase({ confirmation, onChange, reminders = [], onReminderChange, onStatusChange }) {
   const history = useAddedRowHistory('confirmation');
 
   // Rows a worker added can be removed (with their reminder).
@@ -35,6 +35,7 @@ export default function ConfirmationPhase({ confirmation, onChange, reminders = 
         onChange={(next) => onChange({ rows: next })}
         reminders={reminders.filter(r => r.section_key === SK_CONFIRMATION)}
         onReminderChange={onReminderChange?.(SK_CONFIRMATION)}
+        onStatusChange={onStatusChange?.(SK_CONFIRMATION)}
         footer={(
           <AddRow
             {...LICENSING_ADD_ROW_PROPS}

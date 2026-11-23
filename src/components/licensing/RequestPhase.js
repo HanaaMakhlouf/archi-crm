@@ -217,7 +217,7 @@ function YesNoToggle({ value, onChange }) {
   );
 }
 
-export default function RequestPhase({ request, conditionsPassed, onChange, onAnswer, reminders = [], onReminderChange, onClearReminders, onNext }) {
+export default function RequestPhase({ request, conditionsPassed, onChange, onAnswer, reminders = [], onReminderChange, onStatusChange, onClearReminders, onNext }) {
   const patch = (key, value) => onChange({ [key]: value });
 
   // Only the rows the questions' answers call for count and show.
@@ -278,6 +278,7 @@ export default function RequestPhase({ request, conditionsPassed, onChange, onAn
         onChange={(next) => patch('submission', { status: next[0].status, note: next[0].note })}
         reminders={sectionReminders(SK_SUBMISSION)}
         onReminderChange={onReminderChange?.(SK_SUBMISSION)}
+        onStatusChange={onStatusChange?.(SK_SUBMISSION)}
       />
 
       {/* Section 2 — Actions */}
@@ -289,6 +290,7 @@ export default function RequestPhase({ request, conditionsPassed, onChange, onAn
           onChange={(next) => patch('actions', mergeShownRows(request.actions, syncTextRows(actions, next), 'actions', request))}
           reminders={sectionReminders(SK_ACTIONS)}
           onReminderChange={onReminderChange?.(SK_ACTIONS)}
+          onStatusChange={onStatusChange?.(SK_ACTIONS)}
           footer={(
             <AddRow
               {...LICENSING_ADD_ROW_PROPS}
@@ -320,6 +322,7 @@ export default function RequestPhase({ request, conditionsPassed, onChange, onAn
           })}
           reminders={sectionReminders(SK_MEETING)}
           onReminderChange={onReminderChange?.(SK_MEETING)}
+          onStatusChange={onStatusChange?.(SK_MEETING)}
           footer={request.meeting.status === MEETING_APPROVED
             ? <button className="btn btn-primary btn-sm" onClick={onNext}>עבור לשלב הבא ←</button>
             : null}

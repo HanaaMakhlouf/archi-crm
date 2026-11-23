@@ -164,12 +164,19 @@ export default function SendMessageDialog({ notification, onClose, onSent }) {
       client_id: notification.client_id != null ? String(notification.client_id) : null,
       client_name: notification.client?.name || null,
       section_key: notification.reminderMeta?.sectionKey || null,
+      // The row this task is about: changing its status reports back to the sender.
+      row_label: notification.reminderMeta?.rowLabel || null,
       notification_text: notification.message,
       message: text.trim() || null,
       image_path: imagePath,
       attachments,
     }));
-    const { error: insertError } = await supabase.from(TABLE_NOTIFICATION_MESSAGES).insert(rows);
+    let { error: insertError } = await supabase.from(TABLE_NOTIFICATION_MESSAGES).insert(rows);
+    // Database not updated yet (no row_label column): send it as before.
+    if (insertError && /row_label/.test(insertError.message || '')) {
+      ({ error: insertError } = await supabase.from(TABLE_NOTIFICATION_MESSAGES)
+        .insert(rows.map(({ row_label, ...r }) => r)));
+    }
     setSending(false);
     if (insertError) {
       console.error('Send message error:', insertError.message);
