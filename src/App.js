@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useDeferredValue } from 'react';
+import { useState, useCallback } from 'react';
 import './App.css';
 import './styles/Mobile.css';
 import { supabase } from './supabaseClient';
@@ -7,49 +7,24 @@ import { useClients } from './hooks/useClients';
 import { useReminders } from './hooks/useReminders';
 import { useNavigation, resolveNavHint } from './hooks/useNavigation';
 import Sidebar from './components/Sidebar';
+import ClientsListView from './components/clients/ClientsListView';
 import ClientDetail from './components/ClientDetail';
 import ClientForm from './components/ClientForm';
 import Inbox from './components/Inbox';
 import SettingsView from './components/SettingsView';
 import ActivityView from './components/ActivityView';
 import ArchiveView from './components/ArchiveView';
-import PriorityDot from './components/PriorityDot';
-import ExportClientsDialog from './components/ExportClientsDialog';
-import { alertDialog } from './components/AppDialog';
-import Icon, { getInitials } from './components/Icon';
-import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
-import { getCurrentPlanningStageLabel } from './components/PlanningTab';
-import { formatDate } from './utils/format';
-import { DEFAULT_SORT, filterAndSortClients } from './utils/clientList';
-import { openClientFolder } from './utils/openClientFolder';
+import { DEFAULT_SORT } from './utils/clientList';
 import { helkaToStrings } from './utils/land';
-import { useFitColumns } from './utils/useFitColumns';
 import { ClientsContext } from './utils/addedRows';
 import { goBack } from './utils/useHistoryStep';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
 import {
-  TYPE_PLANNING, TYPE_LICENSING, CLIENT_TYPES,
+  CLIENT_TYPES,
   VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, VIEW_ARCHIVE, TAB_ACTIVITY,
-  FIELD_ARCHIVED_AT,
-  FILE_LINK_2_PATH, ROLE_MANAGER, PRIORITY_RED,
+  FIELD_ARCHIVED_AT, ROLE_MANAGER,
 } from './constants';
-
-// Clickable column title. The first click sorts by `firstDir` (A→ת for text,
-// newest first for dates); each further click reverses it. One column at a time.
-function SortHeader({ column, label, sort, onChange, firstDir = 'asc' }) {
-  const active = sort !== DEFAULT_SORT && sort.key === column; // the untouched default shows no arrow
-  const toggle = () => onChange({
-    key: column,
-    dir: active ? (sort.dir === 'asc' ? 'desc' : 'asc') : firstDir,
-  });
-  return (
-    <button type="button" className={`th-sort-btn${active ? ' active' : ''}`} onClick={toggle}>
-      {label}
-      <span className="th-sort-arrow">{active ? (sort.dir === 'asc' ? '▲' : '▼') : '↕'}</span>
-    </button>
-  );
-}
 
 const EMPTY_FORM = {
   name: '', phone: '', city: '', email: '',
@@ -74,8 +49,6 @@ export default function App() {
   // ── FILTERS / SEARCH / SORT ──
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState(DEFAULT_SORT);     // one column sorts at a time
-  const [exportOpen, setExportOpen] = useState(false);
-  const closeExport = useCallback(() => setExportOpen(false), []);
 
   // ── FORM STATE ──
   const [form, setForm] = useState(EMPTY_FORM);
@@ -153,22 +126,6 @@ export default function App() {
   }, [isViewer, refreshMessages, fetchReminders]);
   const notificationCount = notifications.length + unreadCount;
 
-  // The box updates on every key; the table follows a beat later, so typing never waits on it.
-  const deferredSearch = useDeferredValue(search);
-  const filtered = useMemo(() => filterAndSortClients(openClients, {
-    search: deferredSearch,
-  }, sort), [openClients, deferredSearch, sort]);
-
-  // Narrow window: the table drops columns until it fits (see App.css).
-  const tableBoxRef = useFitColumns(6, [view, filtered]);
-
-  const urgentCount = useMemo(() => openClients.filter(c => c.priority === PRIORITY_RED).length, [openClients]);
-
-  const STATS = [
-    { label: 'סה״כ לקוחות', value: openClients.length, icon: 'users', tone: '' },
-    { label: 'בעדיפות דחופה', value: urgentCount, icon: 'flag', tone: 'danger' },
-  ];
-
   // RENDER LAYER
   return (
     // Every client: "+ הוסף שורה" offers rows added to the same section before.
@@ -183,222 +140,23 @@ export default function App() {
 
       <main className="main-content">
 
-        {/* ── CLIENTS LIST VIEW ── */}
         {view === VIEW_CLIENTS && (
-          <>
-            {fetchError && (
-              <div className="form-error" style={{ marginBottom: '1rem' }}>{fetchError}</div>
-            )}
-            <div className="page-header">
-              <div>
-                <div className="page-eyebrow"><strong>ראשי</strong> / לקוחות</div>
-                <h1 className="page-title">לקוחות</h1>
-                <p className="page-subtitle">כל תיקי הלקוחות של המשרד, במקום אחד.</p>
-              </div>
-              <div className="page-actions">
-                {openClients.length > 0 && (
-                  <button className="btn btn-ghost" onClick={() => setExportOpen(true)}>
-                    <Icon name="download" size={16} />
-                    ייצוא
-                  </button>
-                )}
-                {!isViewer && (
-                  <button className="btn btn-primary" onClick={() => openForm()}>
-                    <Icon name="plus" size={16} strokeWidth={2.4} />
-                    לקוח חדש
-                  </button>
-                )}
-              </div>
-              {exportOpen && (
-                // In the list's current order (sort applies; the search box doesn't).
-                <ExportClientsDialog
-                  clients={filterAndSortClients(openClients, {}, sort)}
-                  onClose={closeExport}
-                />
-              )}
-            </div>
-
-            <div className="clients-stats-row">
-              {STATS.map(s => (
-                <div key={s.label} className="client-stat">
-                  <div className={`stat-icon ${s.tone}`}><Icon name={s.icon} size={21} /></div>
-                  <div className="stat-body">
-                    <span className="stat-label">{s.label}</span>
-                    <span className="stat-number">{s.value}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="table-card">
-              <div className="list-toolbar">
-                <div className="list-toolbar-title">
-                  רשימת לקוחות
-                  <span className="list-toolbar-count">{filtered.length} תוצאות</span>
-                </div>
-                {/* A label, so a click anywhere in the box (icon, padding) focuses the input. */}
-                <label className="search-bar">
-                  <Icon name="search" size={16} />
-                  <input
-                    type="text"
-                    placeholder="חיפוש לפי שם, עיר, גוש או מס' בקשה..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                  />
-                </label>
-              </div>
-
-              {/* ── LOADING SKELETON ── */}
-              {loading ? (
-                <div className="loading-state" style={{ padding: 18 }}>
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="skeleton-card">
-                      <div className="skeleton skeleton-heading" />
-                      <div className="skeleton skeleton-text" />
-                      <div className="skeleton skeleton-text" />
-                    </div>
-                  ))}
-                </div>
-
-                /* ── EMPTY STATE ── */
-              ) : openClients.length === 0 ? (
-                <div className="empty-state">
-                  <Icon name="users" size={48} strokeWidth={1.5} />
-                  <h3>אין לקוחות עדיין</h3>
-                  <p>הוסיפו את הלקוח הראשון כדי להתחיל</p>
-                  {!isViewer && (
-                    <button className="btn btn-primary" onClick={() => openForm()}>
-                      <Icon name="plus" size={16} strokeWidth={2.4} />
-                      הוספת לקוח
-                    </button>
-                  )}
-                </div>
-
-                /* ── CLIENTS TABLE ── */
-              ) : (
-                <div className="clients-table-scroll" ref={tableBoxRef}>
-                <table className="clients-table">
-                  <thead>
-                    <tr>
-                      <th><SortHeader column="name" label="לקוח" sort={sort} onChange={setSort} /></th>
-                      <th><SortHeader column="priority" label="עדיפות" sort={sort} onChange={setSort} firstDir="desc" /></th>
-                      <th className="col-type">סוג תיק</th>
-                      <th className="col-phase">שלב ברישוי</th>
-                      <th><SortHeader column="city" label="עיר" sort={sort} onChange={setSort} /></th>
-                      <th>גוש / חלקה</th>
-                      <th className="col-request">מס' בקשה</th>
-                      <th className="col-updated">
-                        <SortHeader column="updated" label="עדכון אחרון" sort={sort} onChange={setSort} firstDir="desc" />
-                      </th>
-                      <th className="col-created">
-                        <SortHeader column="created" label="תאריך יצירה" sort={sort} onChange={setSort} firstDir="desc" />
-                      </th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {/* No matches: keep the table (and its column widths) in place. */}
-                    {filtered.length === 0 && (
-                      <tr className="clients-table-empty">
-                        <td colSpan={10}>לא נמצאו לקוחות התואמים ל״{deferredSearch.trim()}״</td>
-                      </tr>
-                    )}
-                    {filtered.map(client => {
-                      const types = client.client_type || [];
-                      const helkaText = client.helka && client.helka.length ? client.helka.join(', ') : '';
-                      return (
-                        <tr
-                          key={client.id}
-                          onClick={() => { setInitialTab(null); setSelectedClient(client); setView(VIEW_DETAIL); }}
-                          className="clients-table-row"
-                        >
-                          <td className="cell-name">
-                            <div className="client-cell">
-                              <div className="client-avatar">{getInitials(client.name)}</div>
-                              <div>
-                                <div className="client-name">{client.name}</div>
-                                {types.includes(TYPE_LICENSING) && (
-                                  <div className="client-sub client-sub--phase">
-                                    <span className="client-sub-key">רישוי · </span>{getCurrentLicensingPhaseLabel(client)}
-                                  </div>
-                                )}
-                                {client.last_change_summary && (
-                                  <div className="client-sub-faint">{client.last_change_summary}</div>
-                                )}
-                                {types.includes(TYPE_PLANNING) && (
-                                  <div className="client-sub">
-                                    <span className="client-sub-key">תכנון · </span>{getCurrentPlanningStageLabel(client)}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="cell-priority">
-                            <PriorityDot
-                              value={client.priority}
-                              editable={canEditPriority}
-                              onChange={(v) => handleUpdateClient(client.id, { priority: v })}
-                            />
-                          </td>
-                          <td className="col-type">
-                            {types.length > 0
-                              ? <div className="type-tags-cell">{types.map(t => <span key={t} className="type-tag">{t}</span>)}</div>
-                              : <span className="muted">—</span>}
-                          </td>
-                          <td className="cell-phase col-phase" data-label="שלב ברישוי">
-                            {types.includes(TYPE_LICENSING)
-                              ? <span className="phase-tag">{getCurrentLicensingPhaseLabel(client)}</span>
-                              : <span className="muted">—</span>}
-                          </td>
-                          <td className="cell-secondary cell-city" data-label="עיר">{client.city || '—'}</td>
-                          <td className="cell-plot" data-label="גוש / חלקה">
-                            {client.gush || helkaText ? `${client.gush || '—'} / ${helkaText || '—'}` : '—'}
-                          </td>
-                          <td className="cell-request col-request" data-label="מס' בקשה">{client.licensing_data?.application?.request_number || '—'}</td>
-                          <td className="cell-updated col-updated" data-label="עדכון אחרון">
-                            {client.last_updated_at
-                              ? <bdi dir="ltr">{formatDate(client.last_updated_at)}</bdi>
-                              : <span className="muted">—</span>}
-                          </td>
-                          <td className="cell-secondary cell-created col-created">
-                            <bdi dir="ltr">{formatDate(client.created_at)}</bdi>
-                          </td>
-                          <td className="cell-actions" onClick={e => e.stopPropagation()}>
-                            <div className="row-actions">
-                              {client[FILE_LINK_2_PATH] && (
-                                <button
-                                  className="icon-btn folder-btn--set"
-                                  onClick={async () => {
-                                    if (!window.electronAPI?.isElectron) return;
-                                    const err = await openClientFolder(client[FILE_LINK_2_PATH], (u) => handleUpdateClient(client.id, u));
-                                    if (err) alertDialog(err);
-                                  }}
-                                  title={`פתח תיקייה: ${client[FILE_LINK_2_PATH]}`}
-                                >
-                                  <Icon name="folder" size={16} />
-                                </button>
-                              )}
-                              {!isViewer && (
-                                <>
-                                  <button className="icon-btn" onClick={() => openForm(client)} title="עריכה">
-                                    <Icon name="edit" size={16} />
-                                  </button>
-                                  <button className="icon-btn danger" onClick={() => handleDelete(client.id)} title="מחיקה">
-                                    <Icon name="trash" size={16} />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                </div>
-              )}
-            </div>
-          </>
+          <ClientsListView
+            clients={openClients}
+            loading={loading}
+            fetchError={fetchError}
+            isViewer={isViewer}
+            canEditPriority={canEditPriority}
+            search={search}
+            onSearchChange={setSearch}
+            sort={sort}
+            onSortChange={setSort}
+            onNewClient={() => openForm()}
+            onOpen={(client) => { setInitialTab(null); setSelectedClient(client); setView(VIEW_DETAIL); }}
+            onEdit={(client) => openForm(client)}
+            onDelete={(client) => handleDelete(client.id)}
+            onUpdate={(client, updates) => handleUpdateClient(client.id, updates)}
+          />
         )}
 
         {/* ── OTHER VIEWS ── */}
