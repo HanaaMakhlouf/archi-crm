@@ -381,12 +381,13 @@ export const PERMIT_OLD_STATUS_OPTIONS = [
 export const CONDITION_HASHBACHA = 'השבחה';
 export const CONDITION_CORP = 'התייחסות תאגיד';
 export const CONDITION_CORP_145D = '145 ד תאגיד';
+export const CONDITION_MUNICIPALITY_145D = '145 ד עירייה';
 export const CONDITION_HAGA = 'הג״א';
 export const CONDITION_TRANSPORT = 'התייחסות לנספח תחבורה';
 export const CONDITION_CONTROL_INSTITUTE = 'מכון בקרה';
 
 export const DEFAULT_CONDITION_ROWS = [
-  CONDITION_HASHBACHA, CONDITION_CORP, CONDITION_CORP_145D, 'עירייה', CONDITION_HAGA, 'בטון',
+  CONDITION_HASHBACHA, CONDITION_CORP, CONDITION_CORP_145D, CONDITION_MUNICIPALITY_145D, CONDITION_HAGA, 'בטון',
   'פסולת', 'סטטי/תצהיר',
 ];
 
@@ -396,6 +397,7 @@ export const RENAMED_CONDITION_ROWS = {
   'פטור 140': CONDITION_HASHBACHA,
   'תאגיד': CONDITION_CORP,
   'תחבורה': CONDITION_TRANSPORT,
+  'עירייה': CONDITION_MUNICIPALITY_145D,
 };
 
 // מכון בקרה: "received" reuses the מוכן (present) code so it counts as done like the others.

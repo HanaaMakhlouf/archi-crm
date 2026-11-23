@@ -36,7 +36,10 @@ import {
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION, LICENSING_PHASE_FORM4,
   FILE_LINK_2_PATH, ROLE_MANAGER, PRIORITY_RED,
   ONLINE_INFO_SECTION_KEY, ONLINE_INFO_ROW_LABEL, OLD_ONLINE_INFO_SECTION_KEYS,
+  RENAMED_CONDITION_ROWS,
 } from './constants';
+
+const CONDITIONS_SECTION_KEY = 'licensing.conditions.rows';
 
 // Maps a reminder's section_key to the tab + licensing phase to navigate to.
 function resolveNavHint(sectionKey) {
@@ -164,6 +167,28 @@ export default function App() {
         if (toDelete.length) {
           await supabase.from(TABLE_ROW_REMINDERS).delete().in('id', toDelete.map(r => r.id));
         }
+      }
+      fetchReminders();
+    })();
+  }, [reminders, isViewer, fetchReminders]);
+
+  // Reminders on a renamed תנאים row (e.g. עירייה → 145 ד עירייה) follow the
+  // row's new name, since reminders are keyed by it. Runs once per session.
+  const renamedRemindersRef = useRef(false);
+  useEffect(() => {
+    if (isViewer || renamedRemindersRef.current) return;
+    const old = reminders.filter(r => r.section_key === CONDITIONS_SECTION_KEY
+      && RENAMED_CONDITION_ROWS[r.row_label] && !String(r.id).startsWith('opt_'));
+    if (!old.length) return;
+    renamedRemindersRef.current = true;
+    (async () => {
+      for (const r of old) {
+        const label = RENAMED_CONDITION_ROWS[r.row_label];
+        const taken = reminders.some(x => x.client_id === r.client_id && x.section_key === CONDITIONS_SECTION_KEY && x.row_label === label);
+        const { error } = taken
+          ? await supabase.from(TABLE_ROW_REMINDERS).delete().eq('id', r.id)
+          : await supabase.from(TABLE_ROW_REMINDERS).update({ row_label: label }).eq('id', r.id);
+        if (error) console.error('Rename reminder error:', error.message);
       }
       fetchReminders();
     })();
