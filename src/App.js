@@ -407,7 +407,7 @@ export default function App() {
   }, sort), [openClients, deferredSearch, sort]);
 
   // Narrow window: the table drops columns until it fits (see App.css).
-  const tableBoxRef = useFitColumns(5, [view, filtered]);
+  const tableBoxRef = useFitColumns(6, [view, filtered]);
 
   const urgentCount = useMemo(() => openClients.filter(c => c.priority === PRIORITY_RED).length, [openClients]);
 
@@ -528,6 +528,7 @@ export default function App() {
                       <th><SortHeader column="name" label="לקוח" sort={sort} onChange={setSort} /></th>
                       <th><SortHeader column="priority" label="עדיפות" sort={sort} onChange={setSort} firstDir="desc" /></th>
                       <th className="col-type">סוג תיק</th>
+                      <th className="col-phase">שלב ברישוי</th>
                       <th><SortHeader column="city" label="עיר" sort={sort} onChange={setSort} /></th>
                       <th>גוש / חלקה</th>
                       <th className="col-request">מס' בקשה</th>
@@ -544,7 +545,7 @@ export default function App() {
                     {/* No matches: keep the table (and its column widths) in place. */}
                     {filtered.length === 0 && (
                       <tr className="clients-table-empty">
-                        <td colSpan={9}>לא נמצאו לקוחות התואמים ל״{deferredSearch.trim()}״</td>
+                        <td colSpan={10}>לא נמצאו לקוחות התואמים ל״{deferredSearch.trim()}״</td>
                       </tr>
                     )}
                     {filtered.map(client => {
@@ -562,7 +563,7 @@ export default function App() {
                               <div>
                                 <div className="client-name">{client.name}</div>
                                 {types.includes(TYPE_LICENSING) && (
-                                  <div className="client-sub">
+                                  <div className="client-sub client-sub--phase">
                                     <span className="client-sub-key">רישוי · </span>{getCurrentLicensingPhaseLabel(client)}
                                   </div>
                                 )}
@@ -587,6 +588,11 @@ export default function App() {
                           <td className="col-type">
                             {types.length > 0
                               ? <div className="type-tags-cell">{types.map(t => <span key={t} className="type-tag">{t}</span>)}</div>
+                              : <span className="muted">—</span>}
+                          </td>
+                          <td className="cell-phase col-phase" data-label="שלב ברישוי">
+                            {types.includes(TYPE_LICENSING)
+                              ? <span className="phase-tag">{getCurrentLicensingPhaseLabel(client)}</span>
                               : <span className="muted">—</span>}
                           </td>
                           <td className="cell-secondary cell-city" data-label="עיר">{client.city || '—'}</td>

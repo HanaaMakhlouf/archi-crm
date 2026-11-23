@@ -866,15 +866,33 @@ h6 {
   .clients-table-scroll:not([data-hide="0"]) .clients-table td { padding-inline: 12px; }
   .clients-table-scroll:not([data-hide="0"]) .clients-table thead th:last-child { width: auto; }
   .clients-table-scroll:not([data-hide="0"]) .client-cell { min-width: 200px; }
-  .clients-table-scroll:is([data-hide="2"], [data-hide="3"], [data-hide="4"], [data-hide="5"]) .col-created,
-  .clients-table-scroll:is([data-hide="3"], [data-hide="4"], [data-hide="5"]) .col-updated,
+  .clients-table-scroll:is([data-hide="2"], [data-hide="3"], [data-hide="4"], [data-hide="5"], [data-hide="6"]) .col-created,
+  .clients-table-scroll:is([data-hide="3"], [data-hide="4"], [data-hide="5"], [data-hide="6"]) .col-updated,
   /* סוג תיק is also written under each name (רישוי · ..., תכנון · ...). */
-  .clients-table-scroll:is([data-hide="4"], [data-hide="5"]) .col-type,
-  .clients-table-scroll[data-hide="5"] .col-request { display: none; }
-  .clients-table-scroll[data-hide="5"] .clients-table thead th,
-  .clients-table-scroll[data-hide="5"] .clients-table td { padding-inline: 8px; }
-  .clients-table-scroll[data-hide="5"] .clients-table td.cell-actions { padding-inline: 6px; }
-  .clients-table-scroll[data-hide="5"] .client-cell { min-width: 140px; gap: 10px; }
+  .clients-table-scroll:is([data-hide="4"], [data-hide="5"], [data-hide="6"]) .col-type,
+  .clients-table-scroll:is([data-hide="5"], [data-hide="6"]) .col-request,
+  .clients-table-scroll[data-hide="6"] .col-phase { display: none; }
+  .clients-table-scroll:is([data-hide="5"], [data-hide="6"]) .clients-table thead th,
+  .clients-table-scroll:is([data-hide="5"], [data-hide="6"]) .clients-table td { padding-inline: 8px; }
+  .clients-table-scroll:is([data-hide="5"], [data-hide="6"]) .clients-table td.cell-actions { padding-inline: 6px; }
+  .clients-table-scroll:is([data-hide="5"], [data-hide="6"]) .client-cell { min-width: 140px; gap: 10px; }
+  /* Once the שלב ברישוי column is gone, the phase goes back under the name. */
+  .clients-table-scroll[data-hide="6"] .client-sub--phase { display: block; }
+}
+
+/* The licensing phase has its own column, so it isn't repeated under the name. */
+.clients-table .client-sub--phase { display: none; }
+.clients-table .phase-tag {
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 1.5;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 /* Folding the sidebar into a strip of icons (Sidebar.js) — offered only
@@ -1031,6 +1049,8 @@ h6 {
   font-size: 13px;
   color: var(--color-text-faint);
   line-height: 1.55;
+  /* Long folder paths have no spaces; let them wrap instead of widening the table. */
+  overflow-wrap: anywhere;
 }
 
 .clients-table td.cell-secondary {
