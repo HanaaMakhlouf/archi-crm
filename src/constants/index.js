@@ -449,10 +449,27 @@ export const conditionRowOptions = (label) => CONDITION_ROW_SELECT_OPTIONS[label
 
 // A condition counts as done (and unlocks היתר once all are) at מוכן or לא נדרש.
 export const CONDITION_DONE_STATUSES = [DOC_STATUS_PRESENT, DOC_STATUS_NOT_REQUIRED];
-export const isConditionRowDone = (row) => CONDITION_DONE_STATUSES.includes(row.status);
+// A row added with its own options is done at the last of them.
+export const isConditionRowDone = (row) => CONDITION_DONE_STATUSES.includes(row.status)
+  || (!!row.options?.length && row.status === row.options[row.options.length - 1].value);
 
 // ── CONFIRMATION PHASE (Phase 4) ──
 export const DEFAULT_CONFIRMATION_ROWS = ['התארגנות'];
+
+// The rows the app itself creates in each licensing table. Any other row was
+// added by a worker (+ הוסף שורה) and can be removed again.
+const BUILT_IN_ROWS = {
+  actions: new Set([
+    ...DEFAULT_REQUEST_ACTIONS, ...REMOVED_REQUEST_ACTIONS,
+    ...Object.values(QUESTION_ROWS).flatMap(q => q.actions),
+  ]),
+  conditions: new Set([
+    ...DEFAULT_CONDITION_ROWS, ...Object.keys(RENAMED_CONDITION_ROWS), ...Object.values(RENAMED_CONDITION_ROWS),
+    ...Object.values(QUESTION_ROWS).flatMap(q => q.conditions),
+  ]),
+  confirmation: new Set(DEFAULT_CONFIRMATION_ROWS),
+};
+export const isBuiltInRow = (kind, label) => BUILT_IN_ROWS[kind].has(label);
 
 // ── VIEW / TAB NAMES ──
 export const VIEW_CLIENTS = 'clients';

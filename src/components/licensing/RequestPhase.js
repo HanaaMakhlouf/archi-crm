@@ -1,6 +1,7 @@
 import StatusTable from './StatusTable';
-import AddRow, { LICENSING_ADD_ROW_PROPS, newStatusRow } from '../AddRow';
+import AddRow, { LICENSING_ADD_ROW_PROPS, newStatusRow, RemovableLabel, isLastOwnOption } from '../AddRow';
 import { useOnLock } from '../../utils/useOnLock';
+import { useAddedRowHistory } from '../../utils/addedRows';
 import GrayOut from '../GrayOut';
 import { shownRows, mergeShownRows } from './questionRows';
 import {
@@ -20,7 +21,7 @@ import {
   ACTION_LABEL_BUILDING_ASSIGN, BUILDING_ASSIGN_STATUS_OPTIONS, BUILDING_ASSIGN_STATUS_SIGNED,
   ACTION_LABEL_TAKANA, ACTION_LABEL_ESTATE_NOTICE, TAKANA_STATUS_OPTIONS, ESTATE_NOTICE_OLD_STATUS_OPTIONS,
   TEXT_STATUS_PREPARING, TEXT_STATUS_READY, TEXT_STATUS_CONTACTED, TEXT_STATUS_TO_COURIER,
-  TEXT_STATUS_RECEIVED, TEXT_STATUS_NOT_RECEIVED,
+  TEXT_STATUS_RECEIVED, TEXT_STATUS_NOT_RECEIVED, isBuiltInRow,
 } from '../../constants';
 
 export const REQUEST_NUMBER_FIELDS = [
@@ -177,7 +178,7 @@ export const syncTextRows = (prev, next) => {
     : a));
 };
 
-export const isActionDone = (a) => (ROW_SELECTS[a.label]
+export const isActionDone = (a) => isLastOwnOption(a) || (ROW_SELECTS[a.label]
   ? ROW_SELECTS[a.label].doneValues.includes(a.status)
   : a.status === ACTION_STATUS_PRESENT || a.status === ACTION_STATUS_NOT_REQUIRED);
 
@@ -229,6 +230,18 @@ export default function RequestPhase({ request, conditionsPassed, onChange, onAn
 
   const sectionReminders = (sk) => reminders.filter(r => r.section_key === sk);
 
+  const history = useAddedRowHistory('actions');
+
+  // Rows a worker added can be removed (with their reminder).
+  const removeAction = (row) => {
+    onReminderChange?.(SK_ACTIONS)?.(row.label, null);
+    patch('actions', request.actions.filter(a => a.id !== row.id));
+  };
+  const actionColumns = ACTION_COLUMNS.map(c => (c.key !== 'label' ? c : {
+    ...c,
+    render: (row) => (isBuiltInRow('actions', row.label) ? row.label : <RemovableLabel row={row} onRemove={removeAction} />),
+  }));
+
   return (
     <div className="licensing-info">
       <div className="detail-section request-numbers">
@@ -272,7 +285,7 @@ export default function RequestPhase({ request, conditionsPassed, onChange, onAn
         <StatusTable
           title="פעולות"
           rows={actions}
-          columns={ACTION_COLUMNS}
+          columns={actionColumns}
           onChange={(next) => patch('actions', mergeShownRows(request.actions, syncTextRows(actions, next), 'actions', request))}
           reminders={sectionReminders(SK_ACTIONS)}
           onReminderChange={onReminderChange?.(SK_ACTIONS)}
@@ -281,7 +294,10 @@ export default function RequestPhase({ request, conditionsPassed, onChange, onAn
               {...LICENSING_ADD_ROW_PROPS}
               existing={request.actions.map(a => a.label)}
               placeholder="שם השורה"
-              onAdd={(label) => patch('actions', [...request.actions, newStatusRow(label, actionRowDefaultStatus(label))])}
+              history={history}
+              statusOptions={(label) => ROW_SELECTS[label]?.options || ACTION_STATUS_OPTIONS}
+              defaultStatus={actionRowDefaultStatus}
+              onAdd={(label, status, options) => patch('actions', [...request.actions, newStatusRow(label, status, options)])}
             />
           )}
         />

@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import StatusTable from './licensing/StatusTable';
-import AddRow from './AddRow';
-import { confirmDialog } from './AppDialog';
+import AddRow, { RemovableLabel } from './AddRow';
 import { useDeferredSave } from '../utils/useDeferredSave';
 import {
   FIELD_PLANNING_DATA,
@@ -249,21 +248,7 @@ export default function PlanningTab({ client, onUpdate, reminders = [], onRemind
 
   const { tables } = pd;
 
-  const removeLabel = (row, onRemove) => (
-    <span className="row-label">
-      {row.label}
-      <button
-        type="button"
-        className="row-remove-btn"
-        title="הסרת שורה"
-        onClick={async () => {
-          if (await confirmDialog({ title: 'הסרת שורה', message: `להסיר את "${row.label}"?`, confirmLabel: 'הסרה', danger: true })) onRemove(row);
-        }}
-      >
-        ✕
-      </button>
-    </span>
-  );
+  const removeLabel = (row, onRemove) => <RemovableLabel row={row} onRemove={onRemove} />;
 
   // ── Part 1: אדריכלות ──
 

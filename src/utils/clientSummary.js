@@ -26,13 +26,14 @@ import {
 import { CONDITION_COLUMNS, PERMIT_COLUMNS } from '../components/licensing/ConditionsPhase';
 import { CONFIRMATION_COLUMNS } from '../components/licensing/ConfirmationPhase';
 import { shownRows } from '../components/licensing/questionRows';
+import { selectFor } from '../components/licensing/StatusTable';
 import { helkaToStrings } from './land';
 
 // A row's status as the page shows it: the label from its dropdown, and its colour.
 export function statusOf(columns, row) {
   const col = columns.find(c => c.type === 'select');
   if (!col) return null;
-  const { options = [], statusColors } = { ...col, ...col.rowSelect?.(row) };
+  const { options = [], statusColors } = selectFor(col, row);
   const value = row[col.key] ?? '';
   return {
     label: options.find(o => o.value === value)?.label || '—',

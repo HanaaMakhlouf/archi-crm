@@ -22,6 +22,7 @@ import { DEFAULT_SORT, filterAndSortClients } from './utils/clientList';
 import { openClientFolder } from './utils/openClientFolder';
 import { helkaToStrings } from './utils/land';
 import { useFitColumns } from './utils/useFitColumns';
+import { ClientsContext } from './utils/addedRows';
 import { goBack, historyState } from './utils/useHistoryStep';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
@@ -418,6 +419,8 @@ export default function App() {
 
   // RENDER LAYER
   return (
+    // Every client: "+ הוסף שורה" offers rows added to the same section before.
+    <ClientsContext.Provider value={clients}>
     <div className="app-layout">
       <Sidebar
         view={view}
@@ -733,5 +736,6 @@ export default function App() {
         )}
       </main>
     </div>
+    </ClientsContext.Provider>
   );
 }

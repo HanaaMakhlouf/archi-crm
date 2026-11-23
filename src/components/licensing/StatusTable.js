@@ -92,6 +92,20 @@ function ReminderCell({ reminder, onChange }) {
   );
 }
 
+// A select column's dropdown for one row: the column's, or rowSelect(row)'s,
+// or the row's own options (set when it was added), whose last one is green.
+export function selectFor(col, row) {
+  const select = { ...col, ...col.rowSelect?.(row) };
+  if (!row.options?.length) return select;
+  const last = row.options[row.options.length - 1].value;
+  return {
+    ...select,
+    options: row.options,
+    statusColors: { ...select.statusColors, [last]: select.statusColors?.[last] || 'green' },
+    doneValues: [...(select.doneValues || []), last],
+  };
+}
+
 // ── StatusTable ─────────────────────────────────────────────────────────────
 // Props:
 //   title, rows, columns, onChange, showHeader, rowClassName, footer — existing
@@ -114,7 +128,7 @@ export default function StatusTable({
     if (col.type === 'select') {
       // rowSelect(row) may return { options, statusColors, doneValues } to give one row its own dropdown.
       // onlyDoneValues: the last option isn't "done" by itself — only doneValues are.
-      const { options, statusColors, doneValues, onlyDoneValues } = { ...col, ...col.rowSelect?.(row) };
+      const { options, statusColors, doneValues, onlyDoneValues } = selectFor(col, row);
       const colorName = statusColors?.[value];
       const lastOptionValue = options?.length ? options[options.length - 1].value : null;
       return (

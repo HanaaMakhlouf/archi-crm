@@ -1,7 +1,8 @@
 import StatusTable from './StatusTable';
 import GrayOut from '../GrayOut';
-import AddRow, { LICENSING_ADD_ROW_PROPS, newStatusRow } from '../AddRow';
+import AddRow, { LICENSING_ADD_ROW_PROPS, newStatusRow, RemovableLabel } from '../AddRow';
 import { useOnLock } from '../../utils/useOnLock';
+import { useAddedRowHistory } from '../../utils/addedRows';
 import { shownRows, mergeShownRows } from './questionRows';
 import {
   DOC_STATUS_PRESENT, DOC_STATUS_MISSING, DOC_STATUS_NOT_REQUIRED,
@@ -11,6 +12,7 @@ import {
   PERMIT_STATUS_OPTIONS, PERMIT_STATUS_SIGNED,
   PERMIT_STATUS_FEE_NOT_GIVEN, PERMIT_STATUS_FEE_GIVEN, PERMIT_STATUS_PRINTED,
   INSTITUTE_STATUS_NOT_CHOSEN, INSTITUTE_STATUS_CHOSEN, INSTITUTE_STATUS_HANDLING,
+  isBuiltInRow,
 } from '../../constants';
 
 const SK_CONDITIONS = 'licensing.conditions.rows';
@@ -83,6 +85,18 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
 
   const sectionReminders = (sk) => reminders.filter(r => r.section_key === sk);
 
+  const history = useAddedRowHistory('conditions');
+
+  // Rows a worker added can be removed (with their reminder).
+  const removeRow = (row) => {
+    onReminderChange?.(SK_CONDITIONS)?.(row.label, null);
+    patch('rows', conditions.rows.filter(r => r.id !== row.id));
+  };
+  const columns = CONDITION_COLUMNS.map(c => (c.key !== 'label' ? c : {
+    ...c,
+    render: (row) => (isBuiltInRow('conditions', row.label) ? row.label : <RemovableLabel row={row} onRemove={removeRow} />),
+  }));
+
   const permitRow = [{
     id: 'permit',
     label: 'היתר',
@@ -96,7 +110,7 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
       <StatusTable
         title="תנאים"
         rows={rows}
-        columns={CONDITION_COLUMNS}
+        columns={columns}
         onChange={(next) => patch('rows', mergeShownRows(conditions.rows, next, 'conditions', answers))}
         reminders={sectionReminders(SK_CONDITIONS)}
         onReminderChange={onReminderChange?.(SK_CONDITIONS)}
@@ -105,7 +119,10 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
             {...LICENSING_ADD_ROW_PROPS}
             existing={conditions.rows.map(r => r.label)}
             placeholder="שם התנאי"
-            onAdd={(label) => patch('rows', [...conditions.rows, newStatusRow(label, conditionRowOptions(label)[0].value)])}
+            history={history}
+            statusOptions={conditionRowOptions}
+            defaultStatus={(label) => conditionRowOptions(label)[0].value}
+            onAdd={(label, status, options) => patch('rows', [...conditions.rows, newStatusRow(label, status, options)])}
           />
         )}
       />
