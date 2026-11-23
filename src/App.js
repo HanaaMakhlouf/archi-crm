@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo, useCallback, useDeferredValue, useRef } from 'react';
+import { useState, useMemo, useCallback, useDeferredValue } from 'react';
 import './App.css';
 import './styles/Mobile.css';
 import { supabase } from './supabaseClient';
 import { useAuth } from './contexts/AuthContext';
 import { useClients } from './hooks/useClients';
 import { useReminders } from './hooks/useReminders';
+import { useNavigation, resolveNavHint } from './hooks/useNavigation';
 import Sidebar from './components/Sidebar';
 import ClientDetail from './components/ClientDetail';
 import ClientForm from './components/ClientForm';
@@ -24,30 +25,15 @@ import { openClientFolder } from './utils/openClientFolder';
 import { helkaToStrings } from './utils/land';
 import { useFitColumns } from './utils/useFitColumns';
 import { ClientsContext } from './utils/addedRows';
-import { goBack, historyState } from './utils/useHistoryStep';
+import { goBack } from './utils/useHistoryStep';
 import { useNotifications } from './notifications/useNotifications';
 import { useMessages } from './notifications/useMessages';
 import {
-  TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
+  TYPE_PLANNING, TYPE_LICENSING, CLIENT_TYPES,
   VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, VIEW_ARCHIVE, TAB_ACTIVITY,
   FIELD_ARCHIVED_AT,
-  LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
-  LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION, LICENSING_PHASE_FORM4,
   FILE_LINK_2_PATH, ROLE_MANAGER, PRIORITY_RED,
 } from './constants';
-
-// Maps a reminder's section_key to the tab + licensing phase to navigate to.
-function resolveNavHint(sectionKey) {
-  if (!sectionKey) return null;
-  if (sectionKey.startsWith('planning.')) return { tab: TYPE_PLANNING, phase: null };
-  if (sectionKey.startsWith('detailed.'))  return { tab: TYPE_DETAILED,  phase: null };
-  if (sectionKey.startsWith('licensing.info'))         return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_INFO };
-  if (sectionKey.startsWith('licensing.application'))  return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_APPLICATION };
-  if (sectionKey.startsWith('licensing.conditions'))   return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_CONDITIONS };
-  if (sectionKey.startsWith('licensing.confirmation')) return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_CONFIRMATION };
-  if (sectionKey.startsWith('licensing.form4'))        return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_FORM4 };
-  return null;
-}
 
 // Clickable column title. The first click sorts by `firstDir` (A→ת for text,
 // newest first for dates); each further click reverses it. One column at a time.
@@ -71,16 +57,6 @@ const EMPTY_FORM = {
   planning_data: {},
 };
 
-const NAV_STORAGE_KEY = 'nav_state';
-
-function readSavedNav() {
-  try {
-    return JSON.parse(sessionStorage.getItem(NAV_STORAGE_KEY)) || {};
-  } catch {
-    return {};
-  }
-}
-
 export default function App() {
   const { isViewer, isAdmin, userRole } = useAuth();
   const isManager = isAdmin || userRole === ROLE_MANAGER;
@@ -95,17 +71,6 @@ export default function App() {
     reminders, fetchReminders, handleReminderChange, handleClearReminders, handleUpdateReminder,
   } = useReminders();
 
-  // ── NAVIGATION / VIEW ──
-  // The current page survives a refresh (per browser tab). An unsaved form
-  // can't be restored, so a refresh mid-edit lands on that client's page.
-  const [view, setView] = useState(() => {
-    const { view: v, clientId } = readSavedNav();
-    if (v === VIEW_FORM) return clientId ? VIEW_DETAIL : VIEW_CLIENTS;
-    return v || VIEW_CLIENTS;
-  });
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [initialTab, setInitialTab] = useState(null); // set when navigating from Inbox
-
   // ── FILTERS / SEARCH / SORT ──
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState(DEFAULT_SORT);     // one column sorts at a time
@@ -117,68 +82,14 @@ export default function App() {
   const [editingId, setEditingId] = useState(null);
   const [formError, setFormError] = useState('');
 
-  // Keep selectedClient in sync after any client list update
-  useEffect(() => {
-    setSelectedClient(prev => {
-      if (!prev) return prev;
-      const fresh = clients.find(c => c.id === prev.id);
-      return fresh || prev;
-    });
-  }, [clients]);
-
-  // After a refresh on a client's page, re-select that client once loaded.
-  useEffect(() => {
-    if (loading || view !== VIEW_DETAIL || selectedClient) return;
-    const saved = clients.find(c => c.id === readSavedNav().clientId);
-    if (saved) setSelectedClient(saved);
-    else setView(VIEW_CLIENTS); // client was deleted or belongs to another office
-  }, [loading, view, selectedClient, clients]);
-
-  useEffect(() => {
-    const clientId = view === VIEW_FORM ? editingId : selectedClient?.id;
-    try {
-      sessionStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ view, clientId: clientId || null }));
-    } catch { /* storage unavailable — just don't persist */ }
-  }, [view, selectedClient, editingId]);
-
-  // ── BROWSER BACK ──
-  // Each page change becomes a browser-history step, so the browser's (and the
-  // phone's) back button returns to the page before instead of leaving the app.
-  // The form is a passing step: leaving it forward replaces it.
-  const navClientId = view === VIEW_DETAIL ? selectedClient?.id ?? null : view === VIEW_FORM ? editingId : null;
-  useEffect(() => {
-    if (view === VIEW_DETAIL && !selectedClient) return; // still loading the client
-    const st = historyState();
-    const next = { view, clientId: navClientId };
-    if (st.nav?.view === next.view && st.nav?.clientId === next.clientId) return;
-    if (!st.nav) window.history.replaceState({ nav: next, idx: 0 }, '');
-    else if (st.nav.view === VIEW_FORM) window.history.replaceState({ nav: next, idx: st.idx ?? 0 }, '');
-    else window.history.pushState({ nav: next, idx: (st.idx ?? 0) + 1 }, '');
-  }, [view, navClientId, selectedClient]);
-
-  const clientsRef = useRef(clients);
-  clientsRef.current = clients;
-  const openFormRef = useRef(null);
-  useEffect(() => {
-    const onPop = (e) => {
-      const nav = e.state?.nav;
-      if (!nav) return;
-      const client = nav.clientId != null ? clientsRef.current.find(c => c.id === nav.clientId) : null;
-      if (nav.view === VIEW_FORM) { openFormRef.current(client); return; }
-      if (nav.view === VIEW_DETAIL) {
-        if (!client) { setSelectedClient(null); setView(VIEW_CLIENTS); return; }
-        setInitialTab(e.state.tab || null);
-        setSelectedClient(client);
-        setView(VIEW_DETAIL);
-        return;
-      }
-      setSelectedClient(null);
-      setEditingId(null);
-      setView(nav.view);
-    };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, []);
+  // ── NAVIGATION / VIEW ──
+  const {
+    view, setView, selectedClient, setSelectedClient, initialTab, setInitialTab,
+  } = useNavigation({
+    clients, loading, editingId,
+    onPopToForm: (client) => openForm(client),
+    onPopAway: () => setEditingId(null),
+  });
 
   const openForm = (client = null) => {
     if (client) {
@@ -199,7 +110,6 @@ export default function App() {
     setFormError('');
     setView(VIEW_FORM);
   };
-  openFormRef.current = openForm;
 
   const toggleType = (type) => setForm(prev => {
     const newTypes = prev.client_type.includes(type)
