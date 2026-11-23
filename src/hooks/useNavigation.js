@@ -65,6 +65,8 @@ export function useNavigation({ clients, loading, editingId, onPopToForm, onPopA
   }, [loading, view, selectedClient, clients]);
 
   useEffect(() => {
+    // Still restoring the client after a refresh: saving now would forget which one.
+    if (view === VIEW_DETAIL && !selectedClient) return;
     const clientId = view === VIEW_FORM ? editingId : selectedClient?.id;
     try {
       sessionStorage.setItem(NAV_STORAGE_KEY, JSON.stringify({ view, clientId: clientId || null }));
