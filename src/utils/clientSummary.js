@@ -5,8 +5,8 @@
 // the summary always reads like the page.
 import {
   TYPE_LICENSING, TYPE_PLANNING, TYPE_DETAILED, CLIENT_TYPES,
-  LICENSING_PHASES, LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
-  LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
+  LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
+  LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION, LICENSING_PHASE_FORM4, licensingPhasesFor,
   DOC_STATUS_MISSING, ONLINE_INFO_OPTIONS, ONLINE_INFO_NOT_SENT, ONLINE_INFO_RECEIVED, ONLINE_INFO_ROW_LABEL,
   MEETING_APPROVED, isPermitSigned, isConditionRowDone, FEE_DONE_STATUSES,
   REQUEST_QUESTIONS, YES_NO_OPTIONS,
@@ -25,6 +25,7 @@ import {
 } from '../components/licensing/RequestPhase';
 import { CONDITION_COLUMNS, PERMIT_COLUMNS, permitBoxRows } from '../components/licensing/ConditionsPhase';
 import { CONFIRMATION_COLUMNS } from '../components/licensing/ConfirmationPhase';
+import { FORM4_COLUMNS } from '../components/licensing/Form4Phase';
 import { shownRows } from '../components/licensing/questionRows';
 import { selectFor } from '../components/licensing/StatusTable';
 import { helkaToStrings } from './land';
@@ -99,8 +100,7 @@ function licensingSummary(client) {
   const { info, application, conditions, confirmation } = ld;
 
   const current = computeCurrentPhase(ld);
-  const needsStartApproval = conditions.needs_start_approval === 'yes';
-  const phases = needsStartApproval ? LICENSING_PHASES : LICENSING_PHASES.filter(p => p.key !== LICENSING_PHASE_CONFIRMATION);
+  const phases = licensingPhasesFor(conditions);
   const currentIdx = phases.findIndex(p => p.key === current);
 
   const conditionsPassed = info.online_info_status === ONLINE_INFO_RECEIVED;
@@ -166,13 +166,20 @@ function licensingSummary(client) {
           .filter(r => r.id === 'fee' || FEE_DONE_STATUSES.includes(conditions.fee_status));
         blocks.push(table('היתר', PERMIT_COLUMNS, permitRows, { showHeader: false }));
         if (isPermitSigned(conditions)) {
-          blocks.push(fields(null, [{ label: 'האם צריך אישור תחילת עבודה?', value: answerLabel(conditions.needs_start_approval) }]));
+          blocks.push(fields(null, [
+            { label: 'האם צריך אישור תחילת עבודה?', value: answerLabel(conditions.needs_start_approval) },
+            { label: 'האם לפתוח בקשה לטופס 4?', value: answerLabel(conditions.open_form4) },
+          ]));
         }
       }
     }
 
     if (p.key === LICENSING_PHASE_CONFIRMATION) {
       blocks.push(table('תנאים לאישור תחילת עבודה', CONFIRMATION_COLUMNS, confirmation.rows));
+    }
+
+    if (p.key === LICENSING_PHASE_FORM4) {
+      blocks.push(table('תנאים טופס 4', FORM4_COLUMNS, ld.form4.rows));
     }
   });
 

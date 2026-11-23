@@ -5,6 +5,7 @@ import InfoPhase from './licensing/InfoPhase';
 import RequestPhase from './licensing/RequestPhase';
 import ConditionsPhase from './licensing/ConditionsPhase';
 import ConfirmationPhase from './licensing/ConfirmationPhase';
+import Form4Phase from './licensing/Form4Phase';
 import GrayOut from './GrayOut';
 import { newStatusRow } from './AddRow';
 import { makeEmptyPerson } from './licensing/PersonForm';
@@ -15,8 +16,9 @@ import { useHistoryStep, recordedStep } from '../utils/useHistoryStep';
 import {
   FIELD_LICENSING_DATA,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
-  LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
-  LICENSING_PHASES,
+  LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION, LICENSING_PHASE_FORM4,
+  LICENSING_PHASES, licensingPhasesFor,
+  DEFAULT_FORM4_ROWS, FORM4_STATUS_NO, isConfirmationRowDone,
   LICENSING_DOCUMENTS,
   DOC_STATUS_MISSING,
   INFO_NOTE_SENT,
@@ -174,12 +176,19 @@ const buildInitialConditions = (src = {}) => ({
   permit_status: !src.permit_status || OLD_FEE_STEPS.includes(src.permit_status) ? PERMIT_STATUS_NOT_PRINTED : src.permit_status,
   permit_note: src.permit_note || '',
   needs_start_approval: src.needs_start_approval ?? null,
+  open_form4: src.open_form4 ?? null,
 });
 
 const buildInitialConfirmation = (src = {}) => ({
   rows: src.rows?.length
     ? src.rows
     : DEFAULT_CONFIRMATION_ROWS.map(label => newStatusRow(label, DOC_STATUS_MISSING)),
+});
+
+const buildInitialForm4 = (src = {}) => ({
+  rows: src?.rows?.length
+    ? src.rows
+    : DEFAULT_FORM4_ROWS.map(label => newStatusRow(label, FORM4_STATUS_NO)),
 });
 
 export const buildInitialLd = (client) => {
@@ -189,6 +198,7 @@ export const buildInitialLd = (client) => {
     application: buildInitialRequest(src.application),
     conditions: buildInitialConditions(src.conditions),
     confirmation: buildInitialConfirmation(src.confirmation),
+    form4: buildInitialForm4(src.form4),
   };
 };
 
@@ -200,9 +210,14 @@ export const computeCurrentPhase = (ld) => {
   const conditionsComplete = isPermitSigned(ld.conditions) && ld.conditions.needs_start_approval !== null;
   if (!conditionsPassed) return LICENSING_PHASE_INFO;
   if (!meetingApproved) return LICENSING_PHASE_APPLICATION;
-  // אישור התחלת עבודה only exists once תנאים answered "yes" to needing it.
-  if (!conditionsComplete || ld.conditions.needs_start_approval !== 'yes') return LICENSING_PHASE_CONDITIONS;
-  return LICENSING_PHASE_CONFIRMATION;
+  if (!conditionsComplete) return LICENSING_PHASE_CONDITIONS;
+  // אישור התחלת עבודה / תנאים טופס 4 only exist once תנאים answered "yes" to them;
+  // טופס 4 comes after אישור התחלת עבודה is done.
+  const startApproval = ld.conditions.needs_start_approval === 'yes';
+  const form4 = ld.conditions.open_form4 === 'yes';
+  if (startApproval && !(form4 && ld.confirmation.rows.every(isConfirmationRowDone))) return LICENSING_PHASE_CONFIRMATION;
+  if (form4) return LICENSING_PHASE_FORM4;
+  return LICENSING_PHASE_CONDITIONS;
 };
 
 // For the clients list: which licensing phase this client is currently at.
@@ -279,27 +294,26 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
   // GrayOut resets: ConditionsPhase / ConfirmationPhase greyed → clear their reminders.
   useOnLock(meetingApproved, () => onClearReminders?.('licensing.conditions*'));
   useOnLock(needsStartApproval, () => onClearReminders?.('licensing.confirmation*'));
+  const openForm4 = ld.conditions.open_form4 === 'yes';
+  useOnLock(openForm4, () => onClearReminders?.('licensing.form4*'));
 
   // Reminder helpers — memoised to avoid re-filtering on every render
   const licReminders = useMemo(() => reminders.filter(r => r.section_key.startsWith('licensing.')), [reminders]);
   const makeReminderChange = useCallback((sectionKey) => (rowLabel, days) => onReminderChange?.(sectionKey, rowLabel, days), [onReminderChange]);
   const makeStatusChange = useCallback((sectionKey) => (rowLabel, change) => onStatusChange?.(sectionKey, rowLabel, change), [onStatusChange]);
 
-  // אישור התחלת עבודה is a step only when תנאים says it's needed.
-  const phases = needsStartApproval ? LICENSING_PHASES : LICENSING_PHASES.filter(p => p.key !== LICENSING_PHASE_CONFIRMATION);
-  const shownPhase = activePhase === LICENSING_PHASE_CONFIRMATION && !needsStartApproval ? LICENSING_PHASE_CONDITIONS : activePhase;
+  // אישור התחלת עבודה / תנאים טופס 4 are steps only when תנאים says they're needed.
+  const phases = licensingPhasesFor(ld.conditions);
+  const shownPhase = phases.some(p => p.key === activePhase) ? activePhase : LICENSING_PHASE_CONDITIONS;
 
-  const unlockedPhases = [
-    LICENSING_PHASE_INFO,
-    LICENSING_PHASE_APPLICATION,
-    LICENSING_PHASE_CONDITIONS,
-    LICENSING_PHASE_CONFIRMATION,
-  ];
+  const unlockedPhases = LICENSING_PHASES.map(p => p.key);
 
   const completedPhases = [
     ...(conditionsPassed ? [LICENSING_PHASE_INFO] : []),
     ...(meetingApproved ? [LICENSING_PHASE_APPLICATION] : []),
     ...(conditionsComplete ? [LICENSING_PHASE_CONDITIONS] : []),
+    ...(conditionsComplete && openForm4 && needsStartApproval && ld.confirmation.rows.every(isConfirmationRowDone)
+      ? [LICENSING_PHASE_CONFIRMATION] : []),
   ];
 
   return (
@@ -354,6 +368,15 @@ export default function LicensingTab({ client, onUpdate, reminders = [], onRemin
             onClearReminders={onClearReminders}
           />
         </GrayOut>
+      )}
+      {shownPhase === LICENSING_PHASE_FORM4 && (
+        <Form4Phase
+          form4={ld.form4}
+          onChange={(p) => updateSection('form4', p)}
+          reminders={licReminders}
+          onReminderChange={makeReminderChange}
+          onStatusChange={makeStatusChange}
+        />
       )}
       {shownPhase === LICENSING_PHASE_CONFIRMATION && (
         <ConfirmationPhase

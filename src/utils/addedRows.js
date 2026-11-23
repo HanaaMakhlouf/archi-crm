@@ -9,6 +9,7 @@ const ROWS_OF = {
   actions: (ld) => ld.application?.actions,
   conditions: (ld) => ld.conditions?.rows,
   confirmation: (ld) => ld.confirmation?.rows,
+  form4: (ld) => ld.form4?.rows,
 };
 
 // The rows added by hand to this licensing section across all clients:

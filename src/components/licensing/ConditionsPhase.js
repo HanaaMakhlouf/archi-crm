@@ -172,24 +172,31 @@ export default function ConditionsPhase({ conditions, answers, onChange, reminde
         />
       </GrayOut>
 
-      {/* Section 3 — Question */}
+      {/* Section 3 — Questions: each "yes" adds a step to the stepper */}
       <GrayOut disabled={!permitSigned} reason="ממתין לחתימת היתר">
         <div className="detail-section">
-          <span className="conditions-question">האם צריך אישור תחילת עבודה?</span>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button
-              className={`btn btn-sm ${conditions.needs_start_approval === 'yes' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => patch('needs_start_approval', 'yes')}
-            >
-              כן
-            </button>
-            <button
-              className={`btn btn-sm ${conditions.needs_start_approval === 'no' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => patch('needs_start_approval', 'no')}
-            >
-              לא
-            </button>
-          </div>
+          {[
+            { key: 'needs_start_approval', text: 'האם צריך אישור תחילת עבודה?' },
+            { key: 'open_form4', text: 'האם לפתוח בקשה לטופס 4?' },
+          ].map((q, i) => (
+            <div key={q.key} className="conditions-question-row" style={i ? { marginTop: 18 } : undefined}>
+              <span className="conditions-question">{q.text}</span>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <button
+                  className={`btn btn-sm ${conditions[q.key] === 'yes' ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => patch(q.key, 'yes')}
+                >
+                  כן
+                </button>
+                <button
+                  className={`btn btn-sm ${conditions[q.key] === 'no' ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => patch(q.key, 'no')}
+                >
+                  לא
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </GrayOut>
     </div>

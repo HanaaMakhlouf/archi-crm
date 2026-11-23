@@ -35,7 +35,7 @@ const FIELD_LABELS = {
   submission: 'הגשה', actions: 'פעולות', meeting: 'ישיבה', request_number: "מס' בקשה",
   rows: 'שורות', permit_status: 'סטטוס היתר', permit_note: 'הערת היתר',
   fee_status: 'אגרות', fee_note: 'הערת אגרות',
-  needs_start_approval: 'נדרש אישור תחילת עבודה',
+  needs_start_approval: 'נדרש אישור תחילת עבודה', open_form4: 'בקשה לטופס 4', form4: 'תנאים טופס 4',
   // detailed_data sections
   hachana: 'הכנה', hafkada: 'הפקדה', pirsum_a: 'פרסום א׳', ishur: 'אישור', pirsum_b: 'פרסום ב׳',
 };

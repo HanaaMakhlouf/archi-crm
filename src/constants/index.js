@@ -54,12 +54,20 @@ export const LICENSING_PHASE_INFO = 'info';
 export const LICENSING_PHASE_APPLICATION = 'application';
 export const LICENSING_PHASE_CONDITIONS = 'conditions';
 export const LICENSING_PHASE_CONFIRMATION = 'confirmation';
+export const LICENSING_PHASE_FORM4 = 'form4';
 export const LICENSING_PHASES = [
   { key: LICENSING_PHASE_INFO, label: 'מידע' },
   { key: LICENSING_PHASE_APPLICATION, label: 'בקשה' },
   { key: LICENSING_PHASE_CONDITIONS, label: 'תנאים' },
   { key: LICENSING_PHASE_CONFIRMATION, label: 'אישור התחלת עבודה' },
+  { key: LICENSING_PHASE_FORM4, label: 'תנאים טופס 4' },
 ];
+
+// The steps this client has: אישור התחלת עבודה and תנאים טופס 4 only when
+// תנאים answered "yes" to needing them.
+export const licensingPhasesFor = (conditions) => LICENSING_PHASES.filter(p =>
+  (p.key !== LICENSING_PHASE_CONFIRMATION || conditions?.needs_start_approval === 'yes')
+  && (p.key !== LICENSING_PHASE_FORM4 || conditions?.open_form4 === 'yes'));
 
 // Licensing document types
 export const DOC_SITE_IMAGE = 'site_image';
@@ -480,6 +488,19 @@ export const isConditionRowDone = (row) => CONDITION_DONE_STATUSES.includes(row.
 
 // ── CONFIRMATION PHASE (Phase 4) ──
 export const DEFAULT_CONFIRMATION_ROWS = ['התארגנות'];
+export const isConfirmationRowDone = (row) => [DOC_STATUS_PRESENT, DOC_STATUS_NOT_REQUIRED].includes(row.status);
+
+// ── תנאים טופס 4 (Phase 5, when תנאים answered "yes" to opening one) ──
+export const FORM4_STATUS_YES = 'yes';
+export const FORM4_STATUS_NO = 'no';
+export const FORM4_STATUS_NOT_REQUIRED = 'not_required';
+export const FORM4_STATUS_OPTIONS = [
+  { value: FORM4_STATUS_YES, label: 'כן' },
+  { value: FORM4_STATUS_NO, label: 'לא' },
+  { value: FORM4_STATUS_NOT_REQUIRED, label: 'לא נדרש' },
+];
+export const FORM4_DONE_STATUSES = [FORM4_STATUS_YES, FORM4_STATUS_NOT_REQUIRED];
+export const DEFAULT_FORM4_ROWS = ['מצבית עדכנית', 'תשלום שיפור מיגון'];
 
 // The rows the app itself creates in each licensing table. Any other row was
 // added by a worker (+ הוסף שורה) and can be removed again.
@@ -493,6 +514,7 @@ const BUILT_IN_ROWS = {
     ...Object.values(QUESTION_ROWS).flatMap(q => q.conditions),
   ]),
   confirmation: new Set(DEFAULT_CONFIRMATION_ROWS),
+  form4: new Set(DEFAULT_FORM4_ROWS),
 };
 export const isBuiltInRow = (kind, label) => BUILT_IN_ROWS[kind].has(label);
 

@@ -33,7 +33,7 @@ import {
   FIELD_ARCHIVED_AT,
   TABLE_CLIENTS, TABLE_ROW_REMINDERS,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
-  LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION,
+  LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION, LICENSING_PHASE_FORM4,
   FILE_LINK_2_PATH, ROLE_MANAGER, PRIORITY_RED,
   ONLINE_INFO_SECTION_KEY, ONLINE_INFO_ROW_LABEL, OLD_ONLINE_INFO_SECTION_KEYS,
 } from './constants';
@@ -47,6 +47,7 @@ function resolveNavHint(sectionKey) {
   if (sectionKey.startsWith('licensing.application'))  return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_APPLICATION };
   if (sectionKey.startsWith('licensing.conditions'))   return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_CONDITIONS };
   if (sectionKey.startsWith('licensing.confirmation')) return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_CONFIRMATION };
+  if (sectionKey.startsWith('licensing.form4'))        return { tab: TYPE_LICENSING, phase: LICENSING_PHASE_FORM4 };
   return null;
 }
 
