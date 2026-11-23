@@ -1,9 +1,6 @@
 import { buildInitialLd, computeCurrentPhase } from '../LicensingTab';
 import { licensingPhasesFor } from '../../constants';
 
-// The test runner has no crypto.randomUUID (new rows' ids).
-beforeAll(() => { if (!global.crypto) global.crypto = { randomUUID: () => String(Math.random()) }; });
-
 const clientAt = (conditions, confirmation) => ({
   licensing_data: {
     info: { online_info_status: 'online_info_received' },

@@ -9,11 +9,6 @@ import {
   TEXT_STATUS_PREPARING, TEXT_STATUS_READY, TEXT_STATUS_RECEIVED,
 } from '../constants';
 
-// The test environment has no crypto.randomUUID (the app uses it for new people rows).
-if (!global.crypto?.randomUUID) {
-  global.crypto = { ...global.crypto, randomUUID: require('crypto').randomUUID };
-}
-
 const licensingClient = (info) => ({ id: 1, name: 'לקוח', [FIELD_LICENSING_DATA]: { info } });
 const infoOf = (info) => buildInitialLd(licensingClient(info)).info;
 

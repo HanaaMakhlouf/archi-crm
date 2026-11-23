@@ -1,9 +1,6 @@
 import { buildInitialLd, computeCurrentPhase } from '../LicensingTab';
 import { isPermitSigned } from '../../constants';
 
-// The test runner has no crypto.randomUUID (new rows' ids).
-beforeAll(() => { if (!global.crypto) global.crypto = { randomUUID: () => String(Math.random()) }; });
-
 const conditionsOf =(permit_status) => buildInitialLd({ licensing_data: { conditions: { permit_status } } }).conditions;
 const pick = (c) => [c.fee_status, c.permit_status];
 

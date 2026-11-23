@@ -1,11 +1,9 @@
 import { selectFor } from './StatusTable';
 import { CONDITION_COLUMNS } from './ConditionsPhase';
 import { isActionDone } from './RequestPhase';
+import { newStatusRow } from '../AddRow';
 import { isConditionRowDone } from '../../constants';
 import { addedRowHistory } from '../../utils/addedRows';
-
-// (Like AddRow's newStatusRow, without crypto, which the test runner lacks.)
-const newStatusRow = (label, status, options) => ({ id: label, label, status, note: '', ...(options && { options }) });
 
 const OWN = [{ value: 'missing', label: 'חסר' }, { value: 'בבדיקה', label: 'בבדיקה' }, { value: 'אושר', label: 'אושר' }];
 const statusCol = CONDITION_COLUMNS.find(c => c.key === 'status');

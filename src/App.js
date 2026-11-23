@@ -3,6 +3,7 @@ import './App.css';
 import './styles/Mobile.css';
 import { supabase } from './supabaseClient';
 import { useAuth } from './contexts/AuthContext';
+import { useClients } from './hooks/useClients';
 import Sidebar from './components/Sidebar';
 import ClientDetail from './components/ClientDetail';
 import ClientForm from './components/ClientForm';
@@ -12,11 +13,10 @@ import ActivityView from './components/ActivityView';
 import ArchiveView from './components/ArchiveView';
 import PriorityDot from './components/PriorityDot';
 import ExportClientsDialog from './components/ExportClientsDialog';
-import { confirmDialog, alertDialog } from './components/AppDialog';
+import { alertDialog } from './components/AppDialog';
 import Icon, { getInitials } from './components/Icon';
 import { getCurrentLicensingPhaseLabel } from './components/LicensingTab';
 import { getCurrentPlanningStageLabel } from './components/PlanningTab';
-import { describeClientChange } from './utils/changeSummary';
 import { formatDate } from './utils/format';
 import { DEFAULT_SORT, filterAndSortClients } from './utils/clientList';
 import { openClientFolder } from './utils/openClientFolder';
@@ -31,7 +31,7 @@ import {
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
   VIEW_CLIENTS, VIEW_DETAIL, VIEW_FORM, VIEW_INBOX, VIEW_SETTINGS, VIEW_ACTIVITY, VIEW_ARCHIVE, TAB_ACTIVITY,
   FIELD_ARCHIVED_AT,
-  TABLE_CLIENTS, TABLE_ROW_REMINDERS,
+  TABLE_ROW_REMINDERS,
   LICENSING_PHASE_INFO, LICENSING_PHASE_APPLICATION,
   LICENSING_PHASE_CONDITIONS, LICENSING_PHASE_CONFIRMATION, LICENSING_PHASE_FORM4,
   FILE_LINK_2_PATH, ROLE_MANAGER, PRIORITY_RED,
@@ -92,7 +92,10 @@ export default function App() {
   const canEditPriority = isManager;
 
   // ── DATA ──
-  const [clients, setClients] = useState([]);
+  const {
+    clients, openClients, archivedClients, loading, fetchError,
+    fetchClients, handleUpdateClient, handleDelete, handleArchive, handleReactivate,
+  } = useClients({ isManager });
   const [reminders, setReminders] = useState([]);
 
   // ── NAVIGATION / VIEW ──
@@ -106,10 +109,6 @@ export default function App() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [initialTab, setInitialTab] = useState(null); // set when navigating from Inbox
 
-  // ── LOADING / ERROR ──
-  const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState(null);
-
   // ── FILTERS / SEARCH / SORT ──
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState(DEFAULT_SORT);     // one column sorts at a time
@@ -121,25 +120,12 @@ export default function App() {
   const [editingId, setEditingId] = useState(null);
   const [formError, setFormError] = useState('');
 
-  const fetchClients = useCallback(async () => {
-    setLoading(true);
-    setFetchError(null);
-    const { data, error } = await supabase.from(TABLE_CLIENTS).select('*').eq('office_id', officeId).order('created_at', { ascending: false });
-    if (error) {
-      console.error(error.message);
-      setFetchError('שגיאה בטעינת הלקוחות. נסה לרענן את הדף.');
-    } else {
-      setClients(data);
-    }
-    setLoading(false);
-  }, [officeId]);
-
   const fetchReminders = useCallback(async () => {
     const { data, error } = await supabase.from(TABLE_ROW_REMINDERS).select('*');
     if (!error) setReminders(data || []);
   }, []);
 
-  useEffect(() => { fetchClients(); fetchReminders(); }, [fetchClients, fetchReminders]);
+  useEffect(() => { fetchReminders(); }, [fetchReminders]);
 
   // Reminders set on שלח בקשת מידע / האם עבר תנאים מקדמיים (replaced by one
   // בקשת מידע לזמין row) move onto that row, keeping their due date. Per client
@@ -278,41 +264,6 @@ export default function App() {
   };
   openFormRef.current = openForm;
 
-  const handleDelete = async (id) => {
-    if (isViewer) return;
-    const client = clients.find(c => c.id === id);
-    const name = client?.name || 'לקוח זה';
-    if (!(await confirmDialog({
-      title: 'מחיקת לקוח',
-      message: `למחוק את "${name}"? פעולה זו אינה הפיכה.`,
-      confirmLabel: 'מחיקה',
-      danger: true,
-    }))) return;
-    const { error } = await supabase.from(TABLE_CLIENTS).delete().eq('id', id);
-    if (error) {
-      console.error(error.message);
-      alertDialog('שגיאה במחיקת הלקוח. נסה שוב.');
-    } else {
-      fetchClients();
-    }
-  };
-
-  const handleUpdateClient = async (id, updates) => {
-    if (isViewer) return;
-    const previousClient = clients.find(c => c.id === id);
-    const summary = describeClientChange(updates, previousClient);
-    const payload = summary
-      ? { ...updates, last_updated_at: new Date().toISOString(), last_change_summary: summary }
-      : updates;
-    const { error } = await supabase.from(TABLE_CLIENTS).update(payload).eq('id', id);
-    if (error) {
-      console.error('Update client error:', error.message);
-    } else {
-      fetchClients();
-    }
-    return error;
-  };
-
   // Set or clear a reminder for a specific row.
   // days === null → delete the reminder; days > 0 → upsert it.
   // Optimistic update first so Inbox reflects the change immediately.
@@ -398,27 +349,6 @@ export default function App() {
     }
     return { ...prev, client_type: newTypes, type_attributes: newAttrs };
   });
-
-  // Closed files (archived_at set) live under ארכיון: out of the list, the
-  // stats and the reminders until reactivated.
-  const openClients = useMemo(() => clients.filter(c => !c[FIELD_ARCHIVED_AT]), [clients]);
-  const archivedClients = useMemo(() => clients.filter(c => c[FIELD_ARCHIVED_AT]), [clients]);
-
-  // Only managers (and admins) close and reopen files.
-  const setArchived = async (client, archivedAt) => {
-    if (!isManager) return;
-    const error = await handleUpdateClient(client.id, { [FIELD_ARCHIVED_AT]: archivedAt });
-    if (error) alertDialog('שגיאה בשמירת מצב התיק. ייתכן שעדכון מסד הנתונים לארכיון עדיין לא הורץ.');
-  };
-  const handleArchive = async (client) => {
-    if (!(await confirmDialog({
-      title: 'סגירת תיק',
-      message: `לסגור את התיק של "${client.name}"?\nהתיק יעבור לארכיון עם כל הנתונים, ואפשר להפעיל אותו מחדש בכל עת.`,
-      confirmLabel: 'סגירת התיק',
-    }))) return;
-    setArchived(client, new Date().toISOString());
-  };
-  const handleReactivate = (client) => setArchived(client, null);
 
   // Automatic notifications are for managers only; everyone gets the
   // messages managers forward to them.

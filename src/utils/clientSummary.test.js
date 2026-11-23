@@ -1,4 +1,3 @@
-import nodeCrypto from 'crypto';
 import { buildClientSummary } from './clientSummary';
 import { clientSummaryToHtml, summaryFileName } from './clientSummaryPdf';
 import {
@@ -6,8 +5,6 @@ import {
   ONLINE_INFO_RECEIVED, DOC_STATUS_PRESENT,
   DETAILED_HACHANA_KEN, DETAILED_SHUBATS, DETAILED_LO_NISHLACH,
 } from '../constants';
-
-if (!global.crypto?.randomUUID) global.crypto = nodeCrypto.webcrypto; // new requester rows get an id
 
 const titles = (tab) => tab.blocks.map(b => b.title || (b.kind === 'phase' ? `שלב ${b.title}` : b.kind));
 
