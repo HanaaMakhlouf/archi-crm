@@ -1,75 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
-import { NOTIF_TYPE_ROW_REMINDER, ONE_DAY_MS, NOTIFICATION_DELAY_UNIT } from '../constants';
-import DatePickerButton from './DatePickerButton';
+import { useState, useEffect } from 'react';
 import SendMessageDialog from './SendMessageDialog';
 import Icon from './Icon';
+import MessageCard from './inbox/MessageCard';
+import NotificationCard from './inbox/NotificationCard';
 import { useAuth } from '../contexts/AuthContext';
-import { formatDate, formatDateTime, formatFileSize, nameFromEmail } from '../utils/format';
-import { attachmentUrl, downloadFile, downloadImage, openFile, printImage } from '../utils/fileActions';
+import { NOTIF_TYPE_ROW_REMINDER } from '../constants';
 
-const ONE_MINUTE_MS = 60 * 1000;
-const unitMs = NOTIFICATION_DELAY_UNIT === 'minutes' ? ONE_MINUTE_MS : ONE_DAY_MS;
-
-const SNOOZE_PRESETS = [
-  { label: 'יום', days: 1 },
-  { label: '3 ימים', days: 3 },
-  { label: 'שבוע', days: 7 },
-];
-
-// One דחייה button; its menu holds the presets and a date.
-function SnoozeMenu({ onPick, onPickDate, disabled }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-    // The date picker's calendar floats outside the menu — clicks there don't close it.
-    const onDown = (e) => {
-      if (!ref.current?.contains(e.target) && !e.target.closest?.('.date-picker-popover')) setOpen(false);
-    };
-    const onKey = (e) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', onDown);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
-  const pick = (fn) => (value) => { setOpen(false); fn(value); };
-
-  return (
-    <div className="snooze-menu" ref={ref}>
-      <button
-        type="button"
-        className="btn btn-ghost btn-sm"
-        disabled={disabled}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen(o => !o)}
-      >
-        <Icon name="clock" size={14} />
-        דחייה
-        <span className="snooze-menu-caret" aria-hidden="true">▾</span>
-      </button>
-      {open && (
-        <div className="snooze-menu-list" role="menu">
-          {SNOOZE_PRESETS.map(({ label, days }) => (
-            <button key={days} type="button" role="menuitem" className="snooze-menu-item" onClick={() => pick(onPick)(days)}>
-              {label}
-            </button>
-          ))}
-          <div className="snooze-menu-sep" />
-          <DatePickerButton label="בחירת תאריך…" onSelect={pick(onPickDate)} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Automatic notifications are for managers only (`notifications` is empty for
-// everyone else); each can be forwarded to employees with a message and a
-// picture. Everyone sees the messages that were forwarded to them.
+// The התראות page. Automatic notifications are for managers only
+// (`notifications` is empty for everyone else); each can be forwarded to
+// employees with a message and a picture. Everyone sees the messages that
+// were forwarded to them.
 export default function Inbox({
   notifications, snoozeNotification, onUpdateReminder, onGoToClient,
   isManager, messages = [], imageUrls = {}, onMarkRead, clients = [],
@@ -78,8 +18,6 @@ export default function Inbox({
   const [sendFor, setSendFor] = useState(null);   // notification being forwarded
   const [sentNote, setSentNote] = useState(null); // "sent to N" confirmation
   const [lightbox, setLightbox] = useState(null); // enlarged picture URL
-  const [fileBusy, setFileBusy] = useState(null);   // message id being downloaded/printed
-  const [fileError, setFileError] = useState(null); // { id, text }
 
   useEffect(() => {
     if (!sentNote) return;
@@ -94,68 +32,10 @@ export default function Inbox({
     return () => window.removeEventListener('keydown', onKey);
   }, [lightbox]);
 
-  const handleDateSnooze = async (notif, dateStr) => {
-    const days = Math.ceil((new Date(dateStr).getTime() - Date.now()) / unitMs);
-    if (days <= 0) return;
-    if (notif.type === NOTIF_TYPE_ROW_REMINDER) {
-      await onUpdateReminder?.(notif.reminderMeta.reminderId, days);
-    } else {
-      await snoozeNotification(notif.id, days);
-    }
-  };
-
-  const handlePresetDelay = (notif, days) => {
-    if (notif.type === NOTIF_TYPE_ROW_REMINDER) {
-      onUpdateReminder?.(notif.reminderMeta.reminderId, days);
-    } else {
-      snoozeNotification(notif.id, days);
-    }
-  };
-
-  // Save or print a message's picture. Errors show under that message.
-  const handleImageFile = async (m, url, action) => {
-    setFileBusy(m.id);
-    setFileError(null);
-    try {
-      if (action === 'download') {
-        const day = new Date(m.created_at).toLocaleDateString('he-IL');
-        await downloadImage(url, `${m.client_name || 'תמונה'} ${day}`);
-      } else {
-        await printImage(url, [
-          m.client_name,
-          m.notification_text,
-          m.message,
-          `נשלח ע״י ${nameFromEmail(m.sender_email)} · ${formatDateTime(m.created_at)}`,
-        ].filter(Boolean));
-      }
-    } catch (err) {
-      console.error('Message image error:', err.message);
-      setFileError({ id: m.id, text: action === 'download' ? 'שגיאה בהורדת התמונה.' : 'שגיאה בהדפסת התמונה.' });
-    }
-    setFileBusy(null);
-  };
-
-  // Save an attached file, or open it in its program (where it can be printed).
-  const handleAttachment = async (m, attachment, action) => {
-    setFileBusy(m.id);
-    setFileError(null);
-    try {
-      const url = await attachmentUrl(attachment.path);
-      if (action === 'download') await downloadFile(url, attachment.name);
-      else await openFile(url, attachment.name);
-    } catch (err) {
-      console.error('Attachment error:', err.message);
-      setFileError({
-        id: m.id,
-        text: action === 'download' ? `שגיאה בהורדת ${attachment.name}.` : `לא ניתן לפתוח את ${attachment.name}.`,
-      });
-    }
-    setFileBusy(null);
-  };
-
-  const openMessageClient = (message, client) => {
-    if (!message.read_at) onMarkRead?.(message.id);
-    onGoToClient?.(client, message.section_key);
+  // A row reminder moves its own due date; other notifications are snoozed.
+  const delay = (notif, days) => {
+    if (notif.type === NOTIF_TYPE_ROW_REMINDER) return onUpdateReminder?.(notif.reminderMeta.reminderId, days);
+    return snoozeNotification(notif.id, days);
   };
 
   const unread = messages.filter(m => !m.read_at).length;
@@ -180,74 +60,17 @@ export default function Inbox({
         <section className="inbox-section">
           {isManager && <h2 className="inbox-section-title">הודעות שקיבלתי</h2>}
           <div className="notification-list">
-            {messages.map(m => {
-              const client = clients.find(c => String(c.id) === m.client_id);
-              const imageUrl = m.image_path && imageUrls[m.image_path];
-              // A worker changed the status of a row the manager sent them.
-              const isUpdate = m.kind === 'status_update';
-              return (
-                <div key={m.id} className={`notification-card message-card${isUpdate ? ' status-update-card' : ''}${m.read_at ? ' is-read' : ''}`}>
-                  <div className="notification-content">
-                    <div className="message-meta">
-                      {!m.read_at && <span className="message-new">חדש</span>}
-                      {isUpdate && <span className="message-kind">עדכון סטטוס</span>}
-                      <strong title={m.sender_email || ''}>{nameFromEmail(m.sender_email)}</strong>
-                      <bdi dir="ltr">{formatDateTime(m.created_at)}</bdi>
-                    </div>
-                    {m.client_name && <h4>{m.client_name}</h4>}
-                    {m.notification_text && <p className="message-quote">{m.notification_text}</p>}
-                    {m.message && <p className="message-text">{m.message}</p>}
-                    {imageUrl && (
-                      <>
-                        <button type="button" className="message-image" onClick={() => setLightbox(imageUrl)} title="הגדלה">
-                          <img src={imageUrl} alt="תמונה מצורפת" />
-                        </button>
-                        <div className="message-image-actions">
-                          <button type="button" className="btn btn-ghost btn-sm" disabled={fileBusy === m.id}
-                            onClick={() => handleImageFile(m, imageUrl, 'download')}>
-                            <Icon name="download" size={14} /> הורדה
-                          </button>
-                          <button type="button" className="btn btn-ghost btn-sm" disabled={fileBusy === m.id}
-                            onClick={() => handleImageFile(m, imageUrl, 'print')}>
-                            <Icon name="printer" size={14} /> הדפסה
-                          </button>
-                        </div>
-                      </>
-                    )}
-                    {m.attachments?.length > 0 && (
-                      <ul className="attachment-list">
-                        {m.attachments.map(a => (
-                          <li key={a.path} className="attachment-item">
-                            <Icon name="note" size={16} />
-                            <span className="attachment-name" title={a.name}>{a.name}</span>
-                            <span className="muted">{formatFileSize(a.size)}</span>
-                            <button type="button" className="btn btn-ghost btn-sm" disabled={fileBusy === m.id}
-                              onClick={() => handleAttachment(m, a, 'download')}>
-                              <Icon name="download" size={14} /> הורדה
-                            </button>
-                            <button type="button" className="btn btn-ghost btn-sm" disabled={fileBusy === m.id}
-                              onClick={() => handleAttachment(m, a, 'open')} title="פתיחה בתוכנה המתאימה, משם אפשר להדפיס">
-                              <Icon name="printer" size={14} /> פתיחה / הדפסה
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    {fileError?.id === m.id && <div className="form-error">{fileError.text}</div>}
-                  </div>
-                  <div className="notification-actions">
-                    {!m.read_at && (
-                      <button className="btn btn-ghost btn-sm" onClick={() => onMarkRead?.(m.id)}>סמן כנקרא</button>
-                    )}
-                    {client && (
-                      <button className="btn btn-primary btn-sm" onClick={() => openMessageClient(m, client)}>
-                        עבור ללקוח
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            {messages.map(m => (
+              <MessageCard
+                key={m.id}
+                message={m}
+                client={clients.find(c => String(c.id) === m.client_id) || null}
+                imageUrl={m.image_path && imageUrls[m.image_path]}
+                onEnlarge={setLightbox}
+                onMarkRead={onMarkRead}
+                onOpenClient={onGoToClient}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -265,44 +88,15 @@ export default function Inbox({
               </div>
             ) : (
               notifications.map((notification) => (
-                <div key={notification.id} className="notification-card">
-                  <div className="notification-content">
-                    <h4>{notification.client?.name}</h4>
-                    <p>{notification.message}</p>
-                    <small>נוצר ב: {formatDate(notification.created_at)}</small>
-                  </div>
-
-                  <div className="notification-actions">
-                    {/* Task done: delete the reminder (the row's status isn't changed). */}
-                    {notification.type === NOTIF_TYPE_ROW_REMINDER && !isViewer && (
-                      <button
-                        type="button"
-                        className="btn btn-ghost btn-sm notification-done-btn"
-                        onClick={() => onUpdateReminder?.(notification.reminderMeta.reminderId, null)}
-                        title="המשימה בוצעה — מחיקת ההתראה"
-                      >
-                        <Icon name="check" size={14} />
-                        בוצע
-                      </button>
-                    )}
-                    <SnoozeMenu
-                      disabled={isViewer}
-                      onPick={(days) => handlePresetDelay(notification, days)}
-                      onPickDate={(dateStr) => handleDateSnooze(notification, dateStr)}
-                    />
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSendFor(notification)}>
-                      <Icon name="mail" size={14} />
-                      שליחה לעובד
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-sm"
-                      onClick={() => onGoToClient?.(notification.client, notification.reminderMeta?.sectionKey)}
-                    >
-                      עבור ללקוח
-                    </button>
-                  </div>
-                </div>
+                <NotificationCard
+                  key={notification.id}
+                  notification={notification}
+                  isViewer={isViewer}
+                  onDone={() => onUpdateReminder?.(notification.reminderMeta.reminderId, null)}
+                  onDelay={(days) => delay(notification, days)}
+                  onSend={() => setSendFor(notification)}
+                  onGoToClient={() => onGoToClient?.(notification.client, notification.reminderMeta?.sectionKey)}
+                />
               ))
             )}
           </div>
