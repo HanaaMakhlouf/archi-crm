@@ -1,0 +1,7 @@
+/* ── Clients table: no search matches ── */
+.clients-table .clients-table-empty td {
+  padding: 40px 18px;
+  text-align: center;
+  color: var(--color-text-muted);
+  border-bottom: none;
+}

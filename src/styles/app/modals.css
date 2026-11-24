@@ -1,0 +1,99 @@
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 16, 22, 0.5);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 34px;
+  width: 360px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.modal-icon {
+  font-size: 36px;
+}
+
+.modal h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modal p {
+  font-size: 15px;
+  color: var(--color-text-muted);
+}
+
+.modal input {
+  text-align: right;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.discard-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 16, 22, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.discard-dialog {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: 26px 28px 24px;
+  max-width: 460px;
+  width: calc(100% - 32px);
+  box-sizing: border-box;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-border);
+}
+
+.discard-dialog h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.discard-dialog p {
+  margin: 0 0 22px;
+  font-size: 15px;
+  color: var(--color-text-muted);
+}
+
+/* confirmDialog / alertDialog (AppDialog.js): messages may hold line breaks */
+.app-dialog p {
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+/* Three choices; they wrap onto two lines rather than spill out of a narrow window */
+.discard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}

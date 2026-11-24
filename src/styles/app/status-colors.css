@@ -1,0 +1,36 @@
+/* ── BADGE COLORS ── */
+.badge {
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 80px;
+  text-align: center;
+}
+
+.badge-gray {
+  background: var(--color-neutral-light);
+  color: var(--color-neutral-text);
+}
+
+.badge-blue {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+.badge-amber {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.badge-green {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.muted.small {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  min-width: 80px;
+  text-align: center;
+}

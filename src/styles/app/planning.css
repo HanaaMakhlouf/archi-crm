@@ -1,0 +1,119 @@
+/* ── PLANNING ── */
+.planning-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sub-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.sub-tab-button {
+  padding: 8px 16px;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  transition: all 150ms ease;
+}
+
+.sub-tab-button.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  font-weight: 700;
+}
+
+.sub-tab-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.discipline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flow-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.flow-card.locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.flow-card.ready-outline {
+  border: 1px solid var(--color-success);
+  background: var(--color-success-light);
+}
+
+.work-plan-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.work-plan-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.work-plan-row.ready {
+  border-color: var(--color-success);
+  background: var(--color-success-light);
+}
+
+.work-plan-row-title {
+  font-weight: 600;
+}
+
+.work-plan-row-badge {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.work-plan-row.ready .work-plan-row-badge {
+  color: var(--color-success);
+}
+
+.flow-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.flow-row h4 {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.flow-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}

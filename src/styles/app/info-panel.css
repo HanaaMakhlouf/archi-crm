@@ -1,0 +1,162 @@
+/* ── INFO PANEL: one card, a row per topic with its title on the side ── */
+.info-panel {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 6px 24px;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 24px;
+  padding: 16px 0;
+}
+
+.info-row + .info-row {
+  border-top: 1px solid var(--color-border);
+}
+
+.info-row-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.info-row-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.info-row-side .link-btn {
+  padding: 2px 0;
+}
+
+.info-row-side .link-btn:hover {
+  background: none;
+  text-decoration: underline;
+}
+
+/* Inline editing: fields read as plain text, a soft fill on hover, a ring
+   while typing. (--color-input feeds the Chromium inset-shadow fill.) */
+.info-panel input,
+.info-panel textarea,
+.docs-table input[type="text"] {
+  --color-input: var(--color-surface);
+  border-color: transparent;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Hints in empty fields stay light */
+.info-panel input::placeholder,
+.info-panel textarea::placeholder,
+.docs-table input[type="text"]::placeholder {
+  font-weight: 400;
+}
+
+.land-grid label,
+.person-grid-head,
+.docs-table th {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.info-panel input:hover,
+.info-panel textarea:hover,
+.docs-table input[type="text"]:hover {
+  --color-input: var(--color-surface-2);
+  background: var(--color-surface-2);
+  border-color: transparent;
+}
+
+.info-panel input:focus,
+.info-panel textarea:focus,
+.docs-table input[type="text"]:focus {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+}
+
+.info-panel input::placeholder,
+.info-panel textarea::placeholder,
+.docs-table input[type="text"]::placeholder {
+  color: var(--color-placeholder);
+  -webkit-text-fill-color: var(--color-placeholder);
+}
+
+.land-grid label,
+.person-grid-head {
+  padding-inline-start: 12px;
+}
+
+.info-row-body textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  resize: vertical;
+}
+
+/* Land and people above every licensing phase: the same rows, compact.
+   Scoped so תיק מפורט keeps its roomier version. */
+.licensing-details .info-panel {
+  padding: 2px 20px;
+}
+
+.licensing-details .info-row {
+  gap: 16px;
+  padding: 5px 0;
+}
+
+.licensing-details .info-row-side {
+  gap: 0;
+  padding-top: 0;
+}
+
+.licensing-details .info-row-title {
+  font-size: 14.5px;
+}
+
+.licensing-details .info-row-side .link-btn {
+  padding: 0;
+  font-size: 13px;
+}
+
+.licensing-details .land-grid {
+  row-gap: 0;
+}
+
+.licensing-details .land-grid .form-group {
+  gap: 0;
+}
+
+.licensing-details .land-grid label,
+.licensing-details .person-grid-head {
+  margin-bottom: 0;
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+.licensing-details .person-grid {
+  row-gap: 0;
+}
+
+.licensing-details .land-grid input,
+.licensing-details .person-grid input {
+  height: 26px;
+  font-size: 14px;
+}
+
+.licensing-details .row-icon-btn {
+  width: 24px;
+  height: 24px;
+}
+
+.licensing-details .person-copy-box {
+  margin-bottom: 2px;
+  font-size: 13px;
+}

@@ -1,0 +1,109 @@
+/* ── CLIENT PROFILE HEADER: identity on top, one action bar below ── */
+.detail-hero {
+  background: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  margin-bottom: 22px;
+  overflow: hidden;
+  position: relative;
+}
+
+.detail-hero-main {
+  padding: 24px 30px 22px;
+}
+
+.detail-hero-text {
+  min-width: 0;
+}
+
+.detail-hero-text .page-eyebrow {
+  margin-bottom: 6px;
+}
+
+.detail-crumb {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+
+.detail-crumb:hover {
+  text-decoration: underline;
+}
+
+.detail-hero-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 30px;
+  /* Not 800: on Windows that's "Segoe UI Black", which has no Hebrew, so the
+     name was drawn half in Times New Roman. 700 is Segoe UI Bold. */
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.3px;
+  color: var(--color-text);
+}
+
+.detail-hero .detail-meta {
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* City / phone as info chips, next to the type tags */
+.detail-hero .detail-meta-item {
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.detail-hero .detail-meta .type-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.detail-hero-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 30px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-2);
+}
+
+.detail-hero-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-hero-bar .btn {
+  height: 36px;
+  padding: 0 14px;
+}
+
+.detail-close-btn:hover {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 45%, transparent);
+  background: var(--color-error-light);
+}
+
+.priority-menu-item:hover {
+  background: var(--color-surface-2);
+}

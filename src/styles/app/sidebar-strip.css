@@ -1,0 +1,63 @@
+/* Folding the sidebar into a strip of icons (Sidebar.js) — offered only
+   when the window is narrow; wide windows always show the full menu. */
+.sidebar-toggle-btn { display: none; }
+
+@media (min-width: 860px) and (max-width: 1300px) {
+  .sidebar-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-inline-start: auto;
+    flex-shrink: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+  }
+  .sidebar-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--sidebar-border);
+    color: var(--color-text);
+  }
+
+  html.sidebar-collapsed { --sidebar-width: 68px; }
+
+  /* Top: only the button that opens the menu again */
+  html.sidebar-collapsed .sidebar-brand { justify-content: center; padding: 18px 0 14px; }
+  html.sidebar-collapsed .sidebar-brand > :not(.sidebar-toggle-btn) { display: none; }
+  html.sidebar-collapsed .sidebar-toggle-btn { margin: 0; width: 40px; height: 40px; }
+
+  /* Menu: icons only, the name shows on hover */
+  html.sidebar-collapsed .sidebar-body { padding: 6px 10px 16px; }
+  html.sidebar-collapsed .sidebar-section-label,
+  html.sidebar-collapsed .nav-label,
+  html.sidebar-collapsed .nav-count { display: none; }
+  html.sidebar-collapsed .nav-item { justify-content: center; padding: 11px 0; }
+  html.sidebar-collapsed .nav-item.active::before { right: -10px; }
+  html.sidebar-collapsed .notification-badge {
+    position: absolute;
+    top: 3px;
+    left: 5px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    font-size: 11px;
+  }
+
+  /* Bottom: the user's initial and the small buttons, stacked */
+  html.sidebar-collapsed .sidebar-user { padding: 12px 10px; align-items: center; }
+  html.sidebar-collapsed .office-switcher,
+  html.sidebar-collapsed .user-meta,
+  html.sidebar-collapsed .update-card,
+  html.sidebar-collapsed .app-version { display: none; }
+  html.sidebar-collapsed .sidebar-user-row,
+  html.sidebar-collapsed .sidebar-user-actions { flex-direction: column; align-items: center; gap: 6px; }
+}
+
+/* Sidebar still open but the window not wide: less padding around the page. */
+@media (min-width: 1024px) and (max-width: 1300px) {
+  .main-content { padding-inline: 24px; }
+}

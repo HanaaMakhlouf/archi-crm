@@ -1,0 +1,112 @@
+/* ── STATUS BADGE ── */
+.status-badge-wrap {
+  display: inline-flex;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+/* In tables every status dropdown fills its column, so they line up whatever the text. */
+.docs-table .status-badge-wrap {
+  position: relative;
+  display: flex;
+  width: 100%;
+  border-radius: var(--radius-full);
+}
+
+/* Own arrow, so it gets the same breathing room as the text */
+.docs-table .status-badge-wrap select {
+  appearance: none;
+  -webkit-appearance: none;
+  border-color: transparent;
+  border-radius: var(--radius-full);
+  padding-inline: 16px 34px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.docs-table .status-badge-wrap::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: 16px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--color-text-muted);
+  border-bottom: 2px solid var(--color-text-muted);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+
+.docs-table .status-badge-wrap select {
+  flex: 1;
+  min-width: 0;
+}
+
+.status-badge-wrap select {
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  padding: 4px 8px;
+  font-family: var(--font-body);
+}
+
+.status-badge-green {
+  background: var(--color-success-light);
+}
+
+.status-badge-red {
+  background: var(--color-error-light);
+}
+
+.status-badge-orange {
+  background: var(--color-warning-light);
+}
+
+.status-badge-gray {
+  background: var(--color-neutral-light);
+}
+
+.status-badge-blue {
+  background: var(--color-blue-light);
+}
+
+.status-badge-yellow {
+  background: var(--color-yellow-light);
+}
+
+.docs-table .status-badge-blue select {
+  background: var(--color-blue-light);
+  color: var(--color-blue);
+}
+
+.docs-table .status-badge-green select {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.docs-table .status-badge-red select {
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.docs-table .status-badge-orange select {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.docs-table .status-badge-gray select {
+  background: var(--color-neutral-light);
+  color: var(--color-neutral-text);
+}
+
+.docs-table .status-badge-yellow select {
+  background: var(--color-yellow-light);
+  color: var(--color-yellow);
+}
+
+.submission-stepper {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}

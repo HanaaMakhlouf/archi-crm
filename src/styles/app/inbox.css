@@ -1,0 +1,346 @@
+/* ── NOTIFICATIONS ── */
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notification-card {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 24px 18px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.notification-card::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: var(--color-accent);
+}
+
+.notification-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow);
+}
+
+.notification-content h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.notification-content p {
+  margin: 0 0 4px;
+  color: var(--color-text);
+}
+
+.notification-content small {
+  color: var(--color-text-faint);
+  font-size: 13px;
+}
+
+.notification-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.notification-done-btn {
+  color: var(--color-success);
+}
+
+/* דחייה: one button, the presets and a date in a small menu under it */
+.snooze-menu {
+  position: relative;
+}
+
+.snooze-menu-caret {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.snooze-menu-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  inset-inline-start: 0;
+  z-index: 50;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.snooze-menu-item,
+.snooze-menu-list .btn {
+  justify-content: flex-start;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  text-align: right;
+  cursor: pointer;
+}
+
+.snooze-menu-item:hover,
+.snooze-menu-list .btn:hover {
+  background: var(--color-surface-2);
+}
+
+.snooze-menu-sep {
+  height: 1px;
+  margin: 4px 2px;
+  background: var(--color-border);
+}
+
+/* ── MESSAGES (manager → employee) ── */
+.inbox-section + .inbox-section {
+  margin-top: 28px;
+}
+
+.inbox-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin: 0 0 12px;
+}
+
+.inbox-sent-note {
+  margin-bottom: 14px;
+}
+
+.message-card {
+  align-items: flex-start;
+}
+
+.message-card::before {
+  background: var(--color-primary);
+}
+
+.message-card.is-read::before {
+  background: var(--color-border-strong);
+}
+
+.message-card .notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+.message-meta strong {
+  color: var(--color-text);
+}
+
+.message-new {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-primary);
+  border-radius: var(--radius-full);
+  padding: 1px 8px;
+}
+
+/* A worker's status update on a task the manager sent them. */
+.message-kind {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-success);
+  background: var(--color-success-light);
+  border-radius: var(--radius-full);
+  padding: 1px 8px;
+}
+.status-update-card .message-text { font-weight: 600; }
+
+.notification-content .message-quote {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  border-inline-start: 3px solid var(--color-border-strong);
+  padding-inline-start: 10px;
+  margin: 4px 0 8px;
+}
+
+.notification-content .message-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin-bottom: 8px;
+}
+
+.message-image {
+  display: block;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-2);
+  cursor: zoom-in;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.message-image img {
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+}
+
+.message-image-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.attachment-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attachment-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-2);
+  font-size: 14px;
+}
+
+.attachment-item > svg {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.attachment-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.message-lightbox {
+  cursor: zoom-out;
+  padding: 24px;
+}
+
+.message-lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  background: #fff;
+}
+
+.send-dialog {
+  width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: right;
+  gap: 4px;
+}
+
+.send-dialog h3 {
+  margin-bottom: 8px;
+}
+
+.send-dialog-notif {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 15px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.send-dialog-users {
+  display: flex;
+  flex-direction: column;
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+}
+
+.send-dialog-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 15px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.send-dialog-user input {
+  width: auto;
+  margin: 0;
+}
+
+.send-dialog-all {
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 2px;
+}
+
+.send-dialog-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.send-dialog-preview img {
+  max-width: 220px;
+  max-height: 140px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+}
+
+.send-dialog .modal-actions {
+  justify-content: flex-start;
+}
+
+.send-dialog-preview-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

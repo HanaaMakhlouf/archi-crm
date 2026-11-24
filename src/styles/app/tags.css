@@ -1,0 +1,36 @@
+/* ══════════════════════════════════════════════════════════════════
+   BADGES / TAGS
+   ══════════════════════════════════════════════════════════════════ */
+.badge {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.type-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.type-tag {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+}
+
+.client-card-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}

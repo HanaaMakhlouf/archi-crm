@@ -1,0 +1,12 @@
+/* ── MOBILE MENU ── */
+.mobile-menu-btn {
+  display: none;
+}
+
+.mobile-nav-overlay {
+  display: none;
+}
+
+.mobile-nav-overlay.mobile-open {
+  display: block;
+}

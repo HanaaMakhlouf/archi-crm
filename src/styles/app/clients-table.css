@@ -1,0 +1,145 @@
+.clients-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  direction: rtl;
+  font-size: 15px;
+}
+
+.clients-table thead tr {
+  background: var(--color-surface-2);
+}
+
+.clients-table thead th {
+  text-align: right;
+  padding: 11px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.clients-table thead th:last-child {
+  width: 120px;
+}
+
+.clients-table-row {
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.clients-table-row:hover {
+  background: var(--color-surface-2);
+}
+
+.clients-table-row:last-child td {
+  border-bottom: none;
+}
+
+.clients-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  vertical-align: middle;
+}
+
+.client-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 240px;
+}
+
+.client-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.client-name {
+  font-weight: 600;
+  font-size: 15.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.client-sub {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+}
+
+.client-sub-key {
+  color: var(--color-text-faint);
+}
+
+.client-sub-faint {
+  font-size: 13px;
+  color: var(--color-text-faint);
+  line-height: 1.55;
+  /* Long folder paths have no spaces; let them wrap instead of widening the table. */
+  overflow-wrap: anywhere;
+}
+
+.clients-table td.cell-secondary {
+  color: var(--color-text-muted);
+}
+
+.clients-table td.cell-plot {
+  color: var(--color-text-muted);
+  font-size: 14.5px;
+  direction: ltr;
+  text-align: right;
+}
+
+/* סוג תיק: tags wrap onto their own lines with even spacing, never mid-word. */
+.type-tags-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-width: 190px;
+}
+
+.clients-table .type-tag {
+  white-space: nowrap;
+  line-height: 1.5;
+}
+
+/* עדכון אחרון: the date, with what changed underneath (one line, full text on hover). */
+.clients-table td.cell-updated {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.clients-table td.cell-request {
+  direction: ltr;
+  text-align: right;
+  color: var(--color-text-muted);
+}
+
+.clients-table td.cell-actions {
+  padding: 8px 14px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+}
+
+.clients-table-row:hover .row-actions {
+  opacity: 1;
+}

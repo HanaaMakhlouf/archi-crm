@@ -1,0 +1,151 @@
+/* ── FORMS ── */
+.client-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 30px 34px;
+  max-width: 860px;
+}
+
+.form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 30px 0 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+  line-height: 1.3;
+}
+
+.form-section-title::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--color-accent);
+}
+
+.client-form .form-section-title:first-child {
+  margin-top: 0;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.form-row-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+
+label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.hint-inline {
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+input,
+select,
+textarea {
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-input);
+  outline: none;
+  text-align: right;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--color-border-strong);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  background: var(--color-surface);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* Chromium (Electron) force-darkens <input> widget backgrounds on a
+   dark-mode OS even when the page is explicitly light-themed, ignoring
+   plain `background`. An inset box-shadow paints over that native
+   background instead of relying on it, which reliably overrides it —
+   the same trick used to defeat Chromium's yellow autofill background. */
+input:not([type="checkbox"]):not([type="radio"]) {
+  box-shadow: 0 0 0 1000px var(--color-input) inset !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--color-input) inset !important;
+  -webkit-text-fill-color: var(--color-text) !important;
+}
+
+input:focus:not([type="checkbox"]):not([type="radio"]) {
+  box-shadow: 0 0 0 1000px var(--color-surface) inset, 0 0 0 3px var(--color-primary-light) !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface) inset, 0 0 0 3px var(--color-primary-light) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-placeholder);
+  -webkit-text-fill-color: var(--color-placeholder);
+}
+
+textarea {
+  resize: vertical;
+}
+
+.field-hint {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+
+.field-error {
+  font-size: 13px;
+  color: var(--color-error);
+  margin-top: 4px;
+  display: block;
+}
+
+.form-error {
+  background: var(--color-error-light);
+  color: var(--color-error);
+  padding: 11px 15px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  margin-bottom: 20px;
+  border: 1px solid var(--color-error);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-border);
+  flex-direction: row-reverse;
+}

@@ -1,0 +1,304 @@
+/* ── DOCS TABLE ── */
+.docs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.status-table-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ── PLANNING PARTS: required toggle, added rows, locked rows ── */
+.required-toggle {
+  display: inline-flex;
+  margin-inline-start: 8px;
+  padding: 3px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-2);
+}
+
+.required-toggle button {
+  padding: 4px 14px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: 500 14px var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.required-toggle button:hover:not(.is-on):not(.is-off) { color: var(--color-text); }
+
+.required-toggle button.is-on {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.required-toggle button.is-off {
+  background: var(--color-text-muted);
+  color: var(--color-surface);
+  font-weight: 700;
+}
+
+.part-off-note {
+  margin: 0;
+  font-size: 14px;
+}
+
+.row-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.row-remove-btn {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-faint);
+  font-size: 12.5px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+/* A row that opens only after the one above it (היתר waits for אגרות). */
+.docs-table tr.row-locked td { opacity: 0.45; pointer-events: none; user-select: none; }
+.row-locked-hint { display: block; font-size: 12px; font-weight: 400; color: var(--color-text-faint); }
+
+.docs-table tr:hover .row-remove-btn,
+.row-remove-btn:focus-visible { opacity: 1; }
+
+.row-remove-btn:hover {
+  color: var(--color-error);
+  background: var(--color-error-light);
+}
+
+.add-row-btn {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: 600 14px var(--font-body);
+  cursor: pointer;
+}
+
+.add-row-btn:hover { text-decoration: underline; }
+
+.add-row-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.add-row-form input,
+.add-row-form select {
+  flex: 0 1 240px;
+  padding: 7px 11px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font: 13px var(--font-body);
+}
+
+.add-row-form select { flex: 0 1 160px; color: var(--color-text); }
+
+/* "+ הוסף שורה": the name (with rows added before underneath), status, buttons. */
+.add-row-box { display: flex; flex-direction: column; gap: 10px; }
+.add-row-form .add-row-name { flex: 0 1 240px; }
+.add-row-form .add-row-name input { flex: none; width: 100%; }
+.add-row-suggest { min-width: 260px; }
+.add-row-suggest-title { padding: 4px 8px 6px; font-size: 12px; color: var(--color-text-faint); }
+.add-row-suggest-item { flex-direction: column; align-items: flex-start; gap: 1px; font-size: 14px; }
+.add-row-suggest-item mark { background: none; color: inherit; font-weight: 700; padding: 0; }
+.add-row-suggest-options { font-size: 12px; color: var(--color-text-faint); }
+
+/* ✎ עריכת האפשרויות: one option per line. */
+.options-editor {
+  width: min(100%, 380px);
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.06));
+}
+.options-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.options-editor-head .link-btn,
+.options-editor-foot .link-btn { font-size: 13px; padding: 4px 6px; }
+.options-editor-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 60px 24px;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  border-radius: var(--radius-sm);
+}
+.options-editor-row.is-dragging { background: var(--color-surface-2); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); }
+.drag-handle {
+  display: grid;
+  place-items: center;
+  height: 30px;
+  color: var(--color-text-faint);
+  font-size: 13px;
+  letter-spacing: -3px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.drag-handle:hover { color: var(--color-text-muted); }
+.options-editor-row.is-dragging .drag-handle { cursor: grabbing; }
+.options-editor-row input {
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font: 13.5px var(--font-body);
+  color: var(--color-text);
+}
+.options-editor-row input:focus { border-color: var(--color-border-strong); outline: none; }
+.options-editor-row .row-remove-btn { opacity: 1; }
+.options-editor-row .row-remove-btn:disabled { visibility: hidden; }
+.options-editor-done { font-size: 12px; color: var(--color-success, #2e7d32); white-space: nowrap; }
+.options-editor-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.add-row-error {
+  font-size: 13px;
+  color: var(--color-error);
+}
+
+.docs-table th,
+.docs-table td {
+  padding: 12px 14px;
+  text-align: right;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.docs-table td {
+  font-size: 16px;
+  color: var(--color-text);
+}
+
+/* Table text starts where the card title starts */
+.docs-table th:first-child,
+.docs-table td:first-child {
+  padding-inline-start: 0;
+}
+
+.docs-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.docs-table th {
+  padding-top: 6px;
+  padding-bottom: 10px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.docs-table td:first-child {
+  font-weight: 600;
+  width: 30%;
+}
+
+/* Wide enough for the longest status (בטיפול המכון, לא נמסרה אגרה) */
+.docs-table td:nth-child(2) {
+  width: 190px;
+}
+
+.docs-table select,
+.docs-table input[type="text"] {
+  width: 100%;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--color-text);
+  background: var(--color-input);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.docs-table input[type="text"]:hover,
+.docs-table select:hover {
+  border-color: var(--color-border-strong);
+}
+
+.docs-table input[type="text"]:focus,
+.docs-table select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.docs-table .reminder-select {
+  width: auto;
+  background: transparent;
+}
+
+.docs-table .reminder-select:hover {
+  background: var(--color-surface-2);
+}
+
+/* מידע: a fixed תזכורת column, so its separate cards line up */
+.info-phase .docs-table th:last-child,
+.info-phase .docs-table td:last-child {
+  width: 170px;
+}
+
+/* בקשת מידע לזמין: the request's number beside the note, in the note column */
+.online-info-fields {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.docs-table .online-info-fields input[type="text"] {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.docs-table .online-info-fields .online-info-number {
+  flex: 0 0 210px;
+  font-weight: 600;
+}
+
+.docs-table tr.doc-missing td:nth-child(2) select {
+  border-color: transparent;
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.docs-table tr.doc-present td:nth-child(2) select {
+  border-color: transparent;
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
