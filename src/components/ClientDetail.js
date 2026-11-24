@@ -41,8 +41,8 @@ export default function ClientDetail({
     return saved && (alwaysThere || (client.client_type || []).includes(saved)) ? saved : TAB_GENERAL;
   });
 
-  // Switching tabs is a step: back returns to the tab before.
-  const selectTab = useHistoryStep('tab', activeTab, setActiveTab, client.id);
+  // Back from any tab returns to כללי; back from כללי leaves the client.
+  const selectTab = useHistoryStep('tab', activeTab, setActiveTab, client.id, TAB_GENERAL);
 
   useEffect(() => {
     try { sessionStorage.setItem(tabStorageKey, activeTab); } catch { /* storage unavailable */ }

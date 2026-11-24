@@ -23,7 +23,8 @@ import {
 export default function LicensingTab({ client, onUpdate, reminders = [], onReminderChange, onClearReminders, onStatusChange }) {
   const [ld, setLd] = useState(() => buildInitialLd(client));
   const [activePhase, setActivePhase] = useState(() => recordedStep('phase', client.id) || computeCurrentPhase(ld));
-  // Moving between מידע / בקשה / תנאים is a step: back returns to the one before.
+  // The stage is remembered (back/forward onto this tab reopens it), but moving
+  // between stages isn't a back-step: back leaves the tab for כללי.
   const selectPhase = useHistoryStep('phase', activePhase, setActivePhase, client.id);
   const ldRef = useRef(ld);
   ldRef.current = ld;
