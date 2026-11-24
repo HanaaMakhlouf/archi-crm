@@ -7,7 +7,7 @@ import {
   ONLINE_PERMIT_STATUS_OPTIONS, SUPERVISION_STATUS_OPTIONS, BUILDING_ASSIGN_STATUS_OPTIONS,
   TAKANA_STATUS_OPTIONS, ESTATE_NOTICE_STATUS_OPTIONS, ESTATE_NOTICE_OLD_STATUS_OPTIONS,
 } from '../constants';
-import { OFFER_OPTIONS, DISCIPLINE_OPTIONS, WORK_PLANS_OPTIONS } from '../components/PlanningTab';
+import { OFFER_OPTIONS, DISCIPLINE_OPTIONS, WORK_PLANS_OPTIONS } from '../components/planning/planningData';
 import { HACHANA_OPTIONS, HAFKADA_ISHUR_OPTIONS, PIRSOOM_OPTIONS } from '../components/DetailedTab';
 
 // Hebrew names for the fields/sections that can show up in a change summary.

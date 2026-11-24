@@ -2,7 +2,7 @@ import PriorityDot from '../PriorityDot';
 import Icon, { getInitials } from '../Icon';
 import { alertDialog } from '../AppDialog';
 import { getCurrentLicensingPhaseLabel } from '../licensing/licensingData';
-import { getCurrentPlanningStageLabel } from '../PlanningTab';
+import { getCurrentPlanningStageLabel } from '../planning/planningData';
 import { formatDate } from '../../utils/format';
 import { openClientFolder } from '../../utils/openClientFolder';
 import { TYPE_PLANNING, TYPE_LICENSING, FILE_LINK_2_PATH } from '../../constants';

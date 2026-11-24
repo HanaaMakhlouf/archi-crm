@@ -15,7 +15,7 @@ import {
 import { buildInitialLd, computeCurrentPhase } from '../components/licensing/licensingData';
 import {
   buildInitialPd, rowSelect as planningRowSelect, archRowsOf, constructionRowsOf, getCurrentPlanningStageLabel,
-} from '../components/PlanningTab';
+} from '../components/planning/planningData';
 import {
   buildInitialDetailed, HACHANA_COLS, HAFKADA_COLS, PIRSOOM_COLS, ISHUR_COLS,
 } from '../components/DetailedTab';
