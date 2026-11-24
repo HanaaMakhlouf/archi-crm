@@ -1,4 +1,4 @@
-import { buildInitialLd, computeCurrentPhase } from '../LicensingTab';
+import { buildInitialLd, computeCurrentPhase } from './licensingData';
 import { isPermitSigned } from '../../constants';
 
 const conditionsOf =(permit_status) => buildInitialLd({ licensing_data: { conditions: { permit_status } } }).conditions;

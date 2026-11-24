@@ -12,7 +12,7 @@ import {
   REQUEST_QUESTIONS, YES_NO_OPTIONS,
   DETAILED_HACHANA_KEN, DETAILED_SHUBATS, DETAILED_HITKABEL, FIELD_DETAILED_DATA,
 } from '../constants';
-import { buildInitialLd, computeCurrentPhase } from '../components/LicensingTab';
+import { buildInitialLd, computeCurrentPhase } from '../components/licensing/licensingData';
 import {
   buildInitialPd, rowSelect as planningRowSelect, archRowsOf, constructionRowsOf, getCurrentPlanningStageLabel,
 } from '../components/PlanningTab';

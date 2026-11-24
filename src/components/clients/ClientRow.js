@@ -1,7 +1,7 @@
 import PriorityDot from '../PriorityDot';
 import Icon, { getInitials } from '../Icon';
 import { alertDialog } from '../AppDialog';
-import { getCurrentLicensingPhaseLabel } from '../LicensingTab';
+import { getCurrentLicensingPhaseLabel } from '../licensing/licensingData';
 import { getCurrentPlanningStageLabel } from '../PlanningTab';
 import { formatDate } from '../../utils/format';
 import { openClientFolder } from '../../utils/openClientFolder';

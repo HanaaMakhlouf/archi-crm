@@ -1,4 +1,4 @@
-import { buildInitialLd, computeCurrentPhase } from '../LicensingTab';
+import { buildInitialLd, computeCurrentPhase } from './licensingData';
 import { licensingPhasesFor } from '../../constants';
 
 const clientAt = (conditions, confirmation) => ({

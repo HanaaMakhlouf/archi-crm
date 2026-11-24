@@ -1,5 +1,5 @@
 // Clients saved by version 1.2.0 must open in the new version with nothing lost.
-import { buildInitialLd, getCurrentLicensingPhaseLabel } from '../components/LicensingTab';
+import { buildInitialLd, getCurrentLicensingPhaseLabel } from '../components/licensing/licensingData';
 import { syncTextRows } from '../components/licensing/RequestPhase';
 import { getCurrentPlanningStageLabel } from '../components/PlanningTab';
 import {
