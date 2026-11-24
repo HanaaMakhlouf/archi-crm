@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Icon from './Icon';
 import { openClientFolder } from '../utils/openClientFolder';
 import { FILE_LINK_2_PATH, FILE_LINK_2_NAME, FILE_LINK_LABEL_2 } from '../constants';
-import { isWebUrl, isFolderLink, getFolderName, isAbsoluteFolderPath, getPathBasename } from './QuickFileLinks';
+import { isWebUrl, isFolderLink, getFolderName, isAbsoluteFolderPath, getPathBasename } from '../utils/fileLinks';
 
 // The client's מחיצה folder as a button in the profile header's action bar, so it's one click
 // away from every tab. Linked → opens it; not linked → picks a folder
