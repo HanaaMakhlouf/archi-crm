@@ -6,6 +6,8 @@ import QuickFileLinks from './QuickFileLinks';
 import FolderChip from './FolderChip';
 import ActivityTab from './ActivityTab';
 import { useAuth } from '../contexts/AuthContext';
+import { ReminderForwardContext } from '../contexts/ReminderForwardContext';
+import SendMessageDialog from './SendMessageDialog';
 import Icon from './Icon';
 import {
   TYPE_PLANNING, TYPE_LICENSING, TYPE_DETAILED, CLIENT_TYPES,
@@ -51,6 +53,25 @@ export default function ClientDetail({
   const isManager = isAdmin || userRole === ROLE_MANAGER;
   const archivedAt = client[FIELD_ARCHIVED_AT];
   const readOnly = isViewer || !!archivedAt; // a closed file is kept as-is until reactivated
+
+  // A row's reminder can be sent to a worker before it's due — the same message
+  // as forwarding it from התראות once it is. Managers only, on an open file.
+  const [forwardFor, setForwardFor] = useState(null);
+  const [sentNote, setSentNote] = useState(null);
+  useEffect(() => {
+    if (!sentNote) return;
+    const t = setTimeout(() => setSentNote(null), 4000);
+    return () => clearTimeout(t);
+  }, [sentNote]);
+  const forwardReminder = isManager && !readOnly
+    ? (reminder) => setForwardFor({
+      client_id: client.id,
+      client,
+      message: reminder.row_label,
+      // rowLabel: the worker's status change on this row reports back to the manager.
+      reminderMeta: { reminderId: reminder.id, sectionKey: reminder.section_key, rowLabel: reminder.row_label },
+    })
+    : null;
 
   // Every worker can export, closed files too — it only reads.
   const [exporting, setExporting] = useState(false);
@@ -218,6 +239,7 @@ export default function ClientDetail({
         </div>
       )}
 
+      <ReminderForwardContext.Provider value={forwardReminder}>
       {activeTab === TYPE_PLANNING && (
         <PlanningTab
           client={client}
@@ -248,8 +270,20 @@ export default function ClientDetail({
           onStatusChange={(sk, rl, change) => onRowStatusChange?.(client, sk, rl, change)}
         />
       )}
+      </ReminderForwardContext.Provider>
       </fieldset>
 
+      {forwardFor && (
+        <SendMessageDialog
+          notification={forwardFor}
+          onClose={() => setForwardFor(null)}
+          onSent={(count) => {
+            setForwardFor(null);
+            setSentNote(count === 1 ? 'ההודעה נשלחה' : `ההודעה נשלחה ל-${count} עובדים`);
+          }}
+        />
+      )}
+      {sentNote && <div className="login-success forward-sent-toast" role="status">{sentNote}</div>}
     </>
   );
 }

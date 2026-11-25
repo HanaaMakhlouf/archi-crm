@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { calcDaysRemaining, isReminderDue } from '../../notifications/reminderUtils';
+import { ReminderForwardContext } from '../../contexts/ReminderForwardContext';
+import Icon from '../Icon';
 import { REMINDER_DAYS_PRESETS, ONE_DAY_MS, NOTIFICATION_DELAY_UNIT } from '../../constants';
 import DatePickerButton from '../DatePickerButton';
 
@@ -16,6 +18,7 @@ const unitMs = NOTIFICATION_DELAY_UNIT === 'minutes' ? ONE_MINUTE_MS : ONE_DAY_M
 function ReminderCell({ reminder, onChange }) {
   const [customMode, setCustomMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const forward = useContext(ReminderForwardContext); // managers: send it to a worker now
 
   const daysLeft = calcDaysRemaining(reminder);
   const due = isReminderDue(reminder);
@@ -44,17 +47,30 @@ function ReminderCell({ reminder, onChange }) {
   // — Active reminder: show countdown or "due" badge —
   if (reminder && !customMode) {
     return (
-      <div className={`reminder-badge ${due ? 'reminder-due' : 'reminder-active'}`}>
-        <span className="reminder-text">
-          {due ? 'היום!' : `${daysLeft} ${daysLeft === 1 ? 'יום' : 'ימים'}`}
-        </span>
-        <button
-          className="reminder-clear-btn"
-          onClick={() => fire(null)}
-          title="מחק תזכורת"
-        >
-          ✕
-        </button>
+      <div className="reminder-cell-active">
+        <div className={`reminder-badge ${due ? 'reminder-due' : 'reminder-active'}`}>
+          <span className="reminder-text">
+            {due ? 'היום!' : `${daysLeft} ${daysLeft === 1 ? 'יום' : 'ימים'}`}
+          </span>
+          <button
+            className="reminder-clear-btn"
+            onClick={() => fire(null)}
+            title="מחק תזכורת"
+          >
+            ✕
+          </button>
+        </div>
+        {forward && (
+          <button
+            type="button"
+            className="reminder-forward-btn"
+            onClick={() => forward(reminder)}
+            title="שליחת התזכורת לעובד כבר עכשיו"
+          >
+            <Icon name="mail" size={16} />
+            שלח לעובד
+          </button>
+        )}
       </div>
     );
   }
@@ -190,13 +206,13 @@ export default function StatusTable({
       <table className="docs-table">
         {showHeader && (
           <thead>
-            <tr>{columns.map(c => <th key={c.key}>{c.header || ''}</th>)}</tr>
+            <tr>{columns.map(c => <th key={c.key} className={`col-${c.key}`}>{c.header || ''}</th>)}</tr>
           </thead>
         )}
         <tbody>
           {rows.map((row, i) => (
             <tr key={row.id || row.type || i} className={rowClassName ? rowClassName(row) : ''}>
-              {columns.map(c => <td key={c.key}>{renderCell(row, c, i)}</td>)}
+              {columns.map(c => <td key={c.key} className={`col-${c.key}`}>{renderCell(row, c, i)}</td>)}
             </tr>
           ))}
         </tbody>

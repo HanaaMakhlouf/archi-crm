@@ -212,8 +212,7 @@
 
   .docs-table td:nth-child(2) { width: 100%; }
 
-  /* מידע's fixed תזכורת column and בקשת מידע לזמין's number box are for wide screens */
-  .info-phase .docs-table td:last-child { width: 100%; }
+  /* The fixed הערה column and בקשת מידע לזמין's number box are for wide screens */
   .online-info-fields { flex-wrap: wrap; }
   .docs-table .online-info-fields .online-info-number { flex: 1 1 100%; }
 
@@ -255,7 +254,8 @@
   .docs-table td,
   .docs-table td:first-child,
   .docs-table td:nth-child(2),
-  .info-phase .docs-table td:last-child { width: auto; min-width: 0; }
+  .docs-table td.col-note,
+  .docs-table td.col-notes { width: auto; min-width: 0; }
   .docs-table td:first-child {
     font-weight: 600;
     padding: 0;
@@ -263,10 +263,13 @@
     border-bottom: none;
   }
   .docs-table td:nth-child(2) { padding: 0; }
-  .docs-table .status-badge-wrap { width: auto; min-width: 118px; }
+  .docs-table .status-badge-wrap,
+  .docs-table td.col-status .status-badge-wrap { width: auto; min-width: 118px; }
   .docs-table td:nth-child(n+3) { padding: 0; }
   /* No reminder column: the note takes the whole row. */
   .docs-table td:nth-child(3):last-child { grid-column: 1 / -1; }
+  /* שלח לעובד needs room: the note and the reminder each get their own row. */
+  .docs-table tr:has(.reminder-forward-btn) td:nth-child(n+3) { grid-column: 1 / -1; }
   .docs-table td input[type="text"] { height: 34px; font-size: 16px; }
   .docs-table .reminder-select { width: auto; font-size: 14px; }
 }

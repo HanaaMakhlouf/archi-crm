@@ -268,10 +268,19 @@
   background: var(--color-surface-2);
 }
 
-/* מידע: a fixed תזכורת column, so its separate cards line up */
-.info-phase .docs-table th:last-child,
-.info-phase .docs-table td:last-child {
-  width: 170px;
+/* הערה / הערות: a fixed width, not all the spare room — so תזכורת sits right
+   beside it, and separate cards (e.g. מידע's) still line up column for column. */
+.docs-table th.col-note,
+.docs-table td.col-note,
+.docs-table th.col-notes,
+.docs-table td.col-notes {
+  width: 35%;
+}
+
+/* On a narrower window the note gives way, never the status's text */
+.docs-table td.col-status .status-badge-wrap {
+  min-width: 162px;
+  box-sizing: border-box;
 }
 
 /* בקשת מידע לזמין: the request's number beside the note, in the note column */
